@@ -81,7 +81,7 @@ export default function DetectionTrendChart() {
 
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={activeData} margin={{ top: 5, right: 20, bottom: 0, left: -20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}66`} vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}cc`} vertical={false} />
           <XAxis
             dataKey="t"
             tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 10, fill: C.textDim }}

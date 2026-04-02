@@ -21,7 +21,7 @@ export default function MapSVG({ selectedSitio, onSelectSitio }) {
       <svg viewBox="0 0 500 400" style={{ width: '100%', borderRadius: '8px' }}>
         <defs>
           <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke={`${C.border}88`} strokeWidth="0.5" />
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke={`${C.border}cc`} strokeWidth="0.5" />
           </pattern>
         </defs>
 

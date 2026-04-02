@@ -6,11 +6,12 @@ import { NODE_DETECTIONS, CONFIDENCE_DIST } from '../../constants/MockData';
 import Card from '../../components/ui/Card';
 
 const tooltipStyle = {
-  background:   C.surface,
-  border:       `1px solid ${C.border}`,
+  background:   '#ffffff',
+  border:       `1px solid #e7dfd3`,
   borderRadius: '8px',
   fontFamily:   'IBM Plex Mono, monospace',
   fontSize:     '12px',
+  color:        '#1c1917',
 };
 
 const NODE_COLORS  = [C.red, C.amber, C.gray];
@@ -35,7 +36,7 @@ export default function DistributionCharts() {
         </div>
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={NODE_DETECTIONS} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}66`} vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}cc`} vertical={false} />
             <XAxis
               dataKey="node"
               tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 10, fill: C.textDim }}
@@ -71,7 +72,7 @@ export default function DistributionCharts() {
         </div>
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={CONFIDENCE_DIST} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}66`} vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}cc`} vertical={false} />
             <XAxis
               dataKey="range"
               tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 9, fill: C.textDim }}

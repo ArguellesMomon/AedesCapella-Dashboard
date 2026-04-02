@@ -20,7 +20,7 @@ export default function HourlyFogChart() {
 
       <ResponsiveContainer width="100%" height={160}>
         <BarChart data={HOURLY_FOG} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}88`} vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}cc`} vertical={false} />
           <XAxis
             dataKey="hour"
             tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 10, fill: C.textDim }}
@@ -34,11 +34,12 @@ export default function HourlyFogChart() {
           />
           <Tooltip
             contentStyle={{
-              background:  C.surface,
-              border:      `1px solid ${C.border}`,
+              background:  '#ffffff',
+              border:      `1px solid #e7dfd3`,
               borderRadius:'8px',
               fontFamily:  'IBM Plex Mono, monospace',
               fontSize:    '12px',
+              color:       '#1c1917',
             }}
           />
           <Bar dataKey="fogs" fill={C.amber} radius={[4, 4, 0, 0]} />

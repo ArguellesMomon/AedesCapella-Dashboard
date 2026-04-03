@@ -1,4 +1,4 @@
-import { Activity, Droplets, Server, Eye, AlertTriangle } from 'lucide-react';
+import { Activity, Droplets, Server, Eye, AlertTriangle, Moon, Sun } from 'lucide-react';
 import { C } from '../../constants/colors';
 import { usePHTime } from '../../hooks/usePHTime';
 
@@ -13,8 +13,9 @@ const METRICS = [
  * Persistent top bar with summary metrics, Sabang risk badge, and live PHT clock.
  * @param {object} metrics - { detections, fogs, nodes, confidence }
  */
-export default function Topbar({ metrics }) {
+export default function Topbar({ metrics, theme, onToggleTheme }) {
   const { clock, date } = usePHTime();
+  const ThemeIcon = theme === 'dark' ? Sun : Moon;
 
   const values = {
     detections: String(metrics.detections),
@@ -101,6 +102,37 @@ export default function Topbar({ metrics }) {
           </div>
         </div>
       </div>
+
+      <button
+        onClick={onToggleTheme}
+        style={{
+          marginLeft:     '20px',
+          display:        'flex',
+          alignItems:     'center',
+          gap:            '8px',
+          border:         `1px solid ${C.border}`,
+          background:     C.surface2,
+          color:          C.text,
+          borderRadius:   '999px',
+          padding:        '8px 12px',
+          cursor:         'pointer',
+          flexShrink:     0,
+          transition:     'background 0.2s ease, border-color 0.2s ease, color 0.2s ease',
+        }}
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      >
+        <ThemeIcon size={14} color={C.amber} />
+        <span style={{
+          fontFamily:    'IBM Plex Mono, monospace',
+          fontSize:      '10px',
+          fontWeight:    700,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+        }}>
+          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+        </span>
+      </button>
 
       {/* Live PHT clock */}
       <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>

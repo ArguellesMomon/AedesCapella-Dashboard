@@ -1,9 +1,9 @@
 const COLORS = {
-  amber: { bg: '#fef3c7', border: '#fcd34d', text: '#92400e' },
-  red:   { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' },
-  green: { bg: '#dcfce7', border: '#86efac', text: '#166534' },
-  gray:  { bg: '#f1f5f9', border: '#cbd5e1', text: '#64748b' },
-  blue:  { bg: '#dbeafe', border: '#93c5fd', text: '#1d4ed8' },
+  amber: { bg: 'var(--tag-amber-bg)', border: 'var(--tag-amber-border)', text: 'var(--tag-amber-text)' },
+  red:   { bg: 'var(--tag-red-bg)', border: 'var(--tag-red-border)', text: 'var(--tag-red-text)' },
+  green: { bg: 'var(--tag-green-bg)', border: 'var(--tag-green-border)', text: 'var(--tag-green-text)' },
+  gray:  { bg: 'var(--tag-gray-bg)', border: 'var(--tag-gray-border)', text: 'var(--tag-gray-text)' },
+  blue:  { bg: 'var(--tag-blue-bg)', border: 'var(--tag-blue-border)', text: 'var(--tag-blue-text)' },
 };
 
 /**

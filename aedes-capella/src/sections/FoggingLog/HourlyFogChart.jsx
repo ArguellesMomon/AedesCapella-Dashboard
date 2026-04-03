@@ -34,12 +34,12 @@ export default function HourlyFogChart() {
           />
           <Tooltip
             contentStyle={{
-              background:  '#ffffff',
-              border:      `1px solid #e7dfd3`,
+              background:  C.surface,
+              border:      `1px solid ${C.border}`,
               borderRadius:'8px',
               fontFamily:  'IBM Plex Mono, monospace',
               fontSize:    '12px',
-              color:       '#1c1917',
+              color:       C.text,
             }}
           />
           <Bar dataKey="fogs" fill={C.amber} radius={[4, 4, 0, 0]} />

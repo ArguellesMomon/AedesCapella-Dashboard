@@ -6,12 +6,12 @@ import { NODE_DETECTIONS, CONFIDENCE_DIST } from '../../constants/MockData';
 import Card from '../../components/ui/Card';
 
 const tooltipStyle = {
-  background:   '#ffffff',
-  border:       `1px solid #e7dfd3`,
+  background:   C.surface,
+  border:       `1px solid ${C.border}`,
   borderRadius: '8px',
   fontFamily:   'IBM Plex Mono, monospace',
   fontSize:     '12px',
-  color:        '#1c1917',
+  color:        C.text,
 };
 
 const NODE_COLORS  = [C.red, C.amber, C.gray];

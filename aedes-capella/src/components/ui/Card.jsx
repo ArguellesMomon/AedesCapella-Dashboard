@@ -13,7 +13,7 @@ export default function Card({ children, style = {}, glow = false }) {
       padding:      '20px',
       boxShadow:    glow
         ? `0 0 20px ${C.amberDim}44`
-        : '0 2px 8px rgba(0,0,0,0.4)',
+        : C.shadow,
       ...style,
     }}>
       {children}

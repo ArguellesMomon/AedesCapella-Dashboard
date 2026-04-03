@@ -14,7 +14,7 @@ const NAV_ITEMS = [
 export default function Sidebar({ activeSection, onNavigate, alertPulse }) {
   return (
     <div style={{
-      width:         '240px',
+      width:         '280px',
       flexShrink:    0,
       background:    C.surface,
       borderRight:   `1px solid ${C.border}`,
@@ -25,7 +25,7 @@ export default function Sidebar({ activeSection, onNavigate, alertPulse }) {
 
       {/* Logo */}
       <div style={{ padding: '20px 18px', borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
           <div style={{
             width:          '32px',
             height:         '32px',
@@ -39,13 +39,15 @@ export default function Sidebar({ activeSection, onNavigate, alertPulse }) {
           }}>
             <Bug size={16} color={C.amber} />
           </div>
-          <div>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
               fontFamily:    'Syne, sans-serif',
               fontWeight:    800,
-              fontSize:      '16px',
+              fontSize:      '17px',
               color:         C.text,
-              letterSpacing: '0.02em',
+              letterSpacing: '0.01em',
+              lineHeight:    1,
+              whiteSpace:    'nowrap',
             }}>
               AedesCapella
             </div>

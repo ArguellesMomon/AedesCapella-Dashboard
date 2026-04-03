@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { C } from './constants/colors';
 import { useLiveDetections } from './hooks/useLiveDetections';
 
@@ -21,8 +21,20 @@ const SECTIONS = {
   trends: TrendsAnalytics,
 };
 
+const THEME_STORAGE_KEY = 'aedes-capella-theme';
+
+function getInitialTheme() {
+  if (typeof window === 'undefined') return 'light';
+
+  const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 export default function App() {
   const [activeSection, setActiveSection] = useState('feed');
+  const [theme, setTheme] = useState(getInitialTheme);
   const { detections, alertPulse } = useLiveDetections();
 
   // Derive topbar detection count from live feed
@@ -30,6 +42,11 @@ export default function App() {
 
   // Render the active section component
   const ActiveSection = SECTIONS[activeSection];
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
 
   return (
     <div style={{
@@ -46,7 +63,11 @@ export default function App() {
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <Topbar metrics={{ detections: detectionCount }} />
+        <Topbar
+          metrics={{ detections: detectionCount }}
+          theme={theme}
+          onToggleTheme={() => setTheme(currentTheme => currentTheme === 'dark' ? 'light' : 'dark')}
+        />
 
         {/* Scrollable section content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '28px' }}>

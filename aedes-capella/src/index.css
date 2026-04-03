@@ -1,7 +1,139 @@
-/* Google Fonts — IBM Plex Mono (data/mono) + Syne (headings/nav) */
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap');
 
-/* ── Reset ── */
+:root {
+  color-scheme: light;
+  --color-bg: #f5f0e8;
+  --color-surface: #ffffff;
+  --color-surface-2: #faf6f0;
+  --color-surface-3: #f0e9dd;
+  --color-amber: #b45309;
+  --color-amber-dim: #fef3c7;
+  --color-red: #dc2626;
+  --color-red-dim: #fee2e2;
+  --color-green: #16a34a;
+  --color-green-dim: #dcfce7;
+  --color-blue: #2563eb;
+  --color-gray: #9ca3af;
+  --color-text: #1c1917;
+  --color-text-dim: #78716c;
+  --color-border: #e7dfd3;
+  --color-border-bright: #d1c7b7;
+  --shadow-card: 0 12px 28px rgba(120, 113, 108, 0.12);
+  --scrollbar-thumb: #d1c7b7;
+  --scrollbar-thumb-hover: #b8ad9e;
+  --risk-critical-bg: #fee2e2;
+  --risk-critical-border: #fca5a5;
+  --risk-critical-text: #991b1b;
+  --risk-critical-fill: #ef4444;
+  --risk-high-bg: #fef3c7;
+  --risk-high-border: #fcd34d;
+  --risk-high-text: #92400e;
+  --risk-high-fill: #f59e0b;
+  --risk-medium-bg: #fefce8;
+  --risk-medium-border: #fde047;
+  --risk-medium-text: #713f12;
+  --risk-medium-fill: #eab308;
+  --risk-low-bg: #dcfce7;
+  --risk-low-border: #86efac;
+  --risk-low-text: #166534;
+  --risk-low-fill: #22c55e;
+  --risk-none-bg: #f1f5f9;
+  --risk-none-border: #cbd5e1;
+  --risk-none-text: #64748b;
+  --risk-none-fill: #94a3b8;
+  --tag-amber-bg: #fef3c7;
+  --tag-amber-border: #fcd34d;
+  --tag-amber-text: #92400e;
+  --tag-red-bg: #fee2e2;
+  --tag-red-border: #fca5a5;
+  --tag-red-text: #991b1b;
+  --tag-green-bg: #dcfce7;
+  --tag-green-border: #86efac;
+  --tag-green-text: #166534;
+  --tag-gray-bg: #f1f5f9;
+  --tag-gray-border: #cbd5e1;
+  --tag-gray-text: #64748b;
+  --tag-blue-bg: #dbeafe;
+  --tag-blue-border: #93c5fd;
+  --tag-blue-text: #1d4ed8;
+  --banner-blue-bg: #dbeafe;
+  --banner-blue-border: #93c5fd66;
+  --banner-blue-text: #1d4ed8;
+  --banner-amber-bg: #fef3c7;
+  --banner-amber-border: #fcd34d66;
+  --banner-amber-text: #92400e;
+  --banner-red-bg: #fee2e2;
+  --banner-red-border: #fca5a566;
+  --banner-red-text: #991b1b;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #111827;
+  --color-surface: #18212f;
+  --color-surface-2: #1d2939;
+  --color-surface-3: #243244;
+  --color-amber: #f59e0b;
+  --color-amber-dim: #5b3a05;
+  --color-red: #f87171;
+  --color-red-dim: #4b1f24;
+  --color-green: #4ade80;
+  --color-green-dim: #163826;
+  --color-blue: #60a5fa;
+  --color-gray: #7c8aa0;
+  --color-text: #f7f3ec;
+  --color-text-dim: #b7b0a6;
+  --color-border: #314154;
+  --color-border-bright: #485d75;
+  --shadow-card: 0 18px 34px rgba(0, 0, 0, 0.28);
+  --scrollbar-thumb: #4b5d73;
+  --scrollbar-thumb-hover: #688099;
+  --risk-critical-bg: #45242a;
+  --risk-critical-border: #b9485f;
+  --risk-critical-text: #fecdd3;
+  --risk-critical-fill: #f87171;
+  --risk-high-bg: #47310d;
+  --risk-high-border: #b77c10;
+  --risk-high-text: #fde68a;
+  --risk-high-fill: #f59e0b;
+  --risk-medium-bg: #40360d;
+  --risk-medium-border: #9e8a18;
+  --risk-medium-text: #fde68a;
+  --risk-medium-fill: #eab308;
+  --risk-low-bg: #183323;
+  --risk-low-border: #2f8f5a;
+  --risk-low-text: #bbf7d0;
+  --risk-low-fill: #4ade80;
+  --risk-none-bg: #253243;
+  --risk-none-border: #51667d;
+  --risk-none-text: #cbd5e1;
+  --risk-none-fill: #94a3b8;
+  --tag-amber-bg: #47310d;
+  --tag-amber-border: #b77c10;
+  --tag-amber-text: #fde68a;
+  --tag-red-bg: #45242a;
+  --tag-red-border: #b9485f;
+  --tag-red-text: #fecdd3;
+  --tag-green-bg: #183323;
+  --tag-green-border: #2f8f5a;
+  --tag-green-text: #bbf7d0;
+  --tag-gray-bg: #253243;
+  --tag-gray-border: #51667d;
+  --tag-gray-text: #d5dde7;
+  --tag-blue-bg: #102c4f;
+  --tag-blue-border: #356fb0;
+  --tag-blue-text: #bfdbfe;
+  --banner-blue-bg: #102c4f;
+  --banner-blue-border: #356fb066;
+  --banner-blue-text: #bfdbfe;
+  --banner-amber-bg: #47310d;
+  --banner-amber-border: #b77c1066;
+  --banner-amber-text: #fde68a;
+  --banner-red-bg: #45242a;
+  --banner-red-border: #b9485f66;
+  --banner-red-text: #fecdd3;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -10,53 +142,54 @@
 
 html, body, #root {
   height: 100%;
-  background: #f5f0e8;
-  color: #1c1917;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
-/* ── Scrollbar ── */
+body {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #d1c7b7;
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #b8ad9e;
+  background: var(--scrollbar-thumb-hover);
 }
 
-/* ── Keyframe Animations ── */
-
-/* Fade in + slide down — used for new detection rows */
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-/* Pulse — used for online node dots and fogging status dot */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
+  50% { opacity: 0.4; }
 }
 
-/* Blink — used for the live alert dot in the sidebar */
 @keyframes blink {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.3; }
+  50% { opacity: 0.3; }
 }
 
-/* ── Utility ── */
 button {
   font-family: inherit;
 }

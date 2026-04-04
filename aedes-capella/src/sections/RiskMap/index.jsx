@@ -9,7 +9,7 @@ import SitioDetail from './SitioDetail';
 import PriorityList from './PriorityList';
 
 /** Section 2 — Risk Map */
-export default function RiskMap() {
+export default function RiskMap({ theme = 'light' }) {
   const [selectedSitioId, setSelectedSitioId] = useState(null);
 
   const selectedSitio = selectedSitioId
@@ -29,6 +29,7 @@ export default function RiskMap() {
         {/* SVG Map card */}
         <Card style={{ padding: '16px' }}>
           <MapSVG
+            theme={theme}
             selectedSitio={selectedSitioId}
             onSelectSitio={setSelectedSitioId}
           />

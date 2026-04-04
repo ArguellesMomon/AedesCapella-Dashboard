@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { C } from './constants/colors';
 import { useLiveDetections } from './hooks/useLiveDetections';
+import LoginPage from './components/auth/LoginPage';
+import LogoutConfirmModal from './components/auth/LogoutConfirmModal';
 
 // Layout
 import Sidebar from './components/layout/Sidebar';
@@ -22,6 +24,7 @@ const SECTIONS = {
 };
 
 const THEME_STORAGE_KEY = 'aedes-capella-theme';
+const SESSION_STORAGE_KEY = 'aedes-capella-session';
 
 function getInitialTheme() {
   if (typeof window === 'undefined') return 'light';
@@ -35,6 +38,13 @@ function getInitialTheme() {
 export default function App() {
   const [activeSection, setActiveSection] = useState('feed');
   const [theme, setTheme] = useState(getInitialTheme);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [session, setSession] = useState(() => {
+    if (typeof window === 'undefined') return null;
+
+    const stored = window.localStorage.getItem(SESSION_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  });
   const { detections, alertPulse } = useLiveDetections();
 
   // Derive topbar detection count from live feed
@@ -47,6 +57,25 @@ export default function App() {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (session) {
+      window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+      return;
+    }
+
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
+  }, [session]);
+
+  if (!session) {
+    return (
+      <LoginPage
+        theme={theme}
+        onToggleTheme={() => setTheme(currentTheme => currentTheme === 'dark' ? 'light' : 'dark')}
+        onLogin={setSession}
+      />
+    );
+  }
 
   return (
     <div style={{
@@ -67,13 +96,24 @@ export default function App() {
           metrics={{ detections: detectionCount }}
           theme={theme}
           onToggleTheme={() => setTheme(currentTheme => currentTheme === 'dark' ? 'light' : 'dark')}
+          onLogout={() => setShowLogoutModal(true)}
         />
 
         {/* Scrollable section content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '28px' }}>
-          <ActiveSection detections={detections} />
+          <ActiveSection detections={detections} theme={theme} />
         </div>
       </div>
+
+      {showLogoutModal && (
+        <LogoutConfirmModal
+          onCancel={() => setShowLogoutModal(false)}
+          onConfirm={() => {
+            setShowLogoutModal(false);
+            setSession(null);
+          }}
+        />
+      )}
     </div>
   );
 }

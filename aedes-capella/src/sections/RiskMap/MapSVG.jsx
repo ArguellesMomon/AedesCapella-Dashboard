@@ -2,9 +2,35 @@ import { C, RISK_COLORS } from '../../constants/colors';
 import { SITIO_LIST, NODES_DATA, SITIO_POLYGONS } from '../../constants/MockData';
 
 const getSitioData = (id) => SITIO_LIST.find(s => s.id === id);
+const MAP_THEME = {
+  light: {
+    bg: '#fbf7f0',
+    grid: '#e6dccd',
+    label: '#2c241c',
+    count: '#5f554b',
+    nodeStroke: '#fffaf2',
+    nodeLabel: '#ffffff',
+    nodeIdOffline: '#64748b',
+    textHalo: '#fffaf2',
+    nodeTextHalo: '#fbf7f0',
+  },
+  dark: {
+    bg: '#1b2432',
+    grid: '#314154',
+    label: '#fff4e5',
+    count: '#e5d3bf',
+    nodeStroke: '#f5e7d4',
+    nodeLabel: '#fffdf8',
+    nodeIdOffline: '#d8e2ef',
+    textHalo: '#0f1724',
+    nodeTextHalo: '#111827',
+  },
+};
 
 /** SVG zone map of Barangay Sabang with clickable sitio polygons and animated node markers. */
-export default function MapSVG({ selectedSitio, onSelectSitio }) {
+export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }) {
+  const palette = MAP_THEME[theme] ?? MAP_THEME.light;
+
   return (
     <div>
       {/* Zone label */}
@@ -21,12 +47,12 @@ export default function MapSVG({ selectedSitio, onSelectSitio }) {
       <svg viewBox="0 0 500 400" style={{ width: '100%', borderRadius: '8px' }}>
         <defs>
           <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke={`${C.border}cc`} strokeWidth="0.5" />
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke={palette.grid} strokeWidth="0.6" />
           </pattern>
         </defs>
 
         {/* Background */}
-        <rect width="500" height="400" fill={C.surface2} rx="8" />
+        <rect width="500" height="400" fill={palette.bg} rx="8" />
         <rect width="500" height="400" fill="url(#grid)" rx="8" />
 
         {/* Sitio polygons */}
@@ -43,7 +69,8 @@ export default function MapSVG({ selectedSitio, onSelectSitio }) {
             >
               <polygon
                 points={p.points}
-                fill={`${rc.fill}22`}
+                fill={rc.fill}
+                fillOpacity={theme === 'dark' ? (isSelected ? 0.22 : 0.12) : (isSelected ? 0.31 : 0.15)}
                 stroke={rc.border}
                 strokeWidth={isSelected ? 2.5 : 1.5}
                 style={{
@@ -54,7 +81,8 @@ export default function MapSVG({ selectedSitio, onSelectSitio }) {
               {/* Selected overlay */}
               <polygon
                 points={p.points}
-                fill={isSelected ? `${rc.fill}44` : 'transparent'}
+                fill={rc.fill}
+                fillOpacity={isSelected ? (theme === 'dark' ? 0.08 : 0.12) : 0}
                 stroke="none"
               />
               {/* Sitio name */}
@@ -62,9 +90,10 @@ export default function MapSVG({ selectedSitio, onSelectSitio }) {
                 x={p.label.x} y={p.label.y}
                 textAnchor="middle"
                 fontFamily="IBM Plex Mono, monospace"
-                fontSize="9"
-                fill={rc.text}
+                fontSize="10"
+                fill={palette.label}
                 fontWeight="600"
+                style={{ paintOrder: 'stroke', stroke: palette.textHalo, strokeWidth: 1.5 }}
               >
                 {sitio.name.replace('Sitio ', '')}
               </text>
@@ -74,7 +103,8 @@ export default function MapSVG({ selectedSitio, onSelectSitio }) {
                 textAnchor="middle"
                 fontFamily="IBM Plex Mono, monospace"
                 fontSize="8"
-                fill={`${rc.text}99`}
+                fill={palette.count}
+                style={{ paintOrder: 'stroke', stroke: palette.textHalo, strokeWidth: 1.2 }}
               >
                 {sitio.detections} det.
               </text>
@@ -105,7 +135,7 @@ export default function MapSVG({ selectedSitio, onSelectSitio }) {
               <circle
                 cx={cx} cy={cy} r="7"
                 fill={node.online ? C.amber : C.gray}
-                stroke={C.surface}
+                stroke={palette.nodeStroke}
                 strokeWidth="1.5"
               />
               {/* Node number label */}
@@ -114,7 +144,7 @@ export default function MapSVG({ selectedSitio, onSelectSitio }) {
                 textAnchor="middle"
                 fontFamily="IBM Plex Mono, monospace"
                 fontSize="6"
-                fill={C.bg}
+                fill={palette.nodeLabel}
                 fontWeight="bold"
               >
                 {node.id.replace('NODE-', '')}
@@ -125,7 +155,8 @@ export default function MapSVG({ selectedSitio, onSelectSitio }) {
                 textAnchor="middle"
                 fontFamily="IBM Plex Mono, monospace"
                 fontSize="7.5"
-                fill={node.online ? C.amber : C.gray}
+                fill={node.online ? C.amber : palette.nodeIdOffline}
+                style={{ paintOrder: 'stroke', stroke: palette.nodeTextHalo, strokeWidth: 1.2 }}
               >
                 {node.id}
               </text>

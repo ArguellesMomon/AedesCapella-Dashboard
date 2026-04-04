@@ -1,59 +1,59 @@
 export const SITIO_LIST = [
-  { id: 'puting-bato', name: 'Sitio Puting Bato', risk: 'Critical', detections: 47, node: 'NODE-01' },
-  { id: 'bulalo',      name: 'Sitio Bulalo',       risk: 'High',     detections: 28, node: 'NODE-02' },
-  { id: 'malamig',    name: 'Sitio Malamig',      risk: 'Medium',   detections: 14, node: 'NODE-03' },
-  { id: 'kanto',      name: 'Sitio Kanto',        risk: 'Low',      detections: 5,  node: null },
-  { id: 'silangan',   name: 'Sitio Silangan',     risk: 'None',     detections: 0,  node: null },
-  { id: 'habagatan',  name: 'Sitio Habagatan',    risk: 'High',     detections: 23, node: null },
+  { id: 'uno', name: 'Purok Uno', risk: 'Critical', detections: 47, node: 'NODE-01' },
+  { id: 'dos',      name: 'Purok Dos',       risk: 'High',     detections: 28, node: 'NODE-02' },
+  { id: 'tres',    name: 'Purok Tres',      risk: 'Medium',   detections: 14, node: 'NODE-03' },
+  { id: 'cuatro',      name: 'Purok Cuatro',        risk: 'Low',      detections: 5,  node: null },
+  { id: 'cinco',   name: 'Purok Cinco',     risk: 'None',     detections: 0,  node: null },
+  { id: 'seis',  name: 'Purok Seis',    risk: 'High',     detections: 23, node: null },
 ];
 
 export const NODES_DATA = [
   {
-    id: 'NODE-01', sitio: 'Sitio Puting Bato', online: true,
+    id: 'NODE-01', sitio: 'Purok Uno', online: true,
     battery: 87, wifi: -62, detections: 47, fogEvents: 8,
     mistStatus: 'Armed · Fluid OK', uptime: '6d 14h 22m', batteryLow: false,
   },
   {
-    id: 'NODE-02', sitio: 'Sitio Bulalo', online: true,
+    id: 'NODE-02', sitio: 'Purok Dos', online: true,
     battery: 34, wifi: -78, detections: 28, fogEvents: 5,
     mistStatus: 'Armed · Battery Critical', uptime: '3d 8h 11m', batteryLow: true,
   },
   {
-    id: 'NODE-03', sitio: 'Sitio Malamig', online: false,
+    id: 'NODE-03', sitio: 'Purok Tres', online: false,
     battery: 12, wifi: null, detections: 14, fogEvents: 2,
     mistStatus: 'Offline', uptime: '—', batteryLow: false,
   },
 ];
 
 export const BASE_DETECTIONS = [
-  { id: 1,  minsAgo: 0.5,  nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', freq: 487, confidence: 94, autoResponse: 'fogged' },
-  { id: 2,  minsAgo: 2.1,  nodeId: 'NODE-02', sitio: 'Sitio Bulalo',       freq: 512, confidence: 88, autoResponse: 'cooldown' },
-  { id: 3,  minsAgo: 4.7,  nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', freq: 471, confidence: 97, autoResponse: 'fogged' },
-  { id: 4,  minsAgo: 7.2,  nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', freq: 501, confidence: 83, autoResponse: 'fogged' },
-  { id: 5,  minsAgo: 9.8,  nodeId: 'NODE-02', sitio: 'Sitio Bulalo',       freq: 468, confidence: 91, autoResponse: 'fogged' },
-  { id: 6,  minsAgo: 12.4, nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', freq: 543, confidence: 85, autoResponse: 'fogged' },
-  { id: 7,  minsAgo: 15.0, nodeId: 'NODE-02', sitio: 'Sitio Bulalo',       freq: 495, confidence: 92, autoResponse: 'fogged' },
-  { id: 8,  minsAgo: 18.3, nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', freq: 477, confidence: 89, autoResponse: 'fogged' },
-  { id: 9,  minsAgo: 22.1, nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', freq: 521, confidence: 96, autoResponse: 'fogged' },
-  { id: 10, minsAgo: 28.6, nodeId: 'NODE-02', sitio: 'Sitio Bulalo',       freq: 458, confidence: 80, autoResponse: 'fogged' },
-  { id: 11, minsAgo: 33.2, nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', freq: 509, confidence: 93, autoResponse: 'fogged' },
-  { id: 12, minsAgo: 41.7, nodeId: 'NODE-02', sitio: 'Sitio Bulalo',       freq: 482, confidence: 87, autoResponse: 'fogged' },
+  { id: 1,  minsAgo: 0.5,  nodeId: 'NODE-01', sitio: 'Purok Uno', freq: 487, confidence: 94, autoResponse: 'fogged' },
+  { id: 2,  minsAgo: 2.1,  nodeId: 'NODE-02', sitio: 'Purok Dos',       freq: 512, confidence: 88, autoResponse: 'cooldown' },
+  { id: 3,  minsAgo: 4.7,  nodeId: 'NODE-01', sitio: 'Purok Uno', freq: 471, confidence: 97, autoResponse: 'fogged' },
+  { id: 4,  minsAgo: 7.2,  nodeId: 'NODE-01', sitio: 'Purok Uno', freq: 501, confidence: 83, autoResponse: 'fogged' },
+  { id: 5,  minsAgo: 9.8,  nodeId: 'NODE-02', sitio: 'Purok Dos',       freq: 468, confidence: 91, autoResponse: 'fogged' },
+  { id: 6,  minsAgo: 12.4, nodeId: 'NODE-01', sitio: 'Purok Uno', freq: 543, confidence: 85, autoResponse: 'fogged' },
+  { id: 7,  minsAgo: 15.0, nodeId: 'NODE-02', sitio: 'Purok Dos',       freq: 495, confidence: 92, autoResponse: 'fogged' },
+  { id: 8,  minsAgo: 18.3, nodeId: 'NODE-01', sitio: 'Purok Uno', freq: 477, confidence: 89, autoResponse: 'fogged' },
+  { id: 9,  minsAgo: 22.1, nodeId: 'NODE-01', sitio: 'Purok Uno', freq: 521, confidence: 96, autoResponse: 'fogged' },
+  { id: 10, minsAgo: 28.6, nodeId: 'NODE-02', sitio: 'Purok Dos',       freq: 458, confidence: 80, autoResponse: 'fogged' },
+  { id: 11, minsAgo: 33.2, nodeId: 'NODE-01', sitio: 'Purok Uno', freq: 509, confidence: 93, autoResponse: 'fogged' },
+  { id: 12, minsAgo: 41.7, nodeId: 'NODE-02', sitio: 'Purok Dos',       freq: 482, confidence: 87, autoResponse: 'fogged' },
 ];
 
 export const FOG_LOG = [
-  { id: 1,  ts: '08:47:23', nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', confidence: 94, status: 'Completed' },
-  { id: 2,  ts: '08:31:05', nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', confidence: 97, status: 'Completed' },
-  { id: 3,  ts: '08:12:44', nodeId: 'NODE-02', sitio: 'Sitio Bulalo',       confidence: 91, status: 'Completed' },
-  { id: 4,  ts: '07:58:17', nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', confidence: 83, status: 'Completed' },
-  { id: 5,  ts: '07:43:02', nodeId: 'NODE-02', sitio: 'Sitio Bulalo',       confidence: 88, status: 'Completed' },
-  { id: 6,  ts: '07:29:38', nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', confidence: 85, status: 'Completed' },
-  { id: 7,  ts: '07:14:21', nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', confidence: 92, status: 'Completed' },
-  { id: 8,  ts: '06:55:44', nodeId: 'NODE-02', sitio: 'Sitio Bulalo',       confidence: 96, status: 'Completed' },
-  { id: 9,  ts: '06:38:09', nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', confidence: 89, status: 'Completed' },
-  { id: 10, ts: '06:21:55', nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', confidence: 93, status: 'Completed' },
-  { id: 11, ts: '05:47:30', nodeId: 'NODE-02', sitio: 'Sitio Bulalo',       confidence: 80, status: 'Completed' },
-  { id: 12, ts: '05:12:18', nodeId: 'NODE-01', sitio: 'Sitio Puting Bato', confidence: 87, status: 'Completed' },
-  { id: 13, ts: '04:38:44', nodeId: 'NODE-02', sitio: 'Sitio Bulalo',       confidence: 95, status: 'Completed' },
+  { id: 1,  ts: '08:47:23', nodeId: 'NODE-01', sitio: 'Purok Uno', confidence: 94, status: 'Completed' },
+  { id: 2,  ts: '08:31:05', nodeId: 'NODE-01', sitio: 'Purok Uno', confidence: 97, status: 'Completed' },
+  { id: 3,  ts: '08:12:44', nodeId: 'NODE-02', sitio: 'Purok Dos',       confidence: 91, status: 'Completed' },
+  { id: 4,  ts: '07:58:17', nodeId: 'NODE-01', sitio: 'Purok Uno', confidence: 83, status: 'Completed' },
+  { id: 5,  ts: '07:43:02', nodeId: 'NODE-02', sitio: 'Purok Dos',       confidence: 88, status: 'Completed' },
+  { id: 6,  ts: '07:29:38', nodeId: 'NODE-01', sitio: 'Purok Uno', confidence: 85, status: 'Completed' },
+  { id: 7,  ts: '07:14:21', nodeId: 'NODE-01', sitio: 'Purok Uno', confidence: 92, status: 'Completed' },
+  { id: 8,  ts: '06:55:44', nodeId: 'NODE-02', sitio: 'Purok Dos',       confidence: 96, status: 'Completed' },
+  { id: 9,  ts: '06:38:09', nodeId: 'NODE-01', sitio: 'Purok Uno', confidence: 89, status: 'Completed' },
+  { id: 10, ts: '06:21:55', nodeId: 'NODE-01', sitio: 'Purok Uno', confidence: 93, status: 'Completed' },
+  { id: 11, ts: '05:47:30', nodeId: 'NODE-02', sitio: 'Purok Dos',       confidence: 80, status: 'Completed' },
+  { id: 12, ts: '05:12:18', nodeId: 'NODE-01', sitio: 'Purok Uno', confidence: 87, status: 'Completed' },
+  { id: 13, ts: '04:38:44', nodeId: 'NODE-02', sitio: 'Purok Dos',       confidence: 95, status: 'Completed' },
 ];
 
 export const HOURLY_FOG = [
@@ -96,10 +96,10 @@ export const CONFIDENCE_DIST = [
 
 // Sitio polygon definitions for the SVG map
 export const SITIO_POLYGONS = [
-  { id: 'silangan',    points: '20,20 180,20 180,140 100,155 20,110',                  label: { x: 75,  y: 75  } },
-  { id: 'kanto',       points: '180,20 360,20 340,140 200,150 180,140',                label: { x: 260, y: 75  } },
-  { id: 'puting-bato', points: '360,20 480,20 480,180 400,200 340,140',                label: { x: 415, y: 95  } },
-  { id: 'habagatan',   points: '20,110 100,155 90,290 20,300',                         label: { x: 52,  y: 205 } },
-  { id: 'bulalo',      points: '100,155 200,150 340,140 400,200 310,330 90,290',       label: { x: 225, y: 240 } },
-  { id: 'malamig',     points: '310,330 400,200 480,180 480,380 20,380 20,300 90,290', label: { x: 280, y: 360 } },
+  { id: 'cinco',    points: '20,20 180,20 180,140 100,155 20,110',                  label: { x: 75,  y: 75  } },
+  { id: 'cuatro',       points: '180,20 360,20 340,140 200,150 180,140',                label: { x: 260, y: 75  } },
+  { id: 'uno', points: '360,20 480,20 480,180 400,200 340,140',                label: { x: 415, y: 95  } },
+  { id: 'seis',   points: '20,110 100,155 90,290 20,300',                         label: { x: 52,  y: 205 } },
+  { id: 'dos',      points: '100,155 200,150 340,140 400,200 310,330 90,290',       label: { x: 225, y: 240 } },
+  { id: 'tres',     points: '310,330 400,200 480,180 480,380 20,380 20,300 90,290', label: { x: 280, y: 360 } },
 ];

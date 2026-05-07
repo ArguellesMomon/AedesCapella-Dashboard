@@ -1,11 +1,12 @@
 import { C } from '../../constants/colors';
 import Card from '../../components/ui/Card';
+import Tag from '../../components/ui/Tag';
 
 const SUMMARY = [
-  { label: 'Total Auto-Fogs Today', value: '13',                      color: C.amber },
-  { label: 'Fluid Remaining',        value: '68%',                     color: C.green },
-  { label: 'Avg. Trigger Confidence',value: '90.2%',                   color: C.blue  },
-  { label: 'Last Fog Event',         value: 'NODE-01 · Puting Bato',   color: C.text  },
+  { label: 'Auto-Fogs Today', value: '13', status: 'Active', color: 'amber' },
+  { label: 'Fluid Remaining', value: '68%', status: 'Enough', color: 'green' },
+  { label: 'Avg. Trigger Confidence', value: '90.2%', status: 'High', color: 'amber' },
+  { label: 'Last Fog Event', value: 'NODE-01 - Purok Uno', status: 'Review', color: 'blue' },
 ];
 
 /** Four summary metric cards shown at the top of the Fogging Log section. */
@@ -17,8 +18,11 @@ export default function FogSummaryCards() {
       gap:                 '14px',
       marginBottom:        '24px',
     }}>
-      {SUMMARY.map(({ label, value, color }) => (
+      {SUMMARY.map(({ label, value, status, color }) => (
         <Card key={label} style={{ background: C.surface2, padding: '16px' }}>
+          <div style={{ marginBottom: '10px' }}>
+            <Tag color={color}>{status}</Tag>
+          </div>
           <div style={{
             fontFamily:    'IBM Plex Mono, monospace',
             fontSize:      '10px',
@@ -31,7 +35,7 @@ export default function FogSummaryCards() {
           <div style={{
             fontFamily: 'IBM Plex Mono, monospace',
             fontSize:   '16px',
-            color,
+            color:      C.text,
             fontWeight: 600,
           }}>
             {value}

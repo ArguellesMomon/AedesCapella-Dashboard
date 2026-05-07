@@ -1,3 +1,4 @@
+import { createElement } from 'react';
 import { C } from '../../constants/colors';
 
 /**
@@ -17,7 +18,7 @@ export default function SectionHeader({ icon: Icon, title, subtitle }) {
           alignItems:     'center',
           justifyContent: 'center',
         }}>
-          <Icon size={18} color={C.amber} />
+          {createElement(Icon, { size: 18, color: C.amber })}
         </div>
         <h2 style={{
           fontFamily: 'Syne, sans-serif',

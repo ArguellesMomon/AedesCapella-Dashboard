@@ -2,6 +2,13 @@ import { C, RISK_COLORS } from '../../constants/colors';
 import { SITIO_LIST, NODES_DATA, SITIO_POLYGONS } from '../../constants/MockData';
 
 const getSitioData = (id) => SITIO_LIST.find(s => s.id === id);
+const RISK_HELP = {
+  Critical: 'Inspect now',
+  High: 'Review today',
+  Medium: 'Monitor',
+  Low: 'Check later',
+  None: 'No action',
+};
 const MAP_THEME = {
   light: {
     bg: '#fbf7f0',
@@ -33,15 +40,77 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
 
   return (
     <div>
-      {/* Zone label */}
       <div style={{
-        fontFamily:    'Syne, sans-serif',
-        fontSize:      '12px',
-        color:         C.textDim,
-        marginBottom:  '12px',
-        letterSpacing: '0.08em',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        gap: '14px',
+        marginBottom: '12px',
+        flexWrap: 'wrap',
       }}>
-        BARANGAY SABANG · ZONE MAP
+        <div>
+          <div style={{
+            fontFamily:    'Syne, sans-serif',
+            fontSize:      '12px',
+            color:         C.textDim,
+            letterSpacing: '0.08em',
+          }}>
+            BARANGAY SABANG - ZONE MAP
+          </div>
+          <div style={{
+            marginTop: '4px',
+            fontFamily: 'IBM Plex Mono, monospace',
+            fontSize: '10px',
+            color: C.textDim,
+          }}>
+            Color shows response priority. Click a sitio to inspect details.
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {Object.entries(RISK_COLORS).map(([level, c]) => (
+            <div
+              key={level}
+              title={`${level}: ${RISK_HELP[level]}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                border: `1px solid ${c.border}`,
+                background: c.bg,
+                borderRadius: '6px',
+                padding: '4px 7px',
+              }}
+            >
+              <div style={{ width: '9px', height: '9px', borderRadius: '2px', background: c.fill }} />
+              <span style={{
+                fontFamily: 'IBM Plex Mono, monospace',
+                fontSize: '10px',
+                color: c.text,
+                fontWeight: 700,
+              }}>
+                {level}
+              </span>
+            </div>
+          ))}
+          <div
+            title="Node: deployed sensor device"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              border: `1px solid ${C.border}`,
+              background: C.surface2,
+              borderRadius: '6px',
+              padding: '4px 7px',
+            }}
+          >
+            <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: C.blue }} />
+            <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px', color: C.textDim }}>
+              Node
+            </span>
+          </div>
+        </div>
       </div>
 
       <svg viewBox="0 0 500 400" style={{ width: '100%', borderRadius: '8px' }}>
@@ -51,14 +120,12 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
           </pattern>
         </defs>
 
-        {/* Background */}
         <rect width="500" height="400" fill={palette.bg} rx="8" />
         <rect width="500" height="400" fill="url(#grid)" rx="8" />
 
-        {/* Sitio polygons */}
         {SITIO_POLYGONS.map(p => {
-          const sitio    = getSitioData(p.id);
-          const rc       = RISK_COLORS[sitio.risk];
+          const sitio = getSitioData(p.id);
+          const rc = RISK_COLORS[sitio.risk];
           const isSelected = selectedSitio === p.id;
 
           return (
@@ -78,14 +145,12 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
                   filter: isSelected ? `drop-shadow(0 0 8px ${rc.fill})` : 'none',
                 }}
               />
-              {/* Selected overlay */}
               <polygon
                 points={p.points}
                 fill={rc.fill}
                 fillOpacity={isSelected ? (theme === 'dark' ? 0.08 : 0.12) : 0}
                 stroke="none"
               />
-              {/* Sitio name */}
               <text
                 x={p.label.x} y={p.label.y}
                 textAnchor="middle"
@@ -95,9 +160,8 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
                 fontWeight="600"
                 style={{ paintOrder: 'stroke', stroke: palette.textHalo, strokeWidth: 1.5 }}
               >
-                {sitio.name.replace('Sitio ', '')}
+                {sitio.name}
               </text>
-              {/* Detection count */}
               <text
                 x={p.label.x} y={p.label.y + 13}
                 textAnchor="middle"
@@ -112,33 +176,28 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
           );
         })}
 
-        {/* Node markers */}
         {NODES_DATA.map(node => {
           const polygon = SITIO_POLYGONS.find(p => getSitioData(p.id)?.node === node.id);
           if (!polygon) return null;
 
-          // Compute approximate centroid from polygon points
           const coords = polygon.points.split(' ').map(pt => pt.split(',').map(Number));
-          const cx = coords.reduce((s, c) => s + c[0], 0) / coords.length;
-          const cy = coords.reduce((s, c) => s + c[1], 0) / coords.length;
+          const cx = coords.reduce((sum, coord) => sum + coord[0], 0) / coords.length;
+          const cy = coords.reduce((sum, coord) => sum + coord[1], 0) / coords.length;
 
           return (
             <g key={node.id}>
-              {/* Pulse ring (online only) */}
               {node.online && (
-                <circle cx={cx} cy={cy} r="12" fill="none" stroke={C.amber} strokeWidth="1" opacity="0.4">
-                  <animate attributeName="r"       values="8;18;8"     dur="2s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.4;0;0.4"  dur="2s" repeatCount="indefinite" />
+                <circle cx={cx} cy={cy} r="12" fill="none" stroke={C.blue} strokeWidth="1" opacity="0.4">
+                  <animate attributeName="r" values="8;18;8" dur="2s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite" />
                 </circle>
               )}
-              {/* Node dot */}
               <circle
                 cx={cx} cy={cy} r="7"
-                fill={node.online ? C.amber : C.gray}
+                fill={node.online ? C.blue : C.gray}
                 stroke={palette.nodeStroke}
                 strokeWidth="1.5"
               />
-              {/* Node number label */}
               <text
                 x={cx} y={cy + 4}
                 textAnchor="middle"
@@ -149,13 +208,12 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
               >
                 {node.id.replace('NODE-', '')}
               </text>
-              {/* Node ID below dot */}
               <text
                 x={cx} y={cy + 19}
                 textAnchor="middle"
                 fontFamily="IBM Plex Mono, monospace"
                 fontSize="7.5"
-                fill={node.online ? C.amber : palette.nodeIdOffline}
+                fill={node.online ? C.blue : palette.nodeIdOffline}
                 style={{ paintOrder: 'stroke', stroke: palette.nodeTextHalo, strokeWidth: 1.2 }}
               >
                 {node.id}
@@ -164,20 +222,6 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
           );
         })}
       </svg>
-
-      {/* Legend */}
-      <div style={{ display: 'flex', gap: '12px', marginTop: '14px', flexWrap: 'wrap' }}>
-        {Object.entries(RISK_COLORS).map(([level, c]) => (
-          <div key={level} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: c.fill, opacity: 0.8 }} />
-            <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px', color: C.textDim }}>{level}</span>
-          </div>
-        ))}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginLeft: '8px' }}>
-          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: C.amber }} />
-          <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px', color: C.textDim }}>Node</span>
-        </div>
-      </div>
     </div>
   );
 }

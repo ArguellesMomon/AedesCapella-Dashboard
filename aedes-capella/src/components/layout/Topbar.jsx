@@ -1,12 +1,14 @@
+import { createElement } from 'react';
 import { Activity, Droplets, Server, Eye, AlertTriangle, LogOut, Moon, Sun } from 'lucide-react';
 import { C } from '../../constants/colors';
 import { usePHTime } from '../../hooks/usePHTime';
+import Tag from '../ui/Tag';
 
 const METRICS = [
-  { key: 'detections', label: 'Detections Today', icon: Activity,   color: C.amber },
-  { key: 'fogs',       label: 'Fog Events Today',  icon: Droplets,   color: C.blue  },
-  { key: 'nodes',      label: 'Active Nodes',       icon: Server,     color: C.green },
-  { key: 'confidence', label: 'Avg. Confidence',    icon: Eye,        color: C.text  },
+  { key: 'detections', label: 'Detections Today', icon: Activity, color: C.text, status: 'High', statusColor: 'amber' },
+  { key: 'fogs', label: 'Fog Events Today', icon: Droplets, color: C.text, status: 'Active', statusColor: 'amber' },
+  { key: 'nodes', label: 'Active Nodes', icon: Server, color: C.text, status: '2 online', statusColor: 'green' },
+  { key: 'confidence', label: 'Avg. Confidence', icon: Eye, color: C.text, status: 'High', statusColor: 'amber' },
 ];
 
 /**
@@ -36,9 +38,7 @@ export default function Topbar({ metrics, theme, onToggleTheme, onLogout }) {
       flexShrink:    0,
       overflowX:     'auto',
     }}>
-
-      {/* Metric cells */}
-      {METRICS.map(({ key, label, icon: Icon, color }) => (
+      {METRICS.map(({ key, label, icon: Icon, color, status, statusColor }) => (
         <div key={key} style={{
           display:      'flex',
           alignItems:   'center',
@@ -47,7 +47,7 @@ export default function Topbar({ metrics, theme, onToggleTheme, onLogout }) {
           borderRight:  `1px solid ${C.border}`,
           flexShrink:   0,
         }}>
-          <Icon size={13} color={color} />
+          {createElement(Icon, { size: 13, color })}
           <div>
             <div style={{
               fontFamily:    'IBM Plex Mono, monospace',
@@ -57,19 +57,21 @@ export default function Topbar({ metrics, theme, onToggleTheme, onLogout }) {
             }}>
               {label}
             </div>
-            <div style={{
-              fontFamily: 'IBM Plex Mono, monospace',
-              fontSize:   '15px',
-              fontWeight: 700,
-              color,
-            }}>
-              {values[key]}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                fontFamily: 'IBM Plex Mono, monospace',
+                fontSize:   '15px',
+                fontWeight: 700,
+                color,
+              }}>
+                {values[key]}
+              </span>
+              <Tag color={statusColor}>{status}</Tag>
             </div>
           </div>
         </div>
       ))}
 
-      {/* Sabang risk alert */}
       <div style={{
         display:      'flex',
         alignItems:   'center',
@@ -85,21 +87,9 @@ export default function Topbar({ metrics, theme, onToggleTheme, onLogout }) {
             fontSize:   '9px',
             color:      C.textDim,
           }}>
-            Sabang Alert
+            Barangay Alert
           </div>
-          <div style={{
-            background:    `${C.red}22`,
-            border:        `1px solid ${C.red}55`,
-            color:         C.red,
-            borderRadius:  '4px',
-            padding:       '1px 8px',
-            fontFamily:    'IBM Plex Mono, monospace',
-            fontSize:      '10px',
-            fontWeight:    700,
-            letterSpacing: '0.08em',
-          }}>
-            ⬤ CRITICAL
-          </div>
+          <Tag color="red">Critical - inspect now</Tag>
         </div>
       </div>
 
@@ -121,7 +111,7 @@ export default function Topbar({ metrics, theme, onToggleTheme, onLogout }) {
           aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         >
-          <ThemeIcon size={14} color={C.amber} />
+          <ThemeIcon size={14} color={C.text} />
           <span style={{
             fontFamily:    'IBM Plex Mono, monospace',
             fontSize:      '10px',
@@ -165,7 +155,6 @@ export default function Topbar({ metrics, theme, onToggleTheme, onLogout }) {
         )}
       </div>
 
-      {/* Live PHT clock */}
       <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>
         <div style={{
           fontFamily:    'IBM Plex Mono, monospace',

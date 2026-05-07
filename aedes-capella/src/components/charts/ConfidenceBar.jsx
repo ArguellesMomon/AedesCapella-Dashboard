@@ -1,18 +1,18 @@
 import { C } from '../../constants/colors';
+import { getConfidenceDecision } from '../../utils/decisionLabels';
 import Mono from '../ui/Mono';
+import Tag from '../ui/Tag';
 
-/**
- * Inline confidence score progress bar with percentage label.
- * Color shifts from green → amber → red as confidence increases.
- */
-export default function ConfidenceBar({ confidence, width = '140px' }) {
-  const barColor =
-    confidence >= 95 ? C.red :
-    confidence >= 88 ? C.amber :
-    C.green;
+/** Inline confidence score progress bar with a decision label. */
+export default function ConfidenceBar({ confidence, width = '160px', showLabel = true }) {
+  const decision = getConfidenceDecision(confidence);
+  const barColor = C[decision.color] ?? C.textDim;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: width }}>
+    <div
+      title={decision.meaning}
+      style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: width }}
+    >
       <div style={{
         flex:         1,
         height:       '6px',
@@ -29,6 +29,7 @@ export default function ConfidenceBar({ confidence, width = '140px' }) {
         }} />
       </div>
       <Mono size="11px" color={barColor}>{confidence}%</Mono>
+      {showLabel && <Tag color={decision.color}>{decision.label}</Tag>}
     </div>
   );
 }

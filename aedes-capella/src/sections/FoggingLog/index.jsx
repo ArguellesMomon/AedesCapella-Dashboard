@@ -5,18 +5,18 @@ import FogSummaryCards from './FogSummaryCards';
 import HourlyFogChart from './HourlyFogChart';
 import FogTable from './FogTable';
 
-/** Section 3 — Fogging Log */
+/** Section 3 - Fogging Log */
 export default function FoggingLog() {
   return (
     <div>
       <SectionHeader
         icon={Droplets}
         title="Fogging Log"
-        subtitle="Complete auto-fog event history — Sabang deployment"
+        subtitle="Automatic fogging history and trigger reasons - Sabang deployment"
       />
       <Banner
         icon={Zap}
-        text="All fog events are fully automatic — triggered on-device by the ESP32-S3 via 5V relay at ≥80% confidence. No manual activation is possible."
+        text="Auto-fogging starts only when confidence is at least 80%, the node is armed, and cooldown is clear. Each burst lasts 8 seconds."
         color="amber"
       />
       <FogSummaryCards />

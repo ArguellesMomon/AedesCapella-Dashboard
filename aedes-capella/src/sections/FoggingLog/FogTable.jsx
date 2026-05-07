@@ -1,13 +1,27 @@
+import { Search } from 'lucide-react';
 import { C } from '../../constants/colors';
 import { FOG_LOG } from '../../constants/MockData';
+import { getAutoResponseReason } from '../../utils/decisionLabels';
 import Mono from '../../components/ui/Mono';
 import Tag from '../../components/ui/Tag';
 import Card from '../../components/ui/Card';
+import EmptyState from '../../components/ui/EmptyState';
+import ConfidenceBar from '../../components/charts/ConfidenceBar';
 
-const HEADERS = ['TIMESTAMP', 'NODE · SITIO', 'TRIGGER CONFIDENCE', 'STATUS', 'TRIGGER'];
+const HEADERS = ['TIMESTAMP', 'NODE / SITIO', 'TRIGGER CONFIDENCE', 'STATUS', 'WHY IT TRIGGERED', 'NEXT STEP'];
 
 /** Full timestamped log table of every automatic fog event. */
-export default function FogTable() {
+export default function FogTable({ fogs = FOG_LOG }) {
+  if (!fogs.length) {
+    return (
+      <EmptyState
+        title="No fogging events logged"
+        message="Automatic fog events will appear after a detection meets the trigger rule."
+        action="Suggested action: review live feed confidence and node cooldown status."
+      />
+    );
+  }
+
   return (
     <Card style={{ padding: '0', overflow: 'hidden' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -23,6 +37,7 @@ export default function FogTable() {
                 fontWeight:    600,
                 letterSpacing: '0.08em',
                 borderBottom:  `1px solid ${C.border}`,
+                whiteSpace:    'nowrap',
               }}>
                 {h}
               </th>
@@ -30,7 +45,7 @@ export default function FogTable() {
           </tr>
         </thead>
         <tbody>
-          {FOG_LOG.map((f, i) => (
+          {fogs.map((f, i) => (
             <tr
               key={f.id}
               style={{
@@ -42,33 +57,41 @@ export default function FogTable() {
                 <Mono size="12px" color={C.textDim}>{f.ts}</Mono>
               </td>
               <td style={{ padding: '11px 16px' }}>
-                <div><Mono size="12px" color={C.amber}>{f.nodeId}</Mono></div>
+                <div><Mono size="12px" color={C.text}>{f.nodeId}</Mono></div>
                 <Mono size="10px" color={C.textDim}>{f.sitio}</Mono>
               </td>
               <td style={{ padding: '11px 16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{
-                    width:        '80px',
-                    height:       '5px',
-                    background:   C.border,
-                    borderRadius: '3px',
-                    overflow:     'hidden',
-                  }}>
-                    <div style={{
-                      width:        `${f.confidence}%`,
-                      height:       '100%',
-                      background:   f.confidence >= 95 ? C.red : C.amber,
-                      borderRadius: '3px',
-                    }} />
-                  </div>
-                  <Mono size="11px" color={C.amber}>{f.confidence}%</Mono>
-                </div>
+                <ConfidenceBar confidence={f.confidence} width="190px" />
               </td>
               <td style={{ padding: '11px 16px' }}>
                 <Tag color="green">Completed</Tag>
               </td>
+              <td style={{ padding: '11px 16px', maxWidth: '260px' }}>
+                <Mono size="11px" color={C.textDim}>
+                  {getAutoResponseReason('fogged', f.confidence)}
+                </Mono>
+              </td>
               <td style={{ padding: '11px 16px' }}>
-                <Mono size="11px" color={C.textDim}>Auto · 8s burst</Mono>
+                <button
+                  title="Review this fogging event"
+                  style={{
+                    border: `1px solid ${C.border}`,
+                    background: C.surface2,
+                    color: C.text,
+                    borderRadius: '6px',
+                    padding: '6px 8px',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontFamily: 'IBM Plex Mono, monospace',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                  }}
+                >
+                  <Search size={12} />
+                  Review
+                </button>
               </td>
             </tr>
           ))}

@@ -3,12 +3,12 @@ import { C } from '../../constants/colors';
 import Card from '../../components/ui/Card';
 
 const METADATA = [
-  ['Model',              '1D-CNN on ESP32-S3'],
-  ['Wingbeat Target',    '400–600 Hz'],
-  ['Auto-Fog Threshold', '≥ 80% confidence'],
-  ['Fog Burst Duration', '8 seconds'],
-  ['Cooldown Period',    '5 minutes'],
-  ['Processing Mode',    'Edge — fully offline'],
+  ['Detection Model', 'On-device classifier', 'Runs locally on the sensor node.'],
+  ['Wingbeat Range', '400-600 Hz', 'Expected sound frequency for target mosquito wingbeats.'],
+  ['Auto-Fog Rule', '80%+ confidence', 'Fogging can trigger only after this threshold is met.'],
+  ['Fog Burst', '8 seconds', 'Duration of one automatic fogging action.'],
+  ['Cooldown', '5 minutes', 'Prevents repeated fogging from the same node.'],
+  ['Processing', 'Offline edge mode', 'Detection works without cloud connectivity.'],
 ];
 
 /** Displays static system configuration metadata below the detection feed. */
@@ -16,7 +16,7 @@ export default function SystemMetadata() {
   return (
     <Card style={{ background: C.surface2 }}>
       <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Cpu size={14} color={C.amber} />
+        <Cpu size={14} color={C.textDim} />
         <span style={{
           fontFamily:    'Syne, sans-serif',
           fontSize:      '13px',
@@ -25,7 +25,7 @@ export default function SystemMetadata() {
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
         }}>
-          System Metadata
+          System Guide
         </span>
       </div>
       <div style={{
@@ -33,13 +33,18 @@ export default function SystemMetadata() {
         gridTemplateColumns: 'repeat(3, 1fr)',
         gap:                 '12px',
       }}>
-        {METADATA.map(([key, value]) => (
-          <div key={key} style={{
-            padding:      '10px',
-            background:   C.surface,
-            borderRadius: '8px',
-            border:       `1px solid ${C.border}`,
-          }}>
+        {METADATA.map(([key, value, help]) => (
+          <div
+            key={key}
+            title={help}
+            style={{
+              padding:      '10px',
+              background:   C.surface,
+              borderRadius: '8px',
+              border:       `1px solid ${C.border}`,
+              cursor:       'help',
+            }}
+          >
             <div style={{
               fontFamily:    'IBM Plex Mono, monospace',
               fontSize:      '10px',

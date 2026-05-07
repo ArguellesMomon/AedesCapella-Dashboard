@@ -1,3 +1,4 @@
+import { createElement } from 'react';
 import { Activity, MapPin, Droplets, Server, TrendingUp, Bug } from 'lucide-react';
 import { C } from '../../constants/colors';
 import { NODES_DATA } from '../../constants/MockData';
@@ -96,7 +97,7 @@ export default function Sidebar({ activeSection, onNavigate, alertPulse }) {
                 transition:   'all 0.15s',
               }}
             >
-              <Icon size={15} />
+              {createElement(Icon, { size: 15 })}
               <span style={{
                 fontFamily: 'Syne, sans-serif',
                 fontSize:   '12px',

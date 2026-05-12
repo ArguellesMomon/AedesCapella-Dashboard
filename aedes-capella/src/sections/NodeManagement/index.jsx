@@ -3,6 +3,7 @@ import { NODES_DATA } from '../../constants/MockData';
 import SectionHeader from '../../components/ui/SectionHeader';
 import Banner from '../../components/ui/Banner';
 import EmptyState from '../../components/ui/EmptyState';
+import DeviceStateGuide from './DeviceStateGuide';
 import NodeCard from './NodeCard';
 
 /** Section 4 - Node Management */
@@ -19,6 +20,7 @@ export default function NodeManagement() {
         text="Each node detects mosquito wingbeats locally and controls its fogger without waiting for the cloud."
         color="blue"
       />
+      <DeviceStateGuide />
 
       {NODES_DATA.length ? (
         <div style={{

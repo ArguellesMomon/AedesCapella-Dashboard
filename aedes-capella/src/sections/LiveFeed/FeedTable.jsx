@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 import { Search, ClipboardCheck } from 'lucide-react';
 import { C, RISK_COLORS } from '../../constants/colors';
 import { SITIO_LIST } from '../../constants/MockData';
-import { getRiskAction } from '../../utils/decisionLabels';
+import { getRecommendedAction, getRiskAction } from '../../utils/decisionLabels';
 import Mono from '../../components/ui/Mono';
 import EmptyState from '../../components/ui/EmptyState';
 import ConfidenceBar from '../../components/charts/ConfidenceBar';
@@ -73,6 +73,7 @@ export default function FeedTable({ detections }) {
             const isHighRisk = HIGH_RISK_LEVELS.includes(risk);
             const riskColor = risk ? RISK_COLORS[risk] : null;
             const action = getRiskAction(risk);
+            const recommendation = getRecommendedAction(d);
 
             return (
               <tr
@@ -129,7 +130,7 @@ export default function FeedTable({ detections }) {
                 </td>
                 <td style={{ padding: '10px 14px' }}>
                   <button
-                    title={`Recommended next step: ${action}`}
+                    title={`${recommendation.reason} ${recommendation.why}`}
                     style={{
                       border: `1px solid ${isHighRisk ? riskColor.border : C.border}`,
                       background: C.surface,
@@ -146,7 +147,7 @@ export default function FeedTable({ detections }) {
                     }}
                   >
                     {isHighRisk ? <Search size={12} /> : <ClipboardCheck size={12} />}
-                    {action}
+                    {recommendation.action || action}
                   </button>
                 </td>
               </tr>

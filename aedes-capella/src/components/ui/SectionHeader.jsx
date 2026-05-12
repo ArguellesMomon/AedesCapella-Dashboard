@@ -22,7 +22,7 @@ export default function SectionHeader({ icon: Icon, title, subtitle }) {
         </div>
         <h2 style={{
           fontFamily: 'Syne, sans-serif',
-          fontSize:   '20px',
+          fontSize:   '24px',
           fontWeight: 700,
           color:      C.text,
           margin:     0,
@@ -33,7 +33,7 @@ export default function SectionHeader({ icon: Icon, title, subtitle }) {
       {subtitle && (
         <p style={{
           fontFamily: 'IBM Plex Mono, monospace',
-          fontSize:   '11px',
+          fontSize:   '13px',
           color:      C.textDim,
           marginLeft: '48px',
         }}>

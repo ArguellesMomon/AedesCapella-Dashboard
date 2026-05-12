@@ -40,7 +40,7 @@ export default function NodeCard({ node }) {
           </div>
           <div style={{
             fontFamily: 'IBM Plex Mono, monospace',
-            fontSize:   '11px',
+            fontSize:   '13px',
             color:      C.textDim,
             marginTop:  '2px',
           }}>
@@ -57,10 +57,10 @@ export default function NodeCard({ node }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
               <Battery size={12} color={batteryColor} />
-              <Mono size="10px" color={C.textDim}>Battery</Mono>
+              <Mono size="13px" color={C.textDim}>Battery</Mono>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Mono size="11px" color={batteryColor}>{node.battery}%</Mono>
+              <Mono size="13px" color={batteryColor} style={{ fontWeight: 700 }}>{node.battery}%</Mono>
               <Tag color={batteryDecision.color}>{batteryDecision.label}</Tag>
             </div>
           </div>
@@ -78,7 +78,7 @@ export default function NodeCard({ node }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Wifi size={12} color={C.textDim} />
-            <Mono size="10px" color={C.textDim}>Signal</Mono>
+            <Mono size="13px" color={C.textDim}>Signal</Mono>
           </div>
           <WifiSignal dbm={node.wifi} />
         </div>
@@ -95,7 +95,7 @@ export default function NodeCard({ node }) {
             <Mono size="18px" color={C.text} style={{ display: 'block' }}>
               {node.detections}
             </Mono>
-            <Mono size="9px" color={C.textDim}>DETECTIONS</Mono>
+            <Mono size="12px" color={C.textDim}>DETECTIONS</Mono>
           </div>
           <div style={{
             padding:      '8px',
@@ -106,7 +106,7 @@ export default function NodeCard({ node }) {
             <Mono size="18px" color={C.text} style={{ display: 'block' }}>
               {node.fogEvents}
             </Mono>
-            <Mono size="9px" color={C.textDim}>FOG EVENTS</Mono>
+            <Mono size="12px" color={C.textDim}>FOG EVENTS</Mono>
           </div>
         </div>
 
@@ -115,9 +115,9 @@ export default function NodeCard({ node }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Droplets size={12} color={C.textDim} />
-            <Mono size="10px" color={C.textDim}>Fogger</Mono>
+            <Mono size="13px" color={C.textDim}>Fogger</Mono>
           </div>
-          <Mono size="10px" color={
+          <Mono size="13px" color={
             node.mistStatus === 'Offline'             ? C.gray  :
             node.mistStatus.includes('Critical')      ? C.amber :
             C.green
@@ -129,9 +129,9 @@ export default function NodeCard({ node }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Clock size={12} color={C.textDim} />
-            <Mono size="10px" color={C.textDim}>Uptime</Mono>
+            <Mono size="13px" color={C.textDim}>Uptime</Mono>
           </div>
-          <Mono size="10px" color={C.textDim}>{node.uptime}</Mono>
+          <Mono size="13px" color={C.textDim}>{node.uptime}</Mono>
         </div>
       </div>
 
@@ -147,7 +147,7 @@ export default function NodeCard({ node }) {
           gap:          '6px',
         }}>
           <AlertTriangle size={12} color={C.amber} />
-          <Mono size="10px" color={C.amber}>Battery low. Review charging schedule.</Mono>
+          <Mono size="12px" color={C.amber} style={{ fontWeight: 700 }}>Battery low. Review charging schedule.</Mono>
         </div>
       )}
 
@@ -167,7 +167,7 @@ export default function NodeCard({ node }) {
           justifyContent: 'center',
           gap: '8px',
           fontFamily: 'IBM Plex Mono, monospace',
-          fontSize: '10px',
+          fontSize: '12px',
           fontWeight: 700,
           textTransform: 'uppercase',
         }}

@@ -10,7 +10,7 @@ const tooltipStyle = {
   border:       `1px solid ${C.border}`,
   borderRadius: '8px',
   fontFamily:   'IBM Plex Mono, monospace',
-  fontSize:     '12px',
+  fontSize:     '13px',
   color:        C.text,
 };
 
@@ -26,8 +26,8 @@ export default function DistributionCharts() {
       <Card style={{ background: C.surface2 }}>
         <div style={{
           fontFamily:    'Syne, sans-serif',
-          fontSize:      '13px',
-          fontWeight:    600,
+          fontSize:      '16px',
+          fontWeight:    700,
           color:         C.textDim,
           marginBottom:  '16px',
           letterSpacing: '0.08em',
@@ -39,12 +39,12 @@ export default function DistributionCharts() {
             <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}cc`} vertical={false} />
             <XAxis
               dataKey="node"
-              tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 10, fill: C.textDim }}
+              tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 10, fill: C.textDim }}
+              tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }}
               axisLine={false}
               tickLine={false}
             />
@@ -62,8 +62,8 @@ export default function DistributionCharts() {
       <Card style={{ background: C.surface2 }}>
         <div style={{
           fontFamily:    'Syne, sans-serif',
-          fontSize:      '13px',
-          fontWeight:    600,
+          fontSize:      '16px',
+          fontWeight:    700,
           color:         C.textDim,
           marginBottom:  '16px',
           letterSpacing: '0.08em',
@@ -75,12 +75,12 @@ export default function DistributionCharts() {
             <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}cc`} vertical={false} />
             <XAxis
               dataKey="range"
-              tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 9, fill: C.textDim }}
+              tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 10, fill: C.textDim }}
+              tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }}
               axisLine={false}
               tickLine={false}
             />

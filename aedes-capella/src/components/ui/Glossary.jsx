@@ -15,11 +15,11 @@ const TERMS = [
 export default function Glossary() {
   return (
     <Card style={{ background: C.surface2 }}>
-      <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <BookOpen size={14} color={C.textDim} />
+      <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '9px' }}>
+        <BookOpen size={16} color={C.textDim} />
         <span style={{
           fontFamily: 'Syne, sans-serif',
-          fontSize: '13px',
+          fontSize: '16px',
           fontWeight: 700,
           color: C.text,
         }}>
@@ -34,13 +34,13 @@ export default function Glossary() {
               background: C.surface,
               border: `1px solid ${C.border}`,
               borderRadius: '8px',
-              padding: '10px',
+              padding: '14px',
             }}
           >
-            <Mono size="11px" color={C.text} style={{ display: 'block', fontWeight: 700, marginBottom: '5px' }}>
+            <Mono size="14px" color={C.text} style={{ display: 'block', fontWeight: 700, marginBottom: '8px' }}>
               {term}
             </Mono>
-            <Mono size="10px" color={C.textDim}>{explanation}</Mono>
+            <Mono size="12px" color={C.textDim} style={{ lineHeight: 1.45 }}>{explanation}</Mono>
           </div>
         ))}
       </div>

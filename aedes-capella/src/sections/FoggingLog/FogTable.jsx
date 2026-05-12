@@ -32,7 +32,7 @@ export default function FogTable({ fogs = FOG_LOG }) {
                 padding:       '12px 16px',
                 textAlign:     'left',
                 fontFamily:    'IBM Plex Mono, monospace',
-                fontSize:      '10px',
+                fontSize:      '12px',
                 color:         C.textDim,
                 fontWeight:    600,
                 letterSpacing: '0.08em',
@@ -54,11 +54,11 @@ export default function FogTable({ fogs = FOG_LOG }) {
               }}
             >
               <td style={{ padding: '11px 16px' }}>
-                <Mono size="12px" color={C.textDim}>{f.ts}</Mono>
+                <Mono size="13px" color={C.textDim} style={{ fontWeight: 700 }}>{f.ts}</Mono>
               </td>
               <td style={{ padding: '11px 16px' }}>
-                <div><Mono size="12px" color={C.text}>{f.nodeId}</Mono></div>
-                <Mono size="10px" color={C.textDim}>{f.sitio}</Mono>
+                <div><Mono size="13px" color={C.text} style={{ fontWeight: 700 }}>{f.nodeId}</Mono></div>
+                <Mono size="12px" color={C.textDim}>{f.sitio}</Mono>
               </td>
               <td style={{ padding: '11px 16px' }}>
                 <ConfidenceBar confidence={f.confidence} width="190px" />
@@ -67,7 +67,7 @@ export default function FogTable({ fogs = FOG_LOG }) {
                 <Tag color="green">Completed</Tag>
               </td>
               <td style={{ padding: '11px 16px', maxWidth: '260px' }}>
-                <Mono size="11px" color={C.textDim}>
+                <Mono size="12px" color={C.textDim} style={{ lineHeight: 1.45 }}>
                   {getAutoResponseReason('fogged', f.confidence)}
                 </Mono>
               </td>
@@ -85,7 +85,7 @@ export default function FogTable({ fogs = FOG_LOG }) {
                     alignItems: 'center',
                     gap: '6px',
                     fontFamily: 'IBM Plex Mono, monospace',
-                    fontSize: '10px',
+                    fontSize: '12px',
                     fontWeight: 700,
                   }}
                 >

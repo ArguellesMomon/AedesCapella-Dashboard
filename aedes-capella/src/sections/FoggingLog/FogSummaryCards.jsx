@@ -25,7 +25,7 @@ export default function FogSummaryCards() {
           </div>
           <div style={{
             fontFamily:    'IBM Plex Mono, monospace',
-            fontSize:      '10px',
+            fontSize:      '12px',
             color:         C.textDim,
             marginBottom:  '8px',
             letterSpacing: '0.05em',
@@ -34,9 +34,9 @@ export default function FogSummaryCards() {
           </div>
           <div style={{
             fontFamily: 'IBM Plex Mono, monospace',
-            fontSize:   '16px',
+            fontSize:   '18px',
             color:      C.text,
-            fontWeight: 600,
+            fontWeight: 700,
           }}>
             {value}
           </div>

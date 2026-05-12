@@ -89,14 +89,14 @@ export default function App() {
         activeSection={activeSection}
         onNavigate={setActiveSection}
         alertPulse={alertPulse}
+        theme={theme}
+        onToggleTheme={() => setTheme(currentTheme => currentTheme === 'dark' ? 'light' : 'dark')}
+        onLogout={() => setShowLogoutModal(true)}
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Topbar
           metrics={{ detections: detectionCount }}
-          theme={theme}
-          onToggleTheme={() => setTheme(currentTheme => currentTheme === 'dark' ? 'light' : 'dark')}
-          onLogout={() => setShowLogoutModal(true)}
         />
 
         {/* Scrollable section content */}

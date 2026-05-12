@@ -33,18 +33,18 @@ export default function EmptyState({
       <div style={{
         marginTop: compact ? '8px' : '10px',
         fontFamily: 'Syne, sans-serif',
-        fontSize: compact ? '12px' : '14px',
+        fontSize: compact ? '13px' : '16px',
         fontWeight: 700,
         color: C.text,
       }}>
         {title}
       </div>
       <div style={{ marginTop: '6px' }}>
-        <Mono size="11px" color={C.textDim}>{message}</Mono>
+        <Mono size={compact ? '12px' : '13px'} color={C.textDim} style={{ lineHeight: 1.45 }}>{message}</Mono>
       </div>
       {action && (
         <div style={{ marginTop: compact ? '8px' : '12px' }}>
-          <Mono size="10px" color={C.textDim}>{action}</Mono>
+          <Mono size={compact ? '12px' : '13px'} color={C.textDim} style={{ lineHeight: 1.45 }}>{action}</Mono>
         </div>
       )}
     </Card>

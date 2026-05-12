@@ -21,12 +21,12 @@ const CustomTooltip = ({ active, payload, label }) => {
       borderRadius: '8px',
       padding:      '10px 14px',
     }}>
-      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '11px', color: C.textDim }}>
+      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '12px', color: C.textDim }}>
         {label}
       </div>
       <div style={{
         fontFamily:  'IBM Plex Mono, monospace',
-        fontSize:    '13px',
+        fontSize:    '14px',
         color:       C.amber,
         marginTop:   '4px',
       }}>
@@ -47,8 +47,8 @@ export default function DetectionTrendChart() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div style={{
           fontFamily:    'Syne, sans-serif',
-          fontSize:      '13px',
-          fontWeight:    600,
+          fontSize:      '16px',
+          fontWeight:    700,
           color:         C.textDim,
           letterSpacing: '0.08em',
         }}>
@@ -66,7 +66,7 @@ export default function DetectionTrendChart() {
                 background:    view === key ? `${C.amber}22` : 'transparent',
                 color:         view === key ? C.amber : C.textDim,
                 fontFamily:    'IBM Plex Mono, monospace',
-                fontSize:      '10px',
+                fontSize:      '12px',
                 cursor:        'pointer',
                 fontWeight:    600,
                 textTransform: 'uppercase',
@@ -84,12 +84,12 @@ export default function DetectionTrendChart() {
           <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}cc`} vertical={false} />
           <XAxis
             dataKey="t"
-            tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 10, fill: C.textDim }}
+            tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 10, fill: C.textDim }}
+            tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }}
             axisLine={false}
             tickLine={false}
           />

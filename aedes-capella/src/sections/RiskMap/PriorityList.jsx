@@ -22,8 +22,8 @@ export default function PriorityList({ onSelect }) {
     <Card style={{ background: C.surface2 }}>
       <div style={{
         fontFamily:    'Syne, sans-serif',
-        fontSize:      '12px',
-        fontWeight:    600,
+        fontSize:      '15px',
+        fontWeight:    700,
         color:         C.textDim,
         marginBottom:  '12px',
         letterSpacing: '0.08em',
@@ -58,11 +58,11 @@ export default function PriorityList({ onSelect }) {
               background:   RISK_COLORS[s.risk].fill,
               flexShrink: 0,
             }} />
-            <Mono size="11px">{s.name}</Mono>
+            <Mono size="13px" style={{ fontWeight: 700 }}>{s.name}</Mono>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <Mono size="11px" color={C.text}>{s.detections}</Mono>
-            <Mono size="10px" color={RISK_COLORS[s.risk].text}>{getRiskAction(s.risk)}</Mono>
+            <Mono size="13px" color={C.text} style={{ fontWeight: 700 }}>{s.detections}</Mono>
+            <Mono size="12px" color={RISK_COLORS[s.risk].text} style={{ fontWeight: 700 }}>{getRiskAction(s.risk)}</Mono>
           </div>
         </button>
       ))}

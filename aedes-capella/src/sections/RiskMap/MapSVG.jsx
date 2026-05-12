@@ -51,7 +51,7 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
         <div>
           <div style={{
             fontFamily:    'Syne, sans-serif',
-            fontSize:      '12px',
+            fontSize:      '15px',
             color:         C.textDim,
             letterSpacing: '0.08em',
           }}>
@@ -60,7 +60,7 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
           <div style={{
             marginTop: '4px',
             fontFamily: 'IBM Plex Mono, monospace',
-            fontSize: '10px',
+            fontSize: '12px',
             color: C.textDim,
           }}>
             Color shows response priority. Click a sitio to inspect details.
@@ -85,7 +85,7 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
               <div style={{ width: '9px', height: '9px', borderRadius: '2px', background: c.fill }} />
               <span style={{
                 fontFamily: 'IBM Plex Mono, monospace',
-                fontSize: '10px',
+                fontSize: '12px',
                 color: c.text,
                 fontWeight: 700,
               }}>
@@ -106,7 +106,7 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
             }}
           >
             <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: C.blue }} />
-            <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px', color: C.textDim }}>
+            <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '12px', color: C.textDim }}>
               Node
             </span>
           </div>

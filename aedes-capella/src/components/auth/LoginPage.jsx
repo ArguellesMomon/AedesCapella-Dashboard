@@ -90,7 +90,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                 <div style={{
                   marginTop: '6px',
                   fontFamily: 'IBM Plex Mono, monospace',
-                  fontSize: '11px',
+                  fontSize: '13px',
                   letterSpacing: '0.12em',
                   color: C.amber,
                 }}>
@@ -143,8 +143,8 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                     padding: '16px',
                   }}
                 >
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>{title}</div>
-                  <div style={{ marginTop: '6px', fontSize: '12px', lineHeight: 1.5, color: C.textDim }}>{text}</div>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: C.text }}>{title}</div>
+                  <div style={{ marginTop: '6px', fontSize: '13px', lineHeight: 1.5, color: C.textDim }}>{text}</div>
                 </div>
               ))}
             </div>
@@ -173,7 +173,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                 padding: '8px 12px',
                 cursor: 'pointer',
                 fontFamily: 'IBM Plex Mono, monospace',
-                fontSize: '10px',
+                fontSize: '12px',
                 fontWeight: 700,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
@@ -185,7 +185,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
 
           <form onSubmit={handleSubmit}>
             <label style={{ display: 'block', marginBottom: '14px' }}>
-              <div style={{ marginBottom: '8px', fontSize: '12px', fontWeight: 700, color: C.textDim, letterSpacing: '0.04em' }}>
+              <div style={{ marginBottom: '8px', fontSize: '13px', fontWeight: 700, color: C.textDim, letterSpacing: '0.04em' }}>
                 USERNAME
               </div>
               <div style={{ position: 'relative' }}>
@@ -204,7 +204,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                     background: C.surface2,
                     color: C.text,
                     fontFamily: 'IBM Plex Mono, monospace',
-                    fontSize: '13px',
+                    fontSize: '14px',
                     outline: 'none',
                   }}
                 />
@@ -212,7 +212,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
             </label>
 
             <label style={{ display: 'block', marginBottom: '16px' }}>
-              <div style={{ marginBottom: '8px', fontSize: '12px', fontWeight: 700, color: C.textDim, letterSpacing: '0.04em' }}>
+              <div style={{ marginBottom: '8px', fontSize: '13px', fontWeight: 700, color: C.textDim, letterSpacing: '0.04em' }}>
                 PASSWORD
               </div>
               <div style={{ position: 'relative' }}>
@@ -232,7 +232,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                     background: C.surface2,
                     color: C.text,
                     fontFamily: 'IBM Plex Mono, monospace',
-                    fontSize: '13px',
+                    fontSize: '14px',
                     outline: 'none',
                   }}
                 />
@@ -248,7 +248,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                 borderRadius: '10px',
                 padding: '10px 12px',
                 fontFamily: 'IBM Plex Mono, monospace',
-                fontSize: '11px',
+                fontSize: '13px',
               }}>
                 {error}
               </div>
@@ -269,7 +269,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                 justifyContent: 'center',
                 gap: '10px',
                 fontFamily: 'IBM Plex Mono, monospace',
-                fontSize: '12px',
+                fontSize: '13px',
                 fontWeight: 700,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',

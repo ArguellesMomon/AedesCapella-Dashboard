@@ -74,7 +74,7 @@ export default function MetricCards() {
 
           <div style={{
             fontFamily:    'IBM Plex Mono, monospace',
-            fontSize:      '10px',
+            fontSize:      '12px',
             color:         C.textDim,
             marginBottom:  '10px',
             letterSpacing: '0.05em',
@@ -95,7 +95,8 @@ export default function MetricCards() {
 
           <div style={{
             fontFamily: 'IBM Plex Mono, monospace',
-            fontSize:   '10px',
+            fontSize:   '12px',
+            lineHeight:  1.45,
             color:      C.textDim,
           }}>
             {sub}

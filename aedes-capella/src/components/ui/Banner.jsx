@@ -17,17 +17,18 @@ export default function Banner({ icon: Icon, text, color = 'blue' }) {
       background:    c.bg,
       border:        `1px solid ${c.border}`,
       borderRadius:  '8px',
-      padding:       '10px 16px',
+      padding:       '12px 16px',
       marginBottom:  '20px',
       display:       'flex',
       alignItems:    'center',
       gap:           '10px',
     }}>
-      {Icon && <Icon size={14} color={c.text} style={{ flexShrink: 0 }} />}
+      {Icon && <Icon size={16} color={c.text} style={{ flexShrink: 0 }} />}
       <span style={{
         fontFamily: 'IBM Plex Mono, monospace',
-        fontSize:   '11px',
+        fontSize:   '13px',
         color:      c.text ?? C.text,
+        lineHeight:  1.45,
       }}>
         {text}
       </span>

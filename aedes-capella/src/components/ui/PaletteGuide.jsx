@@ -14,10 +14,10 @@ export default function PaletteGuide() {
     <Card style={{ background: C.surface2 }}>
       <div style={{
         fontFamily: 'Syne, sans-serif',
-        fontSize: '13px',
+        fontSize: '16px',
         fontWeight: 700,
         color: C.text,
-        marginBottom: '12px',
+        marginBottom: '14px',
       }}>
         Color Palette Documentation
       </div>
@@ -29,23 +29,23 @@ export default function PaletteGuide() {
               background: C.surface,
               border: `1px solid ${C.border}`,
               borderRadius: '8px',
-              padding: '10px',
+              padding: '14px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '7px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '9px' }}>
               <span style={{
-                width: '12px',
-                height: '12px',
+                width: '14px',
+                height: '14px',
                 borderRadius: '3px',
                 background: item.color,
                 flexShrink: 0,
               }} />
-              <Mono size="11px" color={C.text} style={{ fontWeight: 700 }}>{item.name} - {item.meaning}</Mono>
+              <Mono size="14px" color={C.text} style={{ fontWeight: 700 }}>{item.name} - {item.meaning}</Mono>
             </div>
-            <Mono size="10px" color={C.textDim} style={{ display: 'block', marginBottom: '5px' }}>
+            <Mono size="12px" color={C.textDim} style={{ display: 'block', marginBottom: '8px' }}>
               {item.token}
             </Mono>
-            <Mono size="10px" color={C.textDim}>{item.use}</Mono>
+            <Mono size="12px" color={C.textDim} style={{ lineHeight: 1.45 }}>{item.use}</Mono>
           </div>
         ))}
       </div>

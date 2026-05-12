@@ -44,21 +44,21 @@ export default function RecommendedActions({ detections }) {
               background: C.surface,
               border: `1px solid ${C.border}`,
               borderRadius: '8px',
-              padding: '12px',
+              padding: '14px',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
-              <Mono size="11px" color={C.text} style={{ fontWeight: 700 }}>{item.sitio}</Mono>
+              <Mono size="14px" color={C.text} style={{ fontWeight: 700 }}>{item.sitio}</Mono>
               <Tag color={item.recommendation.color}>{item.confidence}%</Tag>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '8px' }}>
-              {item.autoResponse === 'fogged' ? <Droplets size={13} color={C.green} /> : <ClipboardCheck size={13} color={C.amber} />}
-              <Mono size="11px" color={C.text}>{item.recommendation.action}</Mono>
+              {item.autoResponse === 'fogged' ? <Droplets size={15} color={C.green} /> : <ClipboardCheck size={15} color={C.amber} />}
+              <Mono size="13px" color={C.text} style={{ fontWeight: 700 }}>{item.recommendation.action}</Mono>
             </div>
-            <Mono size="10px" color={C.textDim} style={{ display: 'block', marginBottom: '6px' }}>
+            <Mono size="12px" color={C.textDim} style={{ display: 'block', marginBottom: '7px', lineHeight: 1.45 }}>
               {item.recommendation.reason}
             </Mono>
-            <Mono size="10px" color={C.textDim}>{item.recommendation.why}</Mono>
+            <Mono size="12px" color={C.textDim} style={{ lineHeight: 1.45 }}>{item.recommendation.why}</Mono>
           </div>
         ))}
       </div>

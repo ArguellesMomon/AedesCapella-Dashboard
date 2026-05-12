@@ -55,7 +55,7 @@ export default function FeedTable({ detections }) {
                 padding:       '10px 14px',
                 textAlign:     'left',
                 fontFamily:    'IBM Plex Mono, monospace',
-                fontSize:      '10px',
+                fontSize:      '12px',
                 color:         C.textDim,
                 fontWeight:    600,
                 letterSpacing: '0.08em',
@@ -88,14 +88,20 @@ export default function FeedTable({ detections }) {
                 }}
               >
                 <td style={{ padding: '10px 14px' }}>
-                  <Mono size="12px" color={isHighRisk ? riskColor.text : C.textDim}>{offsetTime(d.minsAgo)}</Mono>
+                  <Mono size="12px" color={isHighRisk ? riskColor.text : C.textDim} style={{ fontWeight: 700 }}>
+                    {offsetTime(d.minsAgo)}
+                  </Mono>
                 </td>
                 <td style={{ padding: '10px 14px' }}>
-                  <Mono size="12px" color={isHighRisk ? riskColor.text : C.text}>{d.nodeId}</Mono>
+                  <Mono size="12px" color={isHighRisk ? riskColor.text : C.text} style={{ fontWeight: 700 }}>
+                    {d.nodeId}
+                  </Mono>
                 </td>
                 <td style={{ padding: '10px 14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Mono size="12px" color={isHighRisk ? riskColor.text : undefined}>{d.sitio}</Mono>
+                    <Mono size="12px" color={isHighRisk ? riskColor.text : undefined} style={{ fontWeight: 700 }}>
+                      {d.sitio}
+                    </Mono>
                     {isHighRisk && (
                       <span style={{
                         border: `1px solid ${riskColor.border}`,
@@ -104,7 +110,7 @@ export default function FeedTable({ detections }) {
                         borderRadius: '4px',
                         padding: '2px 6px',
                         fontFamily: 'IBM Plex Mono, monospace',
-                        fontSize: '9px',
+                        fontSize: '12px',
                         fontWeight: 700,
                         letterSpacing: '0.04em',
                       }}>
@@ -117,7 +123,7 @@ export default function FeedTable({ detections }) {
                   <Mono
                     size="12px"
                     color={isHighRisk ? riskColor.text : C.textDim}
-                    style={{ cursor: 'help' }}
+                    style={{ cursor: 'help', fontWeight: 700 }}
                   >
                     <span title="Wingbeat frequency detected by the acoustic sensor.">{d.freq} Hz</span>
                   </Mono>
@@ -142,7 +148,7 @@ export default function FeedTable({ detections }) {
                       alignItems: 'center',
                       gap: '6px',
                       fontFamily: 'IBM Plex Mono, monospace',
-                      fontSize: '10px',
+                      fontSize: '12px',
                       fontWeight: 700,
                     }}
                   >

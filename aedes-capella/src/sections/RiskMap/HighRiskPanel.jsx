@@ -44,7 +44,7 @@ export default function HighRiskPanel({ onSelect }) {
           <AlertTriangle size={16} color={C.red} />
           <div style={{
             fontFamily: 'Syne, sans-serif',
-            fontSize: '12px',
+            fontSize: '15px',
             fontWeight: 700,
             color: C.text,
             letterSpacing: '0.08em',
@@ -84,18 +84,18 @@ export default function HighRiskPanel({ onSelect }) {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '7px', minWidth: 0 }}>
                   <MapPin size={13} color={rc.text} />
-                  <Mono size="12px" color={rc.text} style={{ fontWeight: 700 }}>
+                  <Mono size="14px" color={rc.text} style={{ fontWeight: 700 }}>
                     {s.name}
                   </Mono>
                 </div>
-                <Mono size="10px" color={rc.text} style={{ fontWeight: 700 }}>
+                <Mono size="12px" color={rc.text} style={{ fontWeight: 700 }}>
                   #{index + 1}
                 </Mono>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                <Mono size="10px" color={rc.text}>{s.risk.toUpperCase()}</Mono>
-                <Mono size="12px" color={rc.text} style={{ fontWeight: 700 }}>
+                <Mono size="12px" color={rc.text} style={{ fontWeight: 700 }}>{s.risk.toUpperCase()}</Mono>
+                <Mono size="14px" color={rc.text} style={{ fontWeight: 700 }}>
                   {s.detections} today
                 </Mono>
               </div>
@@ -107,7 +107,7 @@ export default function HighRiskPanel({ onSelect }) {
                 gap: '6px',
                 color: rc.text,
                 fontFamily: 'IBM Plex Mono, monospace',
-                fontSize: '10px',
+                fontSize: '12px',
                 fontWeight: 700,
               }}>
                 <Search size={12} />

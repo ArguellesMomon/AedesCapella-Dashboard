@@ -15,12 +15,12 @@ const METADATA = [
 export default function SystemMetadata() {
   return (
     <Card style={{ background: C.surface2 }}>
-      <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Cpu size={14} color={C.textDim} />
+      <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '9px' }}>
+        <Cpu size={16} color={C.textDim} />
         <span style={{
           fontFamily:    'Syne, sans-serif',
-          fontSize:      '13px',
-          fontWeight:    600,
+          fontSize:      '16px',
+          fontWeight:    700,
           color:         C.textDim,
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
@@ -38,7 +38,7 @@ export default function SystemMetadata() {
             key={key}
             title={help}
             style={{
-              padding:      '10px',
+              padding:      '14px',
               background:   C.surface,
               borderRadius: '8px',
               border:       `1px solid ${C.border}`,
@@ -47,18 +47,18 @@ export default function SystemMetadata() {
           >
             <div style={{
               fontFamily:    'IBM Plex Mono, monospace',
-              fontSize:      '10px',
+              fontSize:      '12px',
               color:         C.textDim,
-              marginBottom:  '4px',
+              marginBottom:  '8px',
               letterSpacing: '0.05em',
             }}>
               {key}
             </div>
             <div style={{
               fontFamily: 'IBM Plex Mono, monospace',
-              fontSize:   '12px',
+              fontSize:   '14px',
               color:      C.text,
-              fontWeight: 600,
+              fontWeight: 700,
             }}>
               {value}
             </div>

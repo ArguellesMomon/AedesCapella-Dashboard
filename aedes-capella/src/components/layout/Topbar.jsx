@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { Activity, Droplets, Server, Eye, AlertTriangle, LogOut, Moon, Sun } from 'lucide-react';
+import { Activity, Droplets, Server, Eye, AlertTriangle } from 'lucide-react';
 import { C } from '../../constants/colors';
 import { usePHTime } from '../../hooks/usePHTime';
 import Tag from '../ui/Tag';
@@ -15,9 +15,8 @@ const METRICS = [
  * Persistent top bar with summary metrics, Sabang risk badge, and live PHT clock.
  * @param {object} metrics - { detections, fogs, nodes, confidence }
  */
-export default function Topbar({ metrics, theme, onToggleTheme, onLogout }) {
+export default function Topbar({ metrics }) {
   const { clock, date } = usePHTime();
-  const ThemeIcon = theme === 'dark' ? Sun : Moon;
 
   const values = {
     detections: String(metrics.detections),
@@ -47,11 +46,11 @@ export default function Topbar({ metrics, theme, onToggleTheme, onLogout }) {
           borderRight:  `1px solid ${C.border}`,
           flexShrink:   0,
         }}>
-          {createElement(Icon, { size: 13, color })}
+          {createElement(Icon, { size: 15, color })}
           <div>
             <div style={{
               fontFamily:    'IBM Plex Mono, monospace',
-              fontSize:      '9px',
+              fontSize:      '12px',
               color:         C.textDim,
               letterSpacing: '0.06em',
             }}>
@@ -60,7 +59,7 @@ export default function Topbar({ metrics, theme, onToggleTheme, onLogout }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{
                 fontFamily: 'IBM Plex Mono, monospace',
-                fontSize:   '15px',
+                fontSize:   '17px',
                 fontWeight: 700,
                 color,
               }}>
@@ -80,79 +79,17 @@ export default function Topbar({ metrics, theme, onToggleTheme, onLogout }) {
         borderRight:  `1px solid ${C.border}`,
         flexShrink:   0,
       }}>
-        <AlertTriangle size={13} color={C.red} />
+        <AlertTriangle size={15} color={C.red} />
         <div>
           <div style={{
             fontFamily: 'IBM Plex Mono, monospace',
-            fontSize:   '9px',
+            fontSize:   '12px',
             color:      C.textDim,
           }}>
             Barangay Alert
           </div>
           <Tag color="red">Critical - inspect now</Tag>
         </div>
-      </div>
-
-      <div style={{ marginLeft: '20px', display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-        <button
-          onClick={onToggleTheme}
-          style={{
-            display:        'flex',
-            alignItems:     'center',
-            gap:            '8px',
-            border:         `1px solid ${C.border}`,
-            background:     C.surface2,
-            color:          C.text,
-            borderRadius:   '999px',
-            padding:        '8px 12px',
-            cursor:         'pointer',
-            transition:     'background 0.2s ease, border-color 0.2s ease, color 0.2s ease',
-          }}
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        >
-          <ThemeIcon size={14} color={C.text} />
-          <span style={{
-            fontFamily:    'IBM Plex Mono, monospace',
-            fontSize:      '10px',
-            fontWeight:    700,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-          }}>
-            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-          </span>
-        </button>
-
-        {onLogout && (
-          <button
-            onClick={onLogout}
-            style={{
-              display:        'flex',
-              alignItems:     'center',
-              gap:            '8px',
-              border:         `1px solid ${C.border}`,
-              background:     'transparent',
-              color:          C.textDim,
-              borderRadius:   '999px',
-              padding:        '8px 12px',
-              cursor:         'pointer',
-              transition:     'background 0.2s ease, border-color 0.2s ease, color 0.2s ease',
-            }}
-            aria-label="Log out"
-            title="Log out"
-          >
-            <LogOut size={14} color={C.textDim} />
-            <span style={{
-              fontFamily:    'IBM Plex Mono, monospace',
-              fontSize:      '10px',
-              fontWeight:    700,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}>
-              Logout
-            </span>
-          </button>
-        )}
       </div>
 
       <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>
@@ -167,7 +104,7 @@ export default function Topbar({ metrics, theme, onToggleTheme, onLogout }) {
         </div>
         <div style={{
           fontFamily: 'IBM Plex Mono, monospace',
-          fontSize:   '9px',
+          fontSize:   '12px',
           color:      C.textDim,
         }}>
           {date} PHT

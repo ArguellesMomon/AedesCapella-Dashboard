@@ -43,7 +43,6 @@ export default function DeviceStateGuide() {
           action={state.action}
           icon={state.icon}
           variant={state.variant}
-          compact
         />
       ))}
     </div>

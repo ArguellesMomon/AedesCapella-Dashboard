@@ -41,7 +41,7 @@ export default function SitioDetail({ sitio, onClose }) {
 
       <div style={{
         fontFamily:   'Syne, sans-serif',
-        fontSize:     '13px',
+        fontSize:     '16px',
         fontWeight:   700,
         color:        C.text,
         marginBottom: '12px',
@@ -51,7 +51,7 @@ export default function SitioDetail({ sitio, onClose }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Mono size="11px" color={C.textDim}>Risk Level</Mono>
+          <Mono size="13px" color={C.textDim}>Risk Level</Mono>
           <span
             title={`${sitio.risk}: ${action}`}
             style={{
@@ -61,7 +61,7 @@ export default function SitioDetail({ sitio, onClose }) {
               padding:       '2px 8px',
               borderRadius:  '4px',
               fontFamily:    'IBM Plex Mono, monospace',
-              fontSize:      '10px',
+              fontSize:      '12px',
               fontWeight:    700,
             }}
           >
@@ -70,13 +70,13 @@ export default function SitioDetail({ sitio, onClose }) {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Mono size="11px" color={C.textDim}>Detections Today</Mono>
-          <Mono size="11px" color={C.text}>{sitio.detections}</Mono>
+          <Mono size="13px" color={C.textDim}>Detections Today</Mono>
+          <Mono size="13px" color={C.text} style={{ fontWeight: 700 }}>{sitio.detections}</Mono>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Mono size="11px" color={C.textDim}>Assigned Node</Mono>
-          <Mono size="11px" color={sitio.node ? C.green : C.gray}>
+          <Mono size="13px" color={C.textDim}>Assigned Node</Mono>
+          <Mono size="13px" color={sitio.node ? C.green : C.gray} style={{ fontWeight: 700 }}>
             {sitio.node ?? 'None'}
           </Mono>
         </div>
@@ -89,7 +89,7 @@ export default function SitioDetail({ sitio, onClose }) {
             border:       `1px solid ${C.green}33`,
             borderRadius: '6px',
           }}>
-            <Mono size="10px" color={C.green}>
+            <Mono size="12px" color={C.green} style={{ lineHeight: 1.45 }}>
               Auto-fog armed: triggers when confidence is at least 80% and cooldown is clear.
             </Mono>
           </div>
@@ -101,7 +101,7 @@ export default function SitioDetail({ sitio, onClose }) {
             border:       `1px solid ${C.border}`,
             borderRadius: '6px',
           }}>
-            <Mono size="10px" color={C.textDim}>
+            <Mono size="12px" color={C.textDim} style={{ lineHeight: 1.45 }}>
               No node assigned. Manual inspection is needed before auto-response is available.
             </Mono>
           </div>
@@ -122,7 +122,7 @@ export default function SitioDetail({ sitio, onClose }) {
             justifyContent: 'center',
             gap: '8px',
             fontFamily: 'IBM Plex Mono, monospace',
-            fontSize: '10px',
+            fontSize: '12px',
             fontWeight: 700,
             letterSpacing: '0.05em',
             textTransform: 'uppercase',

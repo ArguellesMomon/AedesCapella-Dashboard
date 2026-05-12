@@ -28,7 +28,7 @@ export default function ConfidenceBar({ confidence, width = '160px', showLabel =
           transition:   'width 0.3s ease',
         }} />
       </div>
-      <Mono size="11px" color={barColor}>{confidence}%</Mono>
+      <Mono size="13px" color={barColor} style={{ fontWeight: 700 }}>{confidence}%</Mono>
       {showLabel && <Tag color={decision.color}>{decision.label}</Tag>}
     </div>
   );

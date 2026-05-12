@@ -24,7 +24,7 @@ export default function RiskMap({ theme = 'light' }) {
         subtitle="Mosquito activity and response priority by sitio - Sabang, Lipa City, Batangas"
       />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '20px' }}>
+      <div className="risk-map-layout">
         <Card style={{ padding: '16px' }}>
           <MapSVG
             theme={theme}

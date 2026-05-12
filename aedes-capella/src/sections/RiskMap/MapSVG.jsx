@@ -67,7 +67,7 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <div className="risk-map-legend" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {Object.entries(RISK_COLORS).map(([level, c]) => (
             <div
               key={level}

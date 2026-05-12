@@ -1,21 +1,39 @@
+import { createElement } from 'react';
 import { Inbox } from 'lucide-react';
 import { C } from '../../constants/colors';
 import Card from './Card';
 import Mono from './Mono';
 
-export default function EmptyState({ title, message, action }) {
+const VARIANT_COLORS = {
+  default: C.gray,
+  offline: C.gray,
+  warning: C.amber,
+  critical: C.red,
+  startup: C.blue,
+};
+
+export default function EmptyState({
+  title,
+  message,
+  action,
+  icon: Icon = Inbox,
+  variant = 'default',
+  compact = false,
+}) {
+  const accent = VARIANT_COLORS[variant] ?? C.gray;
+
   return (
     <Card style={{
       background: C.surface2,
-      border: `1px dashed ${C.borderBright}`,
-      padding: '22px',
+      border: `1px dashed ${variant === 'default' ? C.borderBright : accent}`,
+      padding: compact ? '14px' : '22px',
       textAlign: 'center',
     }}>
-      <Inbox size={22} color={C.gray} />
+      {createElement(Icon, { size: compact ? 18 : 22, color: accent })}
       <div style={{
-        marginTop: '10px',
+        marginTop: compact ? '8px' : '10px',
         fontFamily: 'Syne, sans-serif',
-        fontSize: '14px',
+        fontSize: compact ? '12px' : '14px',
         fontWeight: 700,
         color: C.text,
       }}>
@@ -25,7 +43,7 @@ export default function EmptyState({ title, message, action }) {
         <Mono size="11px" color={C.textDim}>{message}</Mono>
       </div>
       {action && (
-        <div style={{ marginTop: '12px' }}>
+        <div style={{ marginTop: compact ? '8px' : '12px' }}>
           <Mono size="10px" color={C.textDim}>{action}</Mono>
         </div>
       )}

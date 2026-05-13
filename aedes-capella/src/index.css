@@ -6,7 +6,7 @@
   --color-surface: #ffffff;
   --color-surface-2: #faf6f0;
   --color-surface-3: #f0e9dd;
-  --color-amber: #b45309;
+  --color-amber: #ff9d00;
   --color-amber-dim: #fef3c7;
   --color-red: #dc2626;
   --color-red-dim: #fee2e2;
@@ -24,15 +24,15 @@
   --risk-critical-bg: #fee2e2;
   --risk-critical-border: #fca5a5;
   --risk-critical-text: #991b1b;
-  --risk-critical-fill: #ef4444;
+  --risk-critical-fill: #ff0000;
   --risk-high-bg: #fef3c7;
   --risk-high-border: #fcd34d;
   --risk-high-text: #92400e;
-  --risk-high-fill: #f59e0b;
+  --risk-high-fill: #ff8c00;
   --risk-medium-bg: #fefce8;
   --risk-medium-border: #fde047;
   --risk-medium-text: #713f12;
-  --risk-medium-fill: #eab308;
+  --risk-medium-fill: #f2ff00;
   --risk-low-bg: #dcfce7;
   --risk-low-border: #86efac;
   --risk-low-text: #166534;

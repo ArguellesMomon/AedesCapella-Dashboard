@@ -6,7 +6,7 @@ const METADATA = [
   ['Detection Model', 'On-device classifier', 'Runs locally on the sensor node.'],
   ['Wingbeat Range', '400-600 Hz', 'Expected sound frequency for target mosquito wingbeats.'],
   ['Auto-Fog Rule', '80%+ confidence', 'Fogging can trigger only after this threshold is met.'],
-  ['Fog Burst', '8 seconds', 'Duration of one automatic fogging action.'],
+  ['Fog Burst', '3 - 5 seconds', 'Duration of one automatic fogging action.'],
   ['Cooldown', '5 minutes', 'Prevents repeated fogging from the same node.'],
   ['Processing', 'Offline edge mode', 'Detection works without cloud connectivity.'],
 ];

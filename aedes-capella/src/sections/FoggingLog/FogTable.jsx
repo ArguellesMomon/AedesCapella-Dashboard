@@ -1,102 +1,93 @@
-import { Search } from 'lucide-react';
 import { C } from '../../constants/colors';
-import { FOG_LOG } from '../../constants/MockData';
-import { getAutoResponseReason } from '../../utils/decisionLabels';
 import Mono from '../../components/ui/Mono';
 import Tag from '../../components/ui/Tag';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
-import ConfidenceBar from '../../components/charts/ConfidenceBar';
+import { formatDashboardTimestamp } from '../../utils/dashboardData';
 
-const HEADERS = ['TIMESTAMP', 'NODE / SITIO', 'TRIGGER CONFIDENCE', 'STATUS', 'WHY IT TRIGGERED', 'NEXT STEP'];
+const HEADERS = ['WHEN', 'SENSOR', 'LENGTH', 'MATCH STRENGTH', 'HOW STARTED', 'WAIT TIME', 'NOTES'];
 
-/** Full timestamped log table of every automatic fog event. */
-export default function FogTable({ fogs = FOG_LOG }) {
+/** Fogging history with simple labels for barangay workers. */
+export default function FogTable({ fogs = [], deviceLabels = {}, loading = false, error = '' }) {
+  if (loading) {
+    return <EmptyState title="Loading fogging history" message="Please wait while the latest fogging information loads." variant="startup" />;
+  }
+
+  if (error) {
+    return <EmptyState title="Fogging history unavailable" message={error} action="Check your connection or ask the system administrator, then try again." variant="warning" />;
+  }
+
   if (!fogs.length) {
     return (
       <EmptyState
-        title="No fogging events logged"
-        message="Automatic fog events will appear after a detection meets the trigger rule."
-        action="Suggested action: review live feed confidence and node cooldown status."
+        title="No fogging recorded"
+        message="No fogging action is saved here right now."
+        action="This does not prove what happened outside the system. Ask the field team if you need to confirm an action."
       />
     );
   }
 
   return (
     <Card style={{ padding: '0', overflow: 'hidden' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ background: C.surface2 }}>
-            {HEADERS.map(h => (
-              <th key={h} style={{
-                padding:       '12px 16px',
-                textAlign:     'left',
-                fontFamily:    'IBM Plex Mono, monospace',
-                fontSize:      '12px',
-                color:         C.textDim,
-                fontWeight:    600,
-                letterSpacing: '0.08em',
-                borderBottom:  `1px solid ${C.border}`,
-                whiteSpace:    'nowrap',
-              }}>
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {fogs.map((f, i) => (
-            <tr
-              key={f.id}
-              style={{
-                background:   i % 2 === 0 ? 'transparent' : `${C.surface2}66`,
-                borderBottom: `1px solid ${C.border}22`,
-              }}
-            >
-              <td style={{ padding: '11px 16px' }}>
-                <Mono size="13px" color={C.textDim} style={{ fontWeight: 700 }}>{f.ts}</Mono>
-              </td>
-              <td style={{ padding: '11px 16px' }}>
-                <div><Mono size="13px" color={C.text} style={{ fontWeight: 700 }}>{f.nodeId}</Mono></div>
-                <Mono size="12px" color={C.textDim}>{f.sitio}</Mono>
-              </td>
-              <td style={{ padding: '11px 16px' }}>
-                <ConfidenceBar confidence={f.confidence} width="190px" />
-              </td>
-              <td style={{ padding: '11px 16px' }}>
-                <Tag color="green">Completed</Tag>
-              </td>
-              <td style={{ padding: '11px 16px', maxWidth: '260px' }}>
-                <Mono size="12px" color={C.textDim} style={{ lineHeight: 1.45 }}>
-                  {getAutoResponseReason('fogged', f.confidence)}
-                </Mono>
-              </td>
-              <td style={{ padding: '11px 16px' }}>
-                <button
-                  title="Review this fogging event"
-                  style={{
-                    border: `1px solid ${C.border}`,
-                    background: C.surface2,
-                    color: C.text,
-                    borderRadius: '6px',
-                    padding: '6px 8px',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontFamily: 'IBM Plex Mono, monospace',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                  }}
-                >
-                  <Search size={12} />
-                  Review
-                </button>
-              </td>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: C.surface2 }}>
+              {HEADERS.map(header => (
+                <th key={header} style={{
+                  padding:       '12px 16px',
+                  textAlign:     'left',
+                  fontFamily:    'IBM Plex Mono, monospace',
+                  fontSize:      '12px',
+                  color:         C.textDim,
+                  fontWeight:    600,
+                  letterSpacing: '0.08em',
+                  borderBottom:  `1px solid ${C.border}`,
+                  whiteSpace:    'nowrap',
+                }}>
+                  {header}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {fogs.map((fog, index) => (
+              <tr key={fog.fogging_id} style={{
+                background:   index % 2 === 0 ? 'transparent' : `${C.surface2}66`,
+                borderBottom: `1px solid ${C.border}22`,
+              }}>
+                <td style={{ padding: '11px 16px' }}>
+                  <Mono size="12px" color={C.textDim} title={formatDashboardTimestamp(fog.triggered_at)}>
+                    {formatDashboardTimestamp(fog.triggered_at)}
+                  </Mono>
+                </td>
+                <td style={{ padding: '11px 16px' }}>
+                  <Mono size="13px" color={C.text} style={{ fontWeight: 700 }}>
+                    {deviceLabels[fog.device_id] || fog.device_id?.slice(0, 8) || 'Unknown sensor'}
+                  </Mono>
+                </td>
+                <td style={{ padding: '11px 16px' }}>
+                  <Mono size="13px" color={C.text} style={{ fontWeight: 700 }}>{fog.duration_seconds ?? '—'} seconds</Mono>
+                </td>
+                <td style={{ padding: '11px 16px' }}>
+                  <Mono size="13px" color={C.text} style={{ fontWeight: 700 }}>
+                    {fog.trigger_confidence === null || fog.trigger_confidence === undefined ? '—' : `${fog.trigger_confidence}%`}
+                  </Mono>
+                </td>
+                <td style={{ padding: '11px 16px' }}>
+                  <Tag color={fog.trigger_source === 'automatic' ? 'amber' : 'blue'}>{fog.trigger_source === 'automatic' ? 'Automatic' : 'Manual'}</Tag>
+                </td>
+                <td style={{ padding: '11px 16px' }}>
+                  <Tag color={fog.cooldown_applied ? 'green' : 'gray'}>{fog.cooldown_applied ? 'Applied' : 'Not stated'}</Tag>
+                </td>
+                <td style={{ padding: '11px 16px', maxWidth: '280px' }}>
+                  <Mono size="12px" color={C.textDim} style={{ lineHeight: 1.45 }}>{fog.notes || 'No notes.'}</Mono>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </Card>
   );
 }

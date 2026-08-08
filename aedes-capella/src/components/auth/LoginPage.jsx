@@ -3,33 +3,30 @@ import { Bug, Lock, LogIn, User } from 'lucide-react';
 import { C } from '../../constants/colors';
 import Card from '../ui/Card';
 import Tag from '../ui/Tag';
-
-const DEMO_CREDENTIALS = {
-  username: 'admin@aedescapella.com',
-  password: 'AedesCapellaAdmin123',
-};
+import { isSupabaseConfigured } from '../../lib/supabaseApi';
+import { getFriendlyError } from '../../utils/userMessages';
 
 export default function LoginPage({ theme, onToggleTheme, onLogin }) {
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (key) => (event) => {
     setForm(current => ({ ...current, [key]: event.target.value }));
     if (error) setError('');
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-
-    const username = form.username.trim();
-    const password = form.password;
-
-    if (username === DEMO_CREDENTIALS.username && password === DEMO_CREDENTIALS.password) {
-      onLogin({ username });
-      return;
+    setSubmitting(true);
+    setError('');
+    try {
+      await onLogin(form.username.trim(), form.password);
+    } catch (loginError) {
+      setError(getFriendlyError(loginError, 'We could not sign you in. Please try again.'));
+    } finally {
+      setSubmitting(false);
     }
-
-    setError('Invalid credentials. Please try again.');
   };
 
   return (
@@ -94,12 +91,12 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                   letterSpacing: '0.12em',
                   color: C.amber,
                 }}>
-                  AIOT VECTOR SURVEILLANCE
+                  BARANGAY MOSQUITO WATCH
                 </div>
               </div>
             </div>
 
-            <Tag color="amber">Secure Operator Access</Tag>
+            <Tag color="amber">Barangay Worker Sign-in</Tag>
 
             <div style={{
               marginTop: '22px',
@@ -109,7 +106,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
               color: C.text,
               maxWidth: '12ch',
             }}>
-              Monitor Sabang operations from one control room.
+              Keep an eye on mosquito activity in one place.
             </div>
 
             <div style={{
@@ -119,7 +116,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
               fontSize: '15px',
               lineHeight: 1.6,
             }}>
-              Sign in to review detections, inspect hotspot zones, manage nodes, and track fogging activity across the barangay network.
+              Sign in to check sensor updates, see areas needing attention, and review fogging activity around the barangay.
             </div>
 
             <div style={{
@@ -129,10 +126,10 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
               gap: '14px',
             }}>
               {[
-                ['Live detection monitoring', 'Real-time stream of mosquito detections and automated responses.'],
-                ['Map-based prioritization', 'Hotspot map tuned for rapid sitio-level risk review.'],
-                ['Node health visibility', 'Battery, uptime, and signal quality in one dashboard.'],
-                ['Protected operator session', 'Simple login gate for local access control in demos.'],
+                ['Latest sensor updates', 'See recent sensor activity and possible mosquito matches.'],
+                ['Barangay map', 'Check recent reports by area and decide where to look first.'],
+                ['Sensor status', 'See which sensors are working and which need checking.'],
+                ['Private account', 'Only approved barangay workers can open the dashboard.'],
               ].map(([title, text]) => (
                 <div
                   key={title}
@@ -160,7 +157,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
             <div>
               <div style={{ fontSize: '28px', fontWeight: 700, color: C.text }}>Login</div>
               <div style={{ marginTop: '8px', color: C.textDim, fontSize: '14px', lineHeight: 1.5 }}>
-                Enter your operator credentials to open the dashboard.
+                Enter your email and password to open the dashboard.
               </div>
             </div>
             <button
@@ -186,14 +183,15 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
           <form onSubmit={handleSubmit}>
             <label style={{ display: 'block', marginBottom: '14px' }}>
               <div style={{ marginBottom: '8px', fontSize: '13px', fontWeight: 700, color: C.textDim, letterSpacing: '0.04em' }}>
-                USERNAME
+                EMAIL ADDRESS
               </div>
               <div style={{ position: 'relative' }}>
                 <User size={16} color={C.textDim} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   value={form.username}
                   onChange={handleChange('username')}
-                  placeholder="Enter username"
+                  type="email"
+                  placeholder="operator@example.org"
                   autoComplete="username"
                   style={{
                     width: '100%',
@@ -254,8 +252,24 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
               </div>
             )}
 
+            {!isSupabaseConfigured && (
+              <div style={{
+                marginBottom: '16px',
+                border: `1px solid ${C.amber}55`,
+                background: `${C.amber}12`,
+                color: C.amber,
+                borderRadius: '10px',
+                padding: '10px 12px',
+                fontFamily: 'IBM Plex Mono, monospace',
+                fontSize: '13px',
+              }}>
+                This dashboard is not set up yet. Please ask the system administrator for help.
+              </div>
+            )}
+
             <button
               type="submit"
+              disabled={submitting || !isSupabaseConfigured}
               style={{
                 width: '100%',
                 height: '48px',
@@ -263,7 +277,8 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                 border: `1px solid ${C.amber}44`,
                 background: `linear-gradient(135deg, ${C.amber}, #d97706)`,
                 color: '#fffaf2',
-                cursor: 'pointer',
+                cursor: submitting || !isSupabaseConfigured ? 'not-allowed' : 'pointer',
+                opacity: submitting || !isSupabaseConfigured ? 0.6 : 1,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -277,7 +292,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
               }}
             >
               <LogIn size={16} />
-              Sign In
+              {submitting ? 'Signing In…' : 'Sign In'}
             </button>
           </form>
         </Card>

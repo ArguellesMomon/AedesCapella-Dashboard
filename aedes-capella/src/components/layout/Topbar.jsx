@@ -5,24 +5,40 @@ import { usePHTime } from '../../hooks/usePHTime';
 import Tag from '../ui/Tag';
 
 const METRICS = [
-  { key: 'detections', label: 'Detections Today', icon: Activity, color: C.text, status: 'High', statusColor: 'amber' },
-  { key: 'fogs', label: 'Fog Events Today', icon: Droplets, color: C.text, status: 'Active', statusColor: 'amber' },
-  { key: 'nodes', label: 'Active Nodes', icon: Server, color: C.text, status: '2 online', statusColor: 'green' },
-  { key: 'confidence', label: 'Avg. Confidence', icon: Eye, color: C.text, status: 'High', statusColor: 'amber' },
+  { key: 'detections', label: 'Mosquito Reports Saved / 24h', icon: Activity },
+  { key: 'fogs', label: 'Fogging / 24h', icon: Droplets },
+  { key: 'nodes', label: 'Sensors Working', icon: Server },
+  { key: 'confidence', label: 'Match Strength', icon: Eye },
 ];
 
 /**
- * Persistent top bar with summary metrics, Sabang risk badge, and live PHT clock.
- * @param {object} metrics - { detections, fogs, nodes, confidence }
+ * Persistent top bar with backend-derived summary metrics and live PHT clock.
+ * @param {object} metrics - { detections, fogs, onlineNodes, totalNodes, avgConfidence, attentionNodes }
  */
 export default function Topbar({ metrics }) {
   const { clock, date } = usePHTime();
 
   const values = {
-    detections: String(metrics.detections),
-    fogs:       '13',
-    nodes:      '2 / 3',
-    confidence: '90.2%',
+    detections: String(metrics.detections ?? 0),
+    fogs:       String(metrics.fogs ?? 0),
+    nodes:      `${metrics.onlineNodes ?? 0} / ${metrics.totalNodes ?? 0}`,
+    confidence: metrics.avgConfidence === null || metrics.avgConfidence === undefined
+      ? '—'
+      : `${Number(metrics.avgConfidence).toFixed(1)}%`,
+  };
+
+  const statuses = {
+    detections: metrics.detections ? 'Available' : 'No reports',
+    fogs: metrics.fogs ? 'Recorded' : 'No records',
+    nodes: metrics.totalNodes === 0 ? 'No sensor data' : `${metrics.onlineNodes} working`,
+    confidence: metrics.avgConfidence === null || metrics.avgConfidence === undefined ? 'No reports' : 'Available',
+  };
+
+  const statusColors = {
+    detections: metrics.detections ? 'blue' : 'gray',
+    fogs: metrics.fogs ? 'amber' : 'gray',
+    nodes: metrics.attentionNodes ? 'amber' : metrics.onlineNodes ? 'green' : 'gray',
+    confidence: metrics.avgConfidence === null || metrics.avgConfidence === undefined ? 'gray' : 'blue',
   };
 
   return (
@@ -37,7 +53,7 @@ export default function Topbar({ metrics }) {
       flexShrink:    0,
       overflowX:     'auto',
     }}>
-      {METRICS.map(({ key, label, icon: Icon, color, status, statusColor }) => (
+      {METRICS.map(({ key, label, icon: Icon }) => (
         <div key={key} style={{
           display:      'flex',
           alignItems:   'center',
@@ -46,7 +62,7 @@ export default function Topbar({ metrics }) {
           borderRight:  `1px solid ${C.border}`,
           flexShrink:   0,
         }}>
-          {createElement(Icon, { size: 15, color })}
+          {createElement(Icon, { size: 15, color: C.text })}
           <div>
             <div style={{
               fontFamily:    'IBM Plex Mono, monospace',
@@ -61,11 +77,11 @@ export default function Topbar({ metrics }) {
                 fontFamily: 'IBM Plex Mono, monospace',
                 fontSize:   '17px',
                 fontWeight: 700,
-                color,
+                color: C.text,
               }}>
                 {values[key]}
               </span>
-              <Tag color={statusColor}>{status}</Tag>
+              <Tag color={statusColors[key]}>{statuses[key]}</Tag>
             </div>
           </div>
         </div>
@@ -79,16 +95,22 @@ export default function Topbar({ metrics }) {
         borderRight:  `1px solid ${C.border}`,
         flexShrink:   0,
       }}>
-        <AlertTriangle size={15} color={C.red} />
+        <AlertTriangle size={15} color={metrics.attentionNodes ? C.red : C.green} />
         <div>
           <div style={{
             fontFamily: 'IBM Plex Mono, monospace',
             fontSize:   '12px',
             color:      C.textDim,
           }}>
-            Barangay Alert
+            Needs Attention
           </div>
-          <Tag color="red">Critical - inspect now</Tag>
+          <Tag color={metrics.totalNodes === 0 ? 'gray' : metrics.attentionNodes ? 'red' : 'green'}>
+            {metrics.totalNodes === 0
+              ? 'Waiting for sensor information'
+              : metrics.attentionNodes
+                ? `${metrics.attentionNodes} sensor${metrics.attentionNodes === 1 ? '' : 's'} need checking`
+                : 'All sensors okay'}
+          </Tag>
         </div>
       </div>
 

@@ -207,10 +207,39 @@ button {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.info-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .risk-map-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
   gap: 20px;
+}
+
+.node-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.status-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border-radius: 7px;
+  padding: 8px 11px;
+  cursor: pointer;
+  font: 700 12px 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+}
+
+.status-refresh-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 @media (max-width: 1100px) {
@@ -225,7 +254,8 @@ button {
 
 @media (max-width: 720px) {
   .info-grid-three,
-  .info-grid-four {
+  .info-grid-four,
+  .info-grid-two {
     grid-template-columns: 1fr;
   }
 

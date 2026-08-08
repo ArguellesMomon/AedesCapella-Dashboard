@@ -35,7 +35,7 @@ const MAP_THEME = {
 };
 
 /** SVG zone map of Barangay Sabang with clickable sitio polygons and animated node markers. */
-export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }) {
+export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio = () => undefined, referenceOnly = false }) {
   const palette = MAP_THEME[theme] ?? MAP_THEME.light;
 
   return (
@@ -55,7 +55,7 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
             color:         C.textDim,
             letterSpacing: '0.08em',
           }}>
-            BARANGAY SABANG - ZONE MAP
+            {referenceOnly ? 'BARANGAY SABANG - MAP GUIDE' : 'BARANGAY SABANG - ZONE MAP'}
           </div>
           <div style={{
             marginTop: '4px',
@@ -63,15 +63,15 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
             fontSize: '12px',
             color: C.textDim,
           }}>
-            Color shows response priority. Click a sitio to inspect details.
+            {referenceOnly ? 'This drawing is a guide only. It is not connected to the live area list.' : 'Color shows response priority. Click a sitio to inspect details.'}
           </div>
         </div>
 
         <div className="risk-map-legend" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          {Object.entries(RISK_COLORS).map(([level, c]) => (
+          {(referenceOnly ? [['Reference', { border: C.border, bg: C.surface2, text: C.textDim, fill: C.gray }]] : Object.entries(RISK_COLORS)).map(([level, c]) => (
             <div
               key={level}
-              title={`${level}: ${RISK_HELP[level]}`}
+              title={referenceOnly ? 'Illustrative polygon only' : `${level}: ${RISK_HELP[level]}`}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -93,23 +93,25 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
               </span>
             </div>
           ))}
-          <div
-            title="Node: deployed sensor device"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              border: `1px solid ${C.border}`,
-              background: C.surface2,
-              borderRadius: '6px',
-              padding: '4px 7px',
-            }}
-          >
-            <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: C.blue }} />
-            <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '12px', color: C.textDim }}>
-              Node
-            </span>
-          </div>
+          {!referenceOnly && (
+            <div
+              title="Node: deployed sensor device"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                border: `1px solid ${C.border}`,
+                background: C.surface2,
+                borderRadius: '6px',
+                padding: '4px 7px',
+              }}
+            >
+              <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: C.blue }} />
+              <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '12px', color: C.textDim }}>
+                Node
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -123,15 +125,17 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
         <rect width="500" height="400" fill={palette.bg} rx="8" />
         <rect width="500" height="400" fill="url(#grid)" rx="8" />
 
-        {SITIO_POLYGONS.map(p => {
-          const sitio = getSitioData(p.id);
-          const rc = RISK_COLORS[sitio.risk];
-          const isSelected = selectedSitio === p.id;
+          {SITIO_POLYGONS.map(p => {
+            const sitio = getSitioData(p.id);
+            const rc = referenceOnly
+              ? { fill: C.gray, border: C.border, text: C.textDim, bg: C.surface2 }
+              : RISK_COLORS[sitio.risk];
+            const isSelected = selectedSitio === p.id;
 
           return (
             <g
               key={p.id}
-              onClick={() => onSelectSitio(isSelected ? null : p.id)}
+              onClick={() => !referenceOnly && onSelectSitio(isSelected ? null : p.id)}
               style={{ cursor: 'pointer' }}
             >
               <polygon
@@ -170,13 +174,13 @@ export default function MapSVG({ theme = 'light', selectedSitio, onSelectSitio }
                 fill={palette.count}
                 style={{ paintOrder: 'stroke', stroke: palette.textHalo, strokeWidth: 1.2 }}
               >
-                {sitio.detections} det.
+                {!referenceOnly && `${sitio.detections} det.`}
               </text>
             </g>
           );
         })}
 
-        {NODES_DATA.map(node => {
+        {!referenceOnly && NODES_DATA.map(node => {
           const polygon = SITIO_POLYGONS.find(p => getSitioData(p.id)?.node === node.id);
           if (!polygon) return null;
 

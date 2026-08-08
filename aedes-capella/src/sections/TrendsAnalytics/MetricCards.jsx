@@ -2,65 +2,71 @@ import { AlertTriangle } from 'lucide-react';
 import { C } from '../../constants/colors';
 import Card from '../../components/ui/Card';
 import Tag from '../../components/ui/Tag';
+import { average, buildRuntimeSummary, formatDashboardTimestamp } from '../../utils/dashboardData';
 
-const METRICS = [
-  {
-    label: 'Highest Risk Sitio',
-    value: 'Purok Uno',
-    sub: '47 detections today',
-    color: C.red,
-    priority: true,
-    status: 'Critical',
-    statusColor: 'red',
-    note: 'Inspect now',
-  },
-  {
-    label: 'Weekly Detections',
-    value: '385',
-    sub: '+18% vs last week',
-    color: C.text,
-    status: 'Rising',
-    statusColor: 'amber',
-  },
-  {
-    label: 'Peak Detection Hour',
-    value: '10:00-11:00',
-    sub: '22 detections',
-    color: C.text,
-    status: 'Review',
-    statusColor: 'blue',
-  },
-  {
-    label: 'Model Confidence',
-    value: '93.2%',
-    sub: 'High - edge classifier',
-    color: C.text,
-    status: 'High',
-    statusColor: 'amber',
-  },
-];
+function peakEventHour(events) {
+  const counts = new Map();
+  events.forEach(event => {
+    const date = new Date(event.display_time);
+    if (Number.isNaN(date.getTime())) return;
+    const parts = new Intl.DateTimeFormat('en-PH', {
+      hour: '2-digit', hour12: false, timeZone: 'Asia/Manila',
+    }).formatToParts(date);
+    const hour = `${parts.find(part => part.type === 'hour')?.value || '—'}:00`;
+    counts.set(hour, (counts.get(hour) || 0) + 1);
+  });
+  const peak = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0];
+  return peak ? `${peak[0]} · ${peak[1]} rows` : '—';
+}
 
-/** Analytics summary cards with the intervention-critical metric emphasized. */
-export default function MetricCards() {
+/** Simple activity summary for barangay workers. */
+export default function MetricCards({ events = [], detections = [] }) {
+  const runtimeSummary = buildRuntimeSummary(events);
+  const meanScore = average(detections.map(record => record.confidence_score));
+  const metrics = [
+    {
+      label: 'Possible mosquito reports saved',
+      value: String(detections.length),
+      sub: detections.length ? 'reports saved by the system' : 'no reports yet',
+      color: C.text,
+      status: detections.length ? 'Available' : 'No reports',
+      statusColor: detections.length ? 'blue' : 'gray',
+    },
+    {
+      label: 'Sensor activities',
+      value: String(runtimeSummary.total),
+      sub: runtimeSummary.latestAt ? `last seen ${formatDashboardTimestamp(runtimeSummary.latestAt)}` : 'no activity yet',
+      color: C.text,
+      status: runtimeSummary.total ? 'Available' : 'No activity',
+      statusColor: runtimeSummary.total ? 'blue' : 'gray',
+    },
+    {
+      label: 'Busiest time',
+      value: peakEventHour(events),
+      sub: 'based on sensor activity',
+      color: C.text,
+      status: events.length ? 'Review soon' : 'No activity',
+      statusColor: events.length ? 'amber' : 'gray',
+    },
+    {
+      label: 'Average match strength',
+      value: meanScore === null ? '—' : `${meanScore.toFixed(1)}%`,
+      sub: detections.length ? 'helps guide a person’s review' : 'no match scores yet',
+      color: C.text,
+      status: meanScore === null ? 'No reports' : 'Available',
+      statusColor: meanScore === null ? 'gray' : 'blue',
+    },
+  ];
+
   return (
     <div style={{
       display:             'grid',
-      gridTemplateColumns: '1.35fr repeat(3, 1fr)',
+      gridTemplateColumns: 'repeat(4, 1fr)',
       gap:                 '14px',
       marginBottom:        '24px',
     }}>
-      {METRICS.map(({ label, value, sub, color, priority, note, status, statusColor }) => (
-        <Card
-          key={label}
-          style={{
-            background: priority
-              ? `linear-gradient(135deg, ${C.redDim}, ${C.surface2} 72%)`
-              : C.surface2,
-            border: priority ? `1px solid ${C.red}66` : `1px solid ${C.border}`,
-            padding: priority ? '18px' : '16px',
-            boxShadow: priority ? `0 18px 34px ${C.redDim}66` : C.shadow,
-          }}
-        >
+      {metrics.map(({ label, value, sub, color, status, statusColor }, index) => (
+        <Card key={label} style={{ background: C.surface2, padding: '16px' }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -69,9 +75,8 @@ export default function MetricCards() {
             marginBottom: '12px',
           }}>
             <Tag color={statusColor}>{status}</Tag>
-            {priority && <AlertTriangle size={18} color={C.red} />}
+            {index === 0 && detections.length === 0 && <AlertTriangle size={16} color={C.amber} />}
           </div>
-
           <div style={{
             fontFamily:    'IBM Plex Mono, monospace',
             fontSize:      '12px',
@@ -81,32 +86,19 @@ export default function MetricCards() {
           }}>
             {label}
           </div>
-
           <div style={{
             fontFamily:   'IBM Plex Mono, monospace',
-            fontSize:     priority ? '28px' : '18px',
+            fontSize:     index === 0 ? '24px' : '18px',
             color,
             fontWeight:   700,
-            marginBottom: '4px',
-            lineHeight:   1,
+            marginBottom: '5px',
+            lineHeight:   1.15,
           }}>
             {value}
           </div>
-
-          <div style={{
-            fontFamily: 'IBM Plex Mono, monospace',
-            fontSize:   '12px',
-            lineHeight:  1.45,
-            color:      C.textDim,
-          }}>
+          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '12px', lineHeight: 1.45, color: C.textDim }}>
             {sub}
           </div>
-
-          {priority && (
-            <div style={{ marginTop: '12px' }}>
-              <Tag color="red">{note}</Tag>
-            </div>
-          )}
         </Card>
       ))}
     </div>

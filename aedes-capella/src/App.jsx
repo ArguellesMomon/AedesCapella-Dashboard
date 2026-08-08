@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { C } from './constants/colors';
-import { useLiveDetections } from './hooks/useLiveDetections';
+import { useOperatorSession } from './hooks/useOperatorSession';
+import { useDeviceStatus } from './hooks/useDeviceStatus';
+import { useDashboardData } from './hooks/useDashboardData';
+import { average, countSince } from './utils/dashboardData';
 import LoginPage from './components/auth/LoginPage';
 import LogoutConfirmModal from './components/auth/LogoutConfirmModal';
 
@@ -8,12 +11,11 @@ import LogoutConfirmModal from './components/auth/LogoutConfirmModal';
 import Sidebar from './components/layout/Sidebar';
 import Topbar  from './components/layout/Topbar';
 
-// Sections
-import LiveFeed       from './sections/LiveFeed';
-import RiskMap        from './sections/RiskMap';
-import FoggingLog     from './sections/FoggingLog';
-import NodeManagement from './sections/NodeManagement';
-import TrendsAnalytics from './sections/TrendsAnalytics';
+const LiveFeed = lazy(() => import('./sections/LiveFeed'));
+const RiskMap = lazy(() => import('./sections/RiskMap'));
+const FoggingLog = lazy(() => import('./sections/FoggingLog'));
+const NodeManagement = lazy(() => import('./sections/NodeManagement'));
+const TrendsAnalytics = lazy(() => import('./sections/TrendsAnalytics'));
 
 const SECTIONS = {
   feed:   LiveFeed,
@@ -24,8 +26,6 @@ const SECTIONS = {
 };
 
 const THEME_STORAGE_KEY = 'aedes-capella-theme';
-const SESSION_STORAGE_KEY = 'aedes-capella-session';
-
 function getInitialTheme() {
   if (typeof window === 'undefined') return 'light';
 
@@ -39,16 +39,17 @@ export default function App() {
   const [activeSection, setActiveSection] = useState('feed');
   const [theme, setTheme] = useState(getInitialTheme);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [session, setSession] = useState(() => {
-    if (typeof window === 'undefined') return null;
+  const { session, login, logout } = useOperatorSession();
+  const deviceStatus = useDeviceStatus(session?.accessToken);
+  const dashboardData = useDashboardData(session?.accessToken);
 
-    const stored = window.localStorage.getItem(SESSION_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
-  });
-  const { detections, alertPulse } = useLiveDetections();
-
-  // Derive topbar detection count from live feed
-  const detectionCount = detections.length + 89;
+  const asOf = dashboardData.refreshedAt?.getTime();
+  const since24h = asOf ? asOf - (24 * 60 * 60 * 1000) : Number.POSITIVE_INFINITY;
+  const detectionsToday = countSince(dashboardData.detections, 'detected_at', since24h);
+  const foggingToday = countSince(dashboardData.fogging, 'triggered_at', since24h);
+  const onlineNodes = deviceStatus.devices.filter(device => device.operational_state === 'online').length;
+  const attentionNodes = deviceStatus.devices.filter(device => device.needs_attention).length;
+  const avgConfidence = average(dashboardData.detections.map(record => record.confidence_score));
 
   // Render the active section component
   const ActiveSection = SECTIONS[activeSection];
@@ -58,21 +59,12 @@ export default function App() {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
-  useEffect(() => {
-    if (session) {
-      window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
-      return;
-    }
-
-    window.localStorage.removeItem(SESSION_STORAGE_KEY);
-  }, [session]);
-
   if (!session) {
     return (
       <LoginPage
         theme={theme}
         onToggleTheme={() => setTheme(currentTheme => currentTheme === 'dark' ? 'light' : 'dark')}
-        onLogin={setSession}
+        onLogin={login}
       />
     );
   }
@@ -88,7 +80,7 @@ export default function App() {
       <Sidebar
         activeSection={activeSection}
         onNavigate={setActiveSection}
-        alertPulse={alertPulse}
+        deviceStatus={deviceStatus}
         theme={theme}
         onToggleTheme={() => setTheme(currentTheme => currentTheme === 'dark' ? 'light' : 'dark')}
         onLogout={() => setShowLogoutModal(true)}
@@ -96,12 +88,25 @@ export default function App() {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Topbar
-          metrics={{ detections: detectionCount }}
+          metrics={{
+            detections: detectionsToday,
+            fogs: foggingToday,
+            onlineNodes,
+            totalNodes: deviceStatus.devices.length,
+            avgConfidence,
+            attentionNodes,
+          }}
         />
 
         {/* Scrollable section content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '28px' }}>
-          <ActiveSection detections={detections} theme={theme} />
+          <Suspense fallback={<div style={{ color: C.textDim }}>Loading dashboard section…</div>}>
+            <ActiveSection
+              theme={theme}
+              deviceStatus={deviceStatus}
+              dashboardData={dashboardData}
+            />
+          </Suspense>
         </div>
       </div>
 
@@ -110,7 +115,7 @@ export default function App() {
           onCancel={() => setShowLogoutModal(false)}
           onConfirm={() => {
             setShowLogoutModal(false);
-            setSession(null);
+            logout();
           }}
         />
       )}

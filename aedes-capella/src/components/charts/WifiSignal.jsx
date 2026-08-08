@@ -3,12 +3,13 @@ import Mono from '../ui/Mono';
 import { getWifiBars } from '../../utils/helpers';
 
 /**
- * WiFi signal bar indicator showing 1–4 bars based on dBm value.
+ * Plain-language signal indicator showing 1–4 bars.
  */
 export default function WifiSignal({ dbm }) {
   if (!dbm) return <Mono size="11px" color={C.gray}>No Signal</Mono>;
 
   const bars = getWifiBars(dbm);
+  const signalLabel = bars >= 4 ? 'Strong' : bars === 3 ? 'Good' : bars === 2 ? 'Fair' : 'Weak';
 
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px' }}>
@@ -24,7 +25,7 @@ export default function WifiSignal({ dbm }) {
         />
       ))}
       <Mono size="10px" color={C.textDim} style={{ marginLeft: '4px' }}>
-        {dbm} dBm
+        {signalLabel}
       </Mono>
     </div>
   );

@@ -3,12 +3,12 @@ import { C } from '../../constants/colors';
 import Card from '../../components/ui/Card';
 
 const METADATA = [
-  ['Detection Model', 'On-device classifier', 'Runs locally on the sensor node.'],
-  ['Wingbeat Range', '400-600 Hz', 'Expected sound frequency for target mosquito wingbeats.'],
-  ['Auto-Fog Rule', '80%+ confidence', 'Fogging can trigger only after this threshold is met.'],
-  ['Fog Burst', '3 - 5 seconds', 'Duration of one automatic fogging action.'],
-  ['Cooldown', '5 minutes', 'Prevents repeated fogging from the same node.'],
-  ['Processing', 'Offline edge mode', 'Detection works without cloud connectivity.'],
+  ['How sound is checked', 'Inside the sensor', 'The sensor checks sound before sending an update.'],
+  ['Typical sound range', '400–600 cycles/second', 'The expected sound range for the mosquito being watched.'],
+  ['When fogging can start', 'After a strong match', 'Fogging follows the project’s safety rules.'],
+  ['Fogging length', 'A few seconds', 'Each automatic fogging action is short.'],
+  ['Waiting time', '5 minutes', 'Prevents repeated fogging too close together.'],
+  ['Works without internet', 'Yes', 'The sensor can check sound even when the connection is unavailable.'],
 ];
 
 /** Displays static system configuration metadata below the detection feed. */
@@ -25,7 +25,7 @@ export default function SystemMetadata() {
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
         }}>
-          System Guide
+          How the system works
         </span>
       </div>
       <div style={{

@@ -1,46 +1,40 @@
-import { useState } from 'react';
-import { MapPin } from 'lucide-react';
-import { SITIO_LIST } from '../../constants/MockData';
+import { Database, MapPin } from 'lucide-react';
 import SectionHeader from '../../components/ui/SectionHeader';
+import Banner from '../../components/ui/Banner';
 import Card from '../../components/ui/Card';
 import MapSVG from './MapSVG';
-import SitioDetail from './SitioDetail';
-import HighRiskPanel from './HighRiskPanel';
-import PriorityList from './PriorityList';
+import LocationActivityPanel from './LocationActivityPanel';
 
 /** Section 2 - Risk Map */
-export default function RiskMap({ theme = 'light' }) {
-  const [selectedSitioId, setSelectedSitioId] = useState(null);
-
-  const selectedSitio = selectedSitioId
-    ? SITIO_LIST.find(s => s.id === selectedSitioId)
-    : null;
+export default function RiskMap({ theme = 'light', dashboardData }) {
+  const locations = dashboardData?.locations || [];
 
   return (
     <div>
       <SectionHeader
         icon={MapPin}
-        title="Risk Map"
-        subtitle="Mosquito activity and response priority by sitio - Sabang, Lipa City, Batangas"
+        title="Barangay Map"
+        subtitle="Recent activity by location"
+      />
+      <Banner
+        icon={Database}
+        text="The list below shows recent reports by location. The drawing is only a guide and is not connected to the live locations yet."
+        color="amber"
       />
 
       <div className="risk-map-layout">
         <Card style={{ padding: '16px' }}>
           <MapSVG
             theme={theme}
-            selectedSitio={selectedSitioId}
-            onSelectSitio={setSelectedSitioId}
+            referenceOnly
           />
         </Card>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <SitioDetail
-            sitio={selectedSitio}
-            onClose={() => setSelectedSitioId(null)}
-          />
-          <HighRiskPanel onSelect={setSelectedSitioId} />
-          <PriorityList onSelect={setSelectedSitioId} />
-        </div>
+        <LocationActivityPanel
+          locations={locations}
+          loading={dashboardData?.loading}
+          error={dashboardData?.errors?.locations}
+        />
       </div>
     </div>
   );

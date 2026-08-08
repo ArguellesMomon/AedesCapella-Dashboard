@@ -3,56 +3,38 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { C } from '../../constants/colors';
-import { TREND_HOURLY, TREND_WEEKLY, TREND_MONTHLY } from '../../constants/MockData';
 import Card from '../../components/ui/Card';
+import EmptyState from '../../components/ui/EmptyState';
+import { buildActivitySeries } from '../../utils/dashboardData';
 
 const VIEWS = [
-  { key: 'today', label: 'TODAY', data: TREND_HOURLY },
-  { key: 'week',  label: 'WEEK',  data: TREND_WEEKLY  },
-  { key: 'month', label: 'MONTH', data: TREND_MONTHLY },
+  { key: 'today', label: '24 HOURS' },
+  { key: 'week', label: '7 DAYS' },
+  { key: 'month', label: '30 DAYS' },
 ];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{
-      background:   C.surface,
-      border:       `1px solid ${C.border}`,
-      borderRadius: '8px',
-      padding:      '10px 14px',
-    }}>
-      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '12px', color: C.textDim }}>
-        {label}
-      </div>
-      <div style={{
-        fontFamily:  'IBM Plex Mono, monospace',
-        fontSize:    '14px',
-        color:       C.amber,
-        marginTop:   '4px',
-      }}>
-        {payload[0].value} detections
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px 14px' }}>
+      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '12px', color: C.textDim }}>{label}</div>
+      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '14px', color: C.amber, marginTop: '4px' }}>
+        {payload[0].value} sensor activities
       </div>
     </div>
   );
 };
 
-/** Line chart of Aedes detections over time with Today / Week / Month toggle. */
-export default function DetectionTrendChart() {
+/** Sensor-activity trend with plain labels. */
+export default function DetectionTrendChart({ events = [] }) {
   const [view, setView] = useState('today');
-  const activeData = VIEWS.find(v => v.key === view).data;
+  const activeData = buildActivitySeries(events, view);
 
   return (
     <Card style={{ marginBottom: '20px', background: C.surface2 }}>
-      {/* Header + toggle */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <div style={{
-          fontFamily:    'Syne, sans-serif',
-          fontSize:      '16px',
-          fontWeight:    700,
-          color:         C.textDim,
-          letterSpacing: '0.08em',
-        }}>
-          AEDES DETECTIONS OVER TIME
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ fontFamily: 'Syne, sans-serif', fontSize: '16px', fontWeight: 700, color: C.textDim, letterSpacing: '0.08em' }}>
+          SENSOR ACTIVITY OVER TIME
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
           {VIEWS.map(({ key, label }) => (
@@ -69,7 +51,6 @@ export default function DetectionTrendChart() {
                 fontSize:      '12px',
                 cursor:        'pointer',
                 fontWeight:    600,
-                textTransform: 'uppercase',
                 letterSpacing: '0.05em',
               }}
             >
@@ -79,31 +60,23 @@ export default function DetectionTrendChart() {
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={200}>
-        <LineChart data={activeData} margin={{ top: 5, right: 20, bottom: 0, left: -20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}cc`} vertical={false} />
-          <XAxis
-            dataKey="t"
-            tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Line
-            type="monotone"
-            dataKey="v"
-            stroke={C.amber}
-            strokeWidth={2}
-            dot={{ fill: C.amber, r: 3 }}
-            activeDot={{ r: 5, fill: C.amber }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      {!activeData.length ? (
+        <EmptyState
+          title="No activity in this period"
+          message="The chart only uses actual sensor updates; it does not fill empty periods with sample numbers."
+          compact
+        />
+      ) : (
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={activeData} margin={{ top: 5, right: 20, bottom: 0, left: -20 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}cc`} vertical={false} />
+            <XAxis dataKey="t" tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }} axisLine={false} tickLine={false} />
+            <Tooltip content={<CustomTooltip />} />
+            <Line type="monotone" dataKey="v" stroke={C.amber} strokeWidth={2} dot={{ fill: C.amber, r: 3 }} activeDot={{ r: 5, fill: C.amber }} />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
     </Card>
   );
 }

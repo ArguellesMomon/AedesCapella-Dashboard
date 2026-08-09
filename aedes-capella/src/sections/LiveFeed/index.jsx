@@ -5,7 +5,6 @@ import Glossary from '../../components/ui/Glossary';
 import PaletteGuide from '../../components/ui/PaletteGuide';
 import FeedTable from './FeedTable';
 import ActivitySummary from './ActivitySummary';
-import SystemMetadata from './SystemMetadata';
 
 /** Section 1 - Latest sensor activity */
 export default function LiveFeed({ dashboardData, deviceStatus }) {
@@ -29,19 +28,18 @@ export default function LiveFeed({ dashboardData, deviceStatus }) {
       />
       <Banner
         icon={Database}
-        text={dashboardData?.refreshedAt
-          ? `Last checked: ${dashboardData.refreshedAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}.`
-          : 'Waiting for the first sensor update.'}
-        color="amber"
+        text={dashboardData?.reconciledAt
+          ? `Last full reconciliation: ${dashboardData.reconciledAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}. Dashboard connection: ${dashboardData.connectionState.replace('_', ' ')}.`
+          : 'Waiting for the first complete live-data reconciliation.'}
+        color={dashboardData?.connectionState === 'live' ? 'blue' : 'amber'}
       />
-      <ActivitySummary events={events} />
+      {!dashboardData?.loading && !dashboardData?.errors?.activity && <ActivitySummary events={events} />}
       <FeedTable
         events={events}
         deviceLabels={deviceLabels}
         loading={dashboardData?.loading}
         error={dashboardData?.errors?.activity}
       />
-      <SystemMetadata />
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
         <PaletteGuide />
         <Glossary />

@@ -9,7 +9,7 @@ import {
   getEventPresentation,
 } from '../../utils/dashboardData';
 
-const HEADERS = ['WHEN', 'SENSOR', 'ACTIVITY', 'TIME CHECK', 'NOTE'];
+const HEADERS = ['OCCURRED', 'RECEIVED', 'SENSOR', 'ACTIVITY', 'TIME QUALITY', 'DETAIL'];
 
 function deviceLabel(deviceId, deviceLabels) {
   return deviceLabels[deviceId] || (deviceId ? deviceId.slice(0, 8) : 'Unknown device');
@@ -88,43 +88,54 @@ export default function FeedTable({ events = [], deviceLabels = {}, loading = fa
         <tbody>
           {events.map((event, index) => {
             const presentation = getEventPresentation(event.event_kind);
-            const timeLabel = formatShortDashboardTimestamp(event.display_time);
+            const isNewCandidate = event.temporal_candidate
+              && Boolean(event.live_arrival_at);
 
             return (
               <tr
                 key={event.runtime_event_id || `${event.device_id}-${event.c3_boot}-${event.ordinal}`}
                 style={{
                   background: index % 2 === 0 ? 'transparent' : `${C.surface2}66`,
+                  boxShadow: isNewCandidate ? `inset 4px 0 ${C.amber}` : 'none',
                   borderBottom: `1px solid ${C.border}22`,
                   animation: index === 0 ? 'fadeIn 0.5s ease' : 'none',
                 }}
               >
                 <td style={{ padding: '10px 14px' }}>
-                  <Mono size="12px" color={C.textDim} style={{ fontWeight: 700 }} title={formatDashboardTimestamp(event.display_time)}>
-                    {timeLabel}
+                  <Mono size="12px" color={event.occurred_at ? C.textDim : C.amber} style={{ fontWeight: 700 }} title={formatDashboardTimestamp(event.occurred_at)}>
+                    {event.occurred_at ? formatShortDashboardTimestamp(event.occurred_at) : 'Unresolved'}
+                  </Mono>
+                </td>
+                <td style={{ padding: '10px 14px' }}>
+                  <Mono size="12px" color={C.textDim} title={formatDashboardTimestamp(event.received_at)}>
+                    {formatShortDashboardTimestamp(event.received_at)}
                   </Mono>
                 </td>
                 <td style={{ padding: '10px 14px' }}>
                   <Mono size="12px" color={C.text} style={{ fontWeight: 700 }}>
-                    {deviceLabel(event.device_id, deviceLabels)}
+                    {event.device_label || deviceLabel(event.device_id, deviceLabels)}
                   </Mono>
                 </td>
                 <td style={{ padding: '10px 14px' }}>
                   <Tag color={presentation.color}>{presentation.label}</Tag>
                   {event.temporal_candidate && (
                     <Mono size="11px" color={C.textDim} style={{ display: 'block', marginTop: '5px' }}>
-                      possible match — please review
+                      {isNewCandidate ? 'newly committed candidate' : 'candidate — please review'}
                     </Mono>
                   )}
                 </td>
                 <td style={{ padding: '10px 14px' }}>
                   <Mono size="12px" color={event.time_quality === 'unresolved' ? C.amber : C.green} style={{ fontWeight: 700 }}>
-                    {event.time_quality === 'unresolved' ? 'Time not confirmed' : 'Time confirmed'}
+                    {event.time_quality === 'unresolved'
+                      ? 'Occurrence unresolved'
+                      : event.time_quality === 'ntp' ? 'NTP time' : 'Boot-anchored time'}
                   </Mono>
                 </td>
                 <td style={{ padding: '10px 14px', maxWidth: '280px' }}>
                   <Mono size="12px" color={C.textDim} style={{ lineHeight: 1.45 }}>
-                    {event.temporal_candidate ? 'Please review this possible mosquito match.' : 'Sensor update recorded.'}
+                    {event.temporal_candidate
+                      ? 'Validated model/temporal candidate; not a confirmed biological detection.'
+                      : event.reason || 'Device-originated event recorded.'}
                   </Mono>
                 </td>
               </tr>

@@ -2,7 +2,7 @@ import { AlertTriangle } from 'lucide-react';
 import { C } from '../../constants/colors';
 import Card from '../../components/ui/Card';
 import Tag from '../../components/ui/Tag';
-import { average, buildRuntimeSummary, formatDashboardTimestamp } from '../../utils/dashboardData';
+import { average, buildRuntimeSummary, candidateScorePercent, formatDashboardTimestamp } from '../../utils/dashboardData';
 
 function peakEventHour(events) {
   const counts = new Map();
@@ -20,17 +20,17 @@ function peakEventHour(events) {
 }
 
 /** Simple activity summary for barangay workers. */
-export default function MetricCards({ events = [], detections = [] }) {
+export default function MetricCards({ events = [], candidates = [] }) {
   const runtimeSummary = buildRuntimeSummary(events);
-  const meanScore = average(detections.map(record => record.confidence_score));
+  const meanScore = average(candidates.map(candidateScorePercent));
   const metrics = [
     {
-      label: 'Possible mosquito reports saved',
-      value: String(detections.length),
-      sub: detections.length ? 'reports saved by the system' : 'no reports yet',
+      label: 'Candidates saved',
+      value: String(candidates.length),
+      sub: candidates.length ? 'validated model/temporal candidates' : 'no candidates yet',
       color: C.text,
-      status: detections.length ? 'Available' : 'No reports',
-      statusColor: detections.length ? 'blue' : 'gray',
+      status: candidates.length ? 'Available' : 'No candidates',
+      statusColor: candidates.length ? 'blue' : 'gray',
     },
     {
       label: 'Sensor activities',
@@ -51,7 +51,7 @@ export default function MetricCards({ events = [], detections = [] }) {
     {
       label: 'Average match strength',
       value: meanScore === null ? '—' : `${meanScore.toFixed(1)}%`,
-      sub: detections.length ? 'helps guide a person’s review' : 'no match scores yet',
+      sub: candidates.length ? 'model score; not species confirmation' : 'no candidate scores yet',
       color: C.text,
       status: meanScore === null ? 'No reports' : 'Available',
       statusColor: meanScore === null ? 'gray' : 'blue',
@@ -59,12 +59,7 @@ export default function MetricCards({ events = [], detections = [] }) {
   ];
 
   return (
-    <div style={{
-      display:             'grid',
-      gridTemplateColumns: 'repeat(4, 1fr)',
-      gap:                 '14px',
-      marginBottom:        '24px',
-    }}>
+    <div className="metric-card-grid">
       {metrics.map(({ label, value, sub, color, status, statusColor }, index) => (
         <Card key={label} style={{ background: C.surface2, padding: '16px' }}>
           <div style={{
@@ -75,7 +70,7 @@ export default function MetricCards({ events = [], detections = [] }) {
             marginBottom: '12px',
           }}>
             <Tag color={statusColor}>{status}</Tag>
-            {index === 0 && detections.length === 0 && <AlertTriangle size={16} color={C.amber} />}
+            {index === 0 && candidates.length === 0 && <AlertTriangle size={16} color={C.amber} />}
           </div>
           <div style={{
             fontFamily:    'IBM Plex Mono, monospace',

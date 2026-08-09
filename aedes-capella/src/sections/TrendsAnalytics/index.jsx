@@ -8,7 +8,7 @@ import DistributionCharts from './DistributionCharts';
 /** Section 5 — Trends & Analytics */
 export default function TrendsAnalytics({ dashboardData, deviceStatus }) {
   const events = dashboardData?.activity || [];
-  const detections = dashboardData?.detections || [];
+  const candidates = dashboardData?.candidates || [];
   const deviceLabels = (deviceStatus?.devices || []).reduce((lookup, device) => ({
     ...lookup,
     [device.device_id]: device.device_label,
@@ -19,16 +19,23 @@ export default function TrendsAnalytics({ dashboardData, deviceStatus }) {
       <SectionHeader
         icon={TrendingUp}
         title="Activity Summary"
-        subtitle="A simple summary of sensor and fogging activity"
+        subtitle="Device-originated candidates and runtime activity · Asia/Manila"
       />
       <Banner
         icon={Database}
         text="These charts summarize sensor information. A possible mosquito match still needs a person to review it and is not proof of mosquitoes."
         color="blue"
       />
-      <MetricCards events={events} detections={detections} />
-      <DetectionTrendChart events={events} />
-      <DistributionCharts events={events} detections={detections} deviceLabels={deviceLabels} />
+      {(dashboardData?.errors?.activity || dashboardData?.errors?.candidates) && (
+        <Banner
+          icon={Database}
+          text="One or more analytics sources are unavailable. Values shown below may be incomplete; polling will retry in 30 seconds."
+          color="red"
+        />
+      )}
+      <MetricCards events={events} candidates={candidates} />
+      <DetectionTrendChart candidates={candidates} />
+      <DistributionCharts events={events} candidates={candidates} deviceLabels={deviceLabels} />
     </div>
   );
 }

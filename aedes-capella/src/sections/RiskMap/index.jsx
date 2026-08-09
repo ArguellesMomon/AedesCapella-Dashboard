@@ -1,41 +1,36 @@
 import { Database, MapPin } from 'lucide-react';
 import SectionHeader from '../../components/ui/SectionHeader';
 import Banner from '../../components/ui/Banner';
-import Card from '../../components/ui/Card';
-import MapSVG from './MapSVG';
+import RealtimeDeviceMap from './RealtimeDeviceMap';
 import LocationActivityPanel from './LocationActivityPanel';
 
-/** Section 2 - Risk Map */
-export default function RiskMap({ theme = 'light', dashboardData }) {
-  const locations = dashboardData?.locations || [];
+export default function RiskMap({ dashboardData }) {
+  const devices = dashboardData?.mapDevices || [];
 
   return (
     <div>
       <SectionHeader
         icon={MapPin}
-        title="Barangay Map"
-        subtitle="Recent activity by location"
+        title="Live Device Map"
+        subtitle="Configured Supabase coordinates and current device activity"
       />
       <Banner
         icon={Database}
-        text="The list below shows recent reports by location. The drawing is only a guide and is not connected to the live locations yet."
-        color="amber"
+        text="Only authorized location coordinates are plotted. Missing coordinates stay in the Location not mapped list and are never assigned a placeholder point."
+        color="blue"
       />
-
-      <div className="risk-map-layout">
-        <Card style={{ padding: '16px' }}>
-          <MapSVG
-            theme={theme}
-            referenceOnly
-          />
-        </Card>
-
-        <LocationActivityPanel
-          locations={locations}
-          loading={dashboardData?.loading}
-          error={dashboardData?.errors?.locations}
-        />
-      </div>
+      <RealtimeDeviceMap
+        devices={devices}
+        candidates={dashboardData?.candidates || []}
+        relays={dashboardData?.relays || []}
+        loading={dashboardData?.loading}
+        error={dashboardData?.errors?.mapDevices}
+      />
+      <LocationActivityPanel
+        devices={devices}
+        loading={dashboardData?.loading}
+        error={dashboardData?.errors?.mapDevices}
+      />
     </div>
   );
 }

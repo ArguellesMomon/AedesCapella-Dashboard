@@ -1,68 +1,53 @@
-import { Database, MapPin } from 'lucide-react';
+import { MapPinOff } from 'lucide-react';
 import { C } from '../../constants/colors';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import Mono from '../../components/ui/Mono';
+import Tag from '../../components/ui/Tag';
 import { formatDashboardTimestamp } from '../../utils/dashboardData';
+import { filterMappedDevices, filterUnmappedDevices } from '../../utils/liveDashboard';
 
-function ActivityCell({ label, value, tone = C.text }) {
+function DeviceTable({ devices, title }) {
   return (
-    <div style={{ minWidth: '110px' }}>
-      <Mono size="11px" color={C.textDim}>{label}</Mono>
-      <Mono size="15px" color={tone} style={{ display: 'block', marginTop: '4px', fontWeight: 700 }}>{value}</Mono>
-    </div>
+    <Card style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="table-section-title">{title}</div>
+      <div className="table-scroll">
+        <table className="data-table">
+          <thead><tr><th>SENSOR / LOCATION</th><th>STATE</th><th>COORDINATES</th><th>CANDIDATES / 24H</th><th>RELAYS / 24H</th><th>LATEST ACTIVITY</th></tr></thead>
+          <tbody>
+            {devices.map(device => (
+              <tr key={device.device_id}>
+                <td><Mono size="12px" style={{ fontWeight: 700 }}>{device.device_label}</Mono><Mono size="11px" color={C.textDim} style={{ display: 'block' }}>{device.location_name} · {device.barangay_name}</Mono></td>
+                <td><Tag color={device.operational_state === 'online' ? 'green' : device.operational_state === 'logging_fault' ? 'red' : 'amber'}>{device.operational_state.replace('_', ' ')}</Tag></td>
+                <td><Mono size="11px" color={C.textDim}>{device.latitude === null || device.longitude === null ? 'Not mapped' : `${device.latitude}, ${device.longitude}`}</Mono></td>
+                <td>{device.candidates_last_24h ?? 0}</td>
+                <td>{device.relay_activations_last_24h ?? 0}</td>
+                <td><Mono size="11px" color={C.textDim}>{formatDashboardTimestamp(device.latest_activity_at)}</Mono></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }
 
-/** Recent location activity with simple labels. */
-export default function LocationActivityPanel({ locations = [], loading = false, error = '' }) {
-  if (loading) {
-    return <EmptyState title="Loading location activity" message="Please wait while the latest area information loads." variant="startup" />;
-  }
-
-  if (error) {
-    return <EmptyState title="Location information unavailable" message={error} action="Check your connection or ask the system administrator, then try again." variant="warning" />;
-  }
-
-  if (!locations.length) {
-    return <EmptyState title="No location information yet" message="No recent area information is available right now." action="Ask the system administrator to check the location setup." />;
-  }
+export default function LocationActivityPanel({ devices = [], loading, error }) {
+  if (loading || error || !devices.length) return null;
+  const mapped = filterMappedDevices(devices);
+  const unmapped = filterUnmappedDevices(devices);
 
   return (
-    <Card style={{ background: C.surface2 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Database size={15} color={C.blue} />
-          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: '15px', fontWeight: 700, color: C.text }}>
-            Recent location activity · 24 hours
-          </div>
+    <div className="map-data-lists">
+      <DeviceTable devices={mapped} title={`Mapped devices · ${mapped.length}`} />
+      {unmapped.length ? (
+        <div>
+          <div className="unmapped-heading"><MapPinOff size={16} /> Location not mapped · {unmapped.length}</div>
+          <DeviceTable devices={unmapped} title="Coordinates required from an authorized source" />
         </div>
-        <Mono size="11px" color={C.textDim}>{locations.length} location{locations.length === 1 ? '' : 's'}</Mono>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {locations.map(location => (
-          <div key={location.location_id} style={{
-            border: `1px solid ${C.border}`,
-            background: C.surface,
-            borderRadius: '8px',
-            padding: '12px',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '10px' }}>
-              <MapPin size={13} color={C.blue} />
-              <Mono size="14px" color={C.text} style={{ fontWeight: 700 }}>{location.location_name}</Mono>
-              <Mono size="11px" color={C.textDim}>{location.barangay_name}</Mono>
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-              <ActivityCell label="Mosquito reports" value={location.detections_last_24h ?? 0} tone={location.detections_last_24h ? C.amber : C.textDim} />
-              <ActivityCell label="Fogging" value={location.fogging_events_last_24h ?? 0} tone={location.fogging_events_last_24h ? C.amber : C.textDim} />
-              <ActivityCell label="Sensors working" value={`${location.devices_online ?? 0} / ${location.devices_total ?? 0}`} tone={location.devices_online ? C.green : C.textDim} />
-              <ActivityCell label="Last report" value={location.latest_detection_at ? formatDashboardTimestamp(location.latest_detection_at) : '—'} />
-              <ActivityCell label="Last fogging" value={location.latest_fogging_at ? formatDashboardTimestamp(location.latest_fogging_at) : '—'} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </Card>
+      ) : (
+        <EmptyState title="All configured devices are mapped" message="Every device row has a valid coordinate pair." compact />
+      )}
+    </div>
   );
 }

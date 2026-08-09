@@ -19,12 +19,12 @@ const NODE_COLORS = [C.red, C.amber, C.blue, C.gray];
 const CONF_COLORS = [C.gray, C.blue, C.amber, C.red];
 
 /** Activity distributions with simple labels. */
-export default function DistributionCharts({ events = [], detections = [], deviceLabels = {} }) {
+export default function DistributionCharts({ events = [], candidates = [], deviceLabels = {} }) {
   const nodeActivity = buildNodeActivity(events, deviceLabels);
-  const confidence = buildConfidenceDistribution(detections);
+  const confidence = buildConfidenceDistribution(candidates);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+    <div className="analytics-grid">
       <Card style={{ background: C.surface2 }}>
         <div style={{ fontFamily: 'Syne, sans-serif', fontSize: '16px', fontWeight: 700, color: C.textDim, marginBottom: '16px', letterSpacing: '0.08em' }}>
           SENSOR ACTIVITY BY SENSOR
@@ -50,8 +50,8 @@ export default function DistributionCharts({ events = [], detections = [], devic
         <div style={{ fontFamily: 'Syne, sans-serif', fontSize: '16px', fontWeight: 700, color: C.textDim, marginBottom: '16px', letterSpacing: '0.08em' }}>
           MATCH STRENGTH
         </div>
-        {!detections.length ? (
-          <EmptyState title="No match scores yet" message="This chart will fill when the system saves mosquito reports." compact />
+        {!candidates.length ? (
+          <EmptyState title="No candidate scores yet" message="This chart will fill from device-originated LIVE_ACCEPT rows." compact />
         ) : (
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={confidence} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>

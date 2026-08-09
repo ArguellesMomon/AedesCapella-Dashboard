@@ -1,6 +1,6 @@
 import {
   Activity, AlertTriangle, CheckCircle2, Clock, Database,
-  Radio, ShieldCheck, Upload, Wifi,
+  Hash, MemoryStick, Radio, ShieldCheck, Upload, Wifi,
 } from 'lucide-react';
 import { createElement } from 'react';
 import { C } from '../../constants/colors';
@@ -78,9 +78,9 @@ export default function NodeCard({ device }) {
           </Tag>
         </Metric>
 
-        <Metric icon={ShieldCheck} label="Sprayer safety">
+        <Metric icon={ShieldCheck} label="Relay-safe state">
           <Tag color={device.relay_safe_high ? 'green' : 'red'}>
-            {device.relay_safe_high ? 'Safe' : 'Check safety'}
+            {device.relay_safe_high ? 'Safe-high reported' : 'Unsafe — check device'}
           </Tag>
         </Metric>
 
@@ -90,6 +90,22 @@ export default function NodeCard({ device }) {
 
         <Metric icon={Activity} label="Time running">
           <Mono size="12px" color={C.text}>{formatDuration(device.uptime_ms)}</Mono>
+        </Metric>
+
+        <Metric icon={Clock} label="Heartbeat age">
+          <Mono size="12px" color={device.needs_attention ? C.amber : C.text}>
+            {device.heartbeat_age_seconds === null ? 'Never reported' : formatDuration(Number(device.heartbeat_age_seconds) * 1000)}
+          </Mono>
+        </Metric>
+
+        <Metric icon={Hash} label="C3 boot / ordinal">
+          <Mono size="12px" color={C.text}>{device.c3_boot ?? '—'} / {device.last_ordinal ?? '—'}</Mono>
+        </Metric>
+
+        <Metric icon={MemoryStick} label="Free heap">
+          <Mono size="12px" color={C.text}>
+            {device.free_heap_bytes === null ? 'Not available' : `${Math.round(device.free_heap_bytes / 1024)} KiB`}
+          </Mono>
         </Metric>
 
         <div style={{ height: 1, background: C.border }} />
@@ -112,7 +128,7 @@ export default function NodeCard({ device }) {
           </div>
           <div style={{ padding: '10px', background: C.surface2, borderRadius: '7px', textAlign: 'center' }}>
             <Mono size="20px" color={C.text} style={{ display: 'block' }}>{device.mist_events_last_7d ?? 0}</Mono>
-            <Mono size="10px" color={C.textDim}>FOGGING EVENTS · 7 DAYS</Mono>
+            <Mono size="10px" color={C.textDim}>RELAY ACTIVATIONS · 7 DAYS</Mono>
           </div>
         </div>
       </div>

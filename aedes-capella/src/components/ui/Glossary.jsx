@@ -4,12 +4,12 @@ import Card from './Card';
 import Mono from './Mono';
 
 const TERMS = [
-  ['Confidence', 'How sure the node is that the sound matches a mosquito wingbeat.'],
-  ['Wingbeat', 'The sound frequency made by mosquito wings, measured in hertz.'],
-  ['Cooldown', 'A waiting period that prevents repeated fogging from the same node.'],
-  ['Edge mode', 'Detection happens on the device, even without cloud access.'],
-  ['Auto-fog', 'A short fogging burst started automatically after the trigger rules are met.'],
-  ['Node', 'A field device with sensors and a connected fogger.'],
+  ['Candidate score', 'The model score saved with a possible match; it is not a species confirmation.'],
+  ['Possible mosquito match', 'A validated model and timing candidate that still needs human review.'],
+  ['Cooldown', 'A recorded pause that prevents relay activations too close together.'],
+  ['Works offline', 'The sensor can check sound even without an internet connection.'],
+  ['Relay event', 'A saved command or state change. It does not prove physical fluid delivery.'],
+  ['Sensor', 'A field device that evaluates sound and reports health and runtime events.'],
 ];
 
 export default function Glossary() {
@@ -23,7 +23,7 @@ export default function Glossary() {
           fontWeight: 700,
           color: C.text,
         }}>
-          Technical Term Glossary
+          Helpful Words
         </span>
       </div>
       <div className="info-grid info-grid-three">

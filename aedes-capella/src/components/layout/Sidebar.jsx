@@ -1,24 +1,22 @@
 import { createElement } from 'react';
 import { Activity, MapPin, Droplets, Server, TrendingUp, Bug, LogOut, Moon, Settings, Sun } from 'lucide-react';
 import { C } from '../../constants/colors';
-import { NODES_DATA } from '../../constants/MockData';
+import { getStatusPresentation } from '../../utils/deviceStatus';
 import Mono from '../ui/Mono';
 
 const NAV_ITEMS = [
-  { id: 'feed',   icon: Activity,   label: 'Live Detection Feed' },
-  { id: 'map',    icon: MapPin,      label: 'Risk Map' },
-  { id: 'fog',    icon: Droplets,    label: 'Fogging Log' },
-  { id: 'nodes',  icon: Server,      label: 'Node Management' },
-  { id: 'trends', icon: TrendingUp,  label: 'Trends & Analytics' },
+  { id: 'feed',   icon: Activity,   label: 'Latest Sensor Activity' },
+  { id: 'map',    icon: MapPin,      label: 'Barangay Map' },
+  { id: 'fog',    icon: Droplets,    label: 'Relay History' },
+  { id: 'nodes',  icon: Server,      label: 'Sensor Status' },
+  { id: 'trends', icon: TrendingUp,  label: 'Activity Summary' },
 ];
 
-export default function Sidebar({ activeSection, onNavigate, alertPulse, theme, onToggleTheme, onLogout }) {
+export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme, onToggleTheme, onLogout }) {
   const ThemeIcon = theme === 'dark' ? Sun : Moon;
 
   return (
-    <div style={{
-      width:         '280px',
-      flexShrink:    0,
+    <aside className="dashboard-sidebar" style={{
       background:    C.surface,
       borderRight:   `1px solid ${C.border}`,
       display:       'flex',
@@ -60,7 +58,7 @@ export default function Sidebar({ activeSection, onNavigate, alertPulse, theme, 
               color:         C.amber,
               letterSpacing: '0.1em',
             }}>
-              AIoT VECTOR SURVEILLANCE
+              BARANGAY MOSQUITO WATCH
             </div>
           </div>
         </div>
@@ -75,7 +73,7 @@ export default function Sidebar({ activeSection, onNavigate, alertPulse, theme, 
       </div>
 
       {/* Navigation */}
-      <nav style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
+      <nav className="dashboard-nav" style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
         {NAV_ITEMS.map(({ id, icon: Icon, label }) => {
           const active = activeSection === id;
           return (
@@ -107,24 +105,13 @@ export default function Sidebar({ activeSection, onNavigate, alertPulse, theme, 
               }}>
                 {label}
               </span>
-              {/* Live alert dot on feed item */}
-              {id === 'feed' && alertPulse && (
-                <div style={{
-                  marginLeft:  'auto',
-                  width:       '6px',
-                  height:      '6px',
-                  borderRadius:'50%',
-                  background:  C.red,
-                  animation:   'blink 0.5s infinite',
-                }} />
-              )}
             </button>
           );
         })}
       </nav>
 
       {/* Node mini status */}
-      <div style={{ padding: '14px', borderTop: `1px solid ${C.border}` }}>
+      <div className="sidebar-device-status" style={{ padding: '14px', borderTop: `1px solid ${C.border}` }}>
         <div style={{
           fontFamily:    'IBM Plex Mono, monospace',
           fontSize:      '12px',
@@ -132,35 +119,48 @@ export default function Sidebar({ activeSection, onNavigate, alertPulse, theme, 
           letterSpacing: '0.1em',
           marginBottom:  '10px',
         }}>
-          NODE STATUS
+          SENSOR STATUS
         </div>
-        {NODES_DATA.map(node => (
-          <div key={node.id} style={{
-            display:     'flex',
-            alignItems:  'center',
-            gap:         '8px',
-            marginBottom:'7px',
-          }}>
-            {/* Online indicator dot */}
-            <div style={{
-              width:        '7px',
-              height:       '7px',
-              borderRadius: '50%',
-              background:   node.online ? C.green : C.gray,
-              boxShadow:    node.online ? `0 0 6px ${C.green}` : 'none',
-              animation:    node.online ? 'pulse 2s infinite' : 'none',
-            }} />
-            <Mono size="12px" color={node.online ? C.text : C.textDim} style={{ flex: 1, fontWeight: 700 }}>
-              {node.id}
-            </Mono>
-            <Mono size="12px" color={node.batteryLow ? C.amber : C.textDim}>
-              {node.battery}%
-            </Mono>
-          </div>
-        ))}
+        {deviceStatus.loading && (
+          <Mono size="12px" color={C.textDim}>Checking sensors…</Mono>
+        )}
+        {!deviceStatus.loading && deviceStatus.error && (
+          <Mono size="12px" color={C.red}>Sensor information unavailable</Mono>
+        )}
+        {!deviceStatus.loading && !deviceStatus.error && !deviceStatus.devices.length && (
+          <Mono size="12px" color={C.textDim}>No sensors listed</Mono>
+        )}
+        {!deviceStatus.loading && !deviceStatus.error && deviceStatus.devices.map(device => {
+          const presentation = getStatusPresentation(device.operational_state);
+          const isHealthy = device.operational_state === 'online';
+
+          return (
+            <div key={device.device_id} style={{
+              display:     'flex',
+              alignItems:  'center',
+              gap:         '8px',
+              marginBottom:'7px',
+            }}>
+              <div style={{
+                width:        '7px',
+                height:       '7px',
+                borderRadius: '50%',
+                background:   isHealthy ? C.green : C.gray,
+                boxShadow:    isHealthy ? `0 0 6px ${C.green}` : 'none',
+                animation:    isHealthy ? 'pulse 2s infinite' : 'none',
+              }} />
+              <Mono size="12px" color={isHealthy ? C.text : C.textDim} style={{ flex: 1, fontWeight: 700 }}>
+                {device.device_label}
+              </Mono>
+              <Mono size="12px" color={presentation.color === 'red' ? C.red : C.textDim}>
+                {presentation.label}
+              </Mono>
+            </div>
+          );
+        })}
       </div>
 
-      <div style={{ padding: '14px', borderTop: `1px solid ${C.border}` }}>
+      <div className="sidebar-settings" style={{ padding: '14px', borderTop: `1px solid ${C.border}` }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -227,6 +227,6 @@ export default function Sidebar({ activeSection, onNavigate, alertPulse, theme, 
           </button>
         )}
       </div>
-    </div>
+    </aside>
   );
 }

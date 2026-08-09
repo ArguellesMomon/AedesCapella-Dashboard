@@ -69,6 +69,12 @@ export function liveDashboardReducer(state, action) {
       return {
         ...state,
         ...action.datasets,
+        activity: action.datasets.activity
+          ? upsertByKey(state.activity, action.datasets.activity, 'runtime_event_id')
+          : state.activity,
+        candidates: action.datasets.candidates
+          ? upsertByKey(state.candidates, action.datasets.candidates, 'candidate_event_id')
+          : state.candidates,
         errors: action.errors,
         loading: false,
         reconciledAt: action.complete ? action.at : state.reconciledAt,

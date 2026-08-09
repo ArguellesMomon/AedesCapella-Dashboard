@@ -2,6 +2,15 @@ const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 const MANILA_OFFSET_MS = 8 * HOUR_MS;
 
+export const OPERATOR_ACTIVITY_KINDS = Object.freeze([
+  'BOOT',
+  'LIVE_ACCEPT',
+  'RELAY_ON',
+  'RELAY_REJECT',
+]);
+
+const OPERATOR_ACTIVITY_KIND_SET = new Set(OPERATOR_ACTIVITY_KINDS);
+
 const EVENT_PRESENTATION = {
   BOOT: { label: 'Sensor started', color: 'blue' },
   TEST_ACCEPT: { label: 'Test candidate checked', color: 'gray' },
@@ -15,6 +24,14 @@ const EVENT_PRESENTATION = {
 
 export function getEventPresentation(eventKind) {
   return EVENT_PRESENTATION[eventKind] || { label: 'Other sensor activity', color: 'gray' };
+}
+
+export function isOperatorActivityEvent(event) {
+  return OPERATOR_ACTIVITY_KIND_SET.has(event?.event_kind);
+}
+
+export function filterOperatorActivity(events = []) {
+  return events.filter(isOperatorActivityEvent);
 }
 
 export function formatDashboardTimestamp(value) {
@@ -63,14 +80,22 @@ export function candidateScorePercent(candidate) {
 }
 
 export function buildRuntimeSummary(events, now = Date.now()) {
+  const operatorEvents = filterOperatorActivity(events);
   const since24h = now - DAY_MS;
+  const latestAt = operatorEvents.reduce((latest, event) => {
+    const timestamp = new Date(event?.display_time).getTime();
+    return Number.isFinite(timestamp) && timestamp > latest.timestamp
+      ? { timestamp, value: event.display_time }
+      : latest;
+  }, { timestamp: Number.NEGATIVE_INFINITY, value: null }).value;
+
   return {
-    total: events.length,
-    last24h: countSince(events, 'display_time', since24h),
-    candidateCount: events.filter(event => event.temporal_candidate).length,
-    relayCount: events.filter(event => event.relay_energized).length,
-    unresolvedCount: events.filter(event => event.time_quality === 'unresolved').length,
-    latestAt: events[0]?.display_time || null,
+    total: operatorEvents.length,
+    last24h: countSince(operatorEvents, 'display_time', since24h),
+    candidateCount: operatorEvents.filter(event => event.temporal_candidate).length,
+    relayCount: operatorEvents.filter(event => event.relay_energized).length,
+    unresolvedCount: operatorEvents.filter(event => event.time_quality === 'unresolved').length,
+    latestAt,
   };
 }
 

@@ -27,6 +27,32 @@ test('Realtime candidate insert is highlighted and duplicate delivery is dedupli
   assert.equal(twice.activity[0].live_arrival_at, 124);
 });
 
+test('a stale reconciliation response cannot erase a newer Realtime activity row', () => {
+  const liveRow = {
+    runtime_event_id: 45,
+    display_time: '2026-08-09T01:01:00Z',
+    event_kind: 'LIVE_ACCEPT',
+  };
+  const olderRow = {
+    runtime_event_id: 44,
+    display_time: '2026-08-09T01:00:00Z',
+    event_kind: 'BOOT',
+  };
+  const withLiveRow = liveDashboardReducer(EMPTY_LIVE_DASHBOARD, {
+    type: 'upsert_activity', row: liveRow, live: true, at: 123,
+  });
+  const reconciled = liveDashboardReducer(withLiveRow, {
+    type: 'reconcile',
+    datasets: { activity: [olderRow] },
+    errors: {}, complete: true, at: new Date('2026-08-09T01:01:01Z'),
+  });
+
+  assert.deepEqual(
+    reconciled.activity.map(row => row.runtime_event_id),
+    [45, 44],
+  );
+});
+
 test('heartbeat update replaces the correct device and preserves logging-fault precedence', () => {
   const start = { ...EMPTY_LIVE_DASHBOARD, devices: [{ device_id: 'd1', operational_state: 'online' }] };
   const next = liveDashboardReducer(start, {

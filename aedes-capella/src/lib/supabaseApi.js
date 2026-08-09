@@ -1,7 +1,10 @@
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '');
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+import {
+  isSupabaseConfigured,
+  supabaseAnonKey,
+  supabaseUrl,
+} from './supabaseClient';
 
-export const isSupabaseConfigured = Boolean(supabaseUrl && anonKey);
+export { isSupabaseConfigured } from './supabaseClient';
 
 function normalizeSession(payload) {
   return {
@@ -21,8 +24,8 @@ async function request(path, { accessToken, body, method = 'GET', signal } = {})
     method,
     signal,
     headers: {
-      apikey: anonKey,
-      Authorization: `Bearer ${accessToken || anonKey}`,
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${accessToken || supabaseAnonKey}`,
       'Content-Type': 'application/json',
     },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -67,7 +70,7 @@ export async function fetchDeviceStatus(accessToken, signal) {
     'offline_after_minutes', 'latest_event_at', 'latest_event_received_at',
     'latest_upload_or_event_at', 'latest_event_time_quality', 'latest_event_kind',
     'latest_activity_at', 'needs_attention', 'mist_events_last_7d',
-    'candidates_last_7d',
+    'candidates_last_7d', 'free_heap_bytes', 'c3_boot', 'last_ordinal',
   ].join(',');
 
   return request(`/rest/v1/dashboard_device_status?select=${columns}&order=device_label.asc`, {
@@ -78,54 +81,107 @@ export async function fetchDeviceStatus(accessToken, signal) {
 
 export async function fetchRuntimeActivity(accessToken, signal) {
   const columns = [
-    'runtime_event_id', 'device_id', 'display_time', 'time_quality',
+    'runtime_event_id', 'device_id', 'device_label', 'location_id',
+    'location_name', 'barangay_name', 'occurred_at', 'received_at',
+    'display_time', 'time_quality',
     'event_kind', 'source_boot', 'source_sequence', 'bag_index',
     'p_aedes', 'p_other_mosquito', 'p_background_noise',
     'temporal_candidate', 'relay_energized', 'reason', 'c3_boot', 'ordinal',
+    'ingest_path',
   ].join(',');
 
-  return request(`/rest/v1/dashboard_c3_activity?select=${columns}&order=display_time.desc&limit=500`, {
+  return request(`/rest/v1/dashboard_runtime_activity?select=${columns}&order=display_time.desc&limit=500`, {
     accessToken,
     signal,
   });
 }
 
-export async function fetchDetectionRecords(accessToken, signal) {
+export async function fetchRuntimeActivityById(accessToken, runtimeEventId, signal) {
+  const rows = await request(
+    `/rest/v1/dashboard_runtime_activity?select=*&runtime_event_id=eq.${encodeURIComponent(runtimeEventId)}&limit=1`,
+    { accessToken, signal },
+  );
+  return rows[0] || null;
+}
+
+export async function fetchCandidateActivity(accessToken, signal) {
   const columns = [
-    'detection_id', 'device_id', 'detected_at', 'classification_label',
-    'confidence_score', 'detection_count', 'audio_window_ms',
-    'inference_latency_ms', 'model_version',
+    'candidate_event_id', 'device_id', 'device_label', 'location_id',
+    'location_name', 'barangay_name', 'occurred_at', 'received_at',
+    'display_time', 'time_quality', 'source_boot', 'source_sequence',
+    'bag_index', 'candidate_score', 'p_other_mosquito',
+    'p_background_noise', 'c3_boot', 'ordinal', 'ingest_path',
   ].join(',');
 
-  return request(`/rest/v1/detection_records?select=${columns}&order=detected_at.desc&limit=500`, {
+  return request(`/rest/v1/dashboard_candidate_activity?select=${columns}&order=display_time.desc&limit=500`, {
     accessToken,
     signal,
   });
 }
 
-export async function fetchFoggingEvents(accessToken, signal) {
-  const columns = [
-    'fogging_id', 'device_id', 'triggered_at', 'duration_seconds',
-    'trigger_confidence', 'cooldown_applied', 'trigger_source', 'notes',
-    'created_at',
-  ].join(',');
+export async function fetchCandidateActivityById(accessToken, runtimeEventId, signal) {
+  const rows = await request(
+    `/rest/v1/dashboard_candidate_activity?select=*&candidate_event_id=eq.${encodeURIComponent(runtimeEventId)}&limit=1`,
+    { accessToken, signal },
+  );
+  return rows[0] || null;
+}
 
-  return request(`/rest/v1/fogging_events?select=${columns}&order=triggered_at.desc&limit=500`, {
+export async function fetchRelayActivity(accessToken, signal) {
+  return request('/rest/v1/dashboard_relay_activity?select=*&order=display_time.desc&limit=500', {
     accessToken,
     signal,
   });
 }
 
-export async function fetchLocationActivity(accessToken, signal) {
-  const columns = [
-    'location_id', 'location_name', 'barangay_name', 'area_type',
-    'devices_total', 'devices_online', 'detections_last_24h',
-    'fogging_events_last_24h', 'latest_detection_at', 'latest_fogging_at',
-    'latest_device_seen_at',
-  ].join(',');
-
-  return request(`/rest/v1/v_location_activity_24h?select=${columns}&order=location_name.asc`, {
+export async function fetchRelayActivityForSource(
+  accessToken,
+  deviceId,
+  sourceBoot,
+  sourceSequence,
+  signal,
+) {
+  const query = [
+    `device_id=eq.${encodeURIComponent(deviceId)}`,
+    `source_boot=eq.${encodeURIComponent(sourceBoot)}`,
+    `source_sequence=eq.${encodeURIComponent(sourceSequence)}`,
+  ].join('&');
+  const rows = await request(`/rest/v1/dashboard_relay_activity?select=*&${query}&limit=1`, {
     accessToken,
     signal,
   });
+  return rows[0] || null;
+}
+
+export async function fetchDeviceMap(accessToken, signal) {
+  return request('/rest/v1/dashboard_device_map?select=*&order=device_label.asc', {
+    accessToken,
+    signal,
+  });
+}
+
+export async function fetchDeviceStatusById(accessToken, deviceId, signal) {
+  const rows = await request(
+    `/rest/v1/dashboard_device_status?select=*&device_id=eq.${encodeURIComponent(deviceId)}&limit=1`,
+    { accessToken, signal },
+  );
+  return rows[0] || null;
+}
+
+export async function fetchDeviceMapById(accessToken, deviceId, signal) {
+  const rows = await request(
+    `/rest/v1/dashboard_device_map?select=*&device_id=eq.${encodeURIComponent(deviceId)}&limit=1`,
+    { accessToken, signal },
+  );
+  return rows[0] || null;
+}
+
+export async function fetchDeviceMapByLocation(accessToken, locationId, signal) {
+  return request(
+    `/rest/v1/dashboard_device_map?select=*&location_id=eq.${encodeURIComponent(locationId)}&order=device_label.asc`,
+    {
+    accessToken,
+    signal,
+    },
+  );
 }

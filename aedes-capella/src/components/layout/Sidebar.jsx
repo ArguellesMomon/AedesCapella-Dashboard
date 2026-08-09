@@ -7,7 +7,7 @@ import Mono from '../ui/Mono';
 const NAV_ITEMS = [
   { id: 'feed',   icon: Activity,   label: 'Latest Sensor Activity' },
   { id: 'map',    icon: MapPin,      label: 'Barangay Map' },
-  { id: 'fog',    icon: Droplets,    label: 'Fogging History' },
+  { id: 'fog',    icon: Droplets,    label: 'Relay History' },
   { id: 'nodes',  icon: Server,      label: 'Sensor Status' },
   { id: 'trends', icon: TrendingUp,  label: 'Activity Summary' },
 ];
@@ -16,9 +16,7 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme
   const ThemeIcon = theme === 'dark' ? Sun : Moon;
 
   return (
-    <div style={{
-      width:         '280px',
-      flexShrink:    0,
+    <aside className="dashboard-sidebar" style={{
       background:    C.surface,
       borderRight:   `1px solid ${C.border}`,
       display:       'flex',
@@ -75,7 +73,7 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme
       </div>
 
       {/* Navigation */}
-      <nav style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
+      <nav className="dashboard-nav" style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
         {NAV_ITEMS.map(({ id, icon: Icon, label }) => {
           const active = activeSection === id;
           return (
@@ -113,7 +111,7 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme
       </nav>
 
       {/* Node mini status */}
-      <div style={{ padding: '14px', borderTop: `1px solid ${C.border}` }}>
+      <div className="sidebar-device-status" style={{ padding: '14px', borderTop: `1px solid ${C.border}` }}>
         <div style={{
           fontFamily:    'IBM Plex Mono, monospace',
           fontSize:      '12px',
@@ -162,7 +160,7 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme
         })}
       </div>
 
-      <div style={{ padding: '14px', borderTop: `1px solid ${C.border}` }}>
+      <div className="sidebar-settings" style={{ padding: '14px', borderTop: `1px solid ${C.border}` }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -229,6 +227,6 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme
           </button>
         )}
       </div>
-    </div>
+    </aside>
   );
 }

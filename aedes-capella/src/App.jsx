@@ -1,9 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { C } from './constants/colors';
 import { useOperatorSession } from './hooks/useOperatorSession';
-import { useDeviceStatus } from './hooks/useDeviceStatus';
-import { useDashboardData } from './hooks/useDashboardData';
-import { average, countSince } from './utils/dashboardData';
+import { useLiveDashboard } from './hooks/useLiveDashboard';
+import { average, candidateScorePercent, countSince } from './utils/dashboardData';
 import LoginPage from './components/auth/LoginPage';
 import LogoutConfirmModal from './components/auth/LogoutConfirmModal';
 
@@ -40,16 +39,29 @@ export default function App() {
   const [theme, setTheme] = useState(getInitialTheme);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { session, login, logout } = useOperatorSession();
-  const deviceStatus = useDeviceStatus(session?.accessToken);
-  const dashboardData = useDashboardData(session?.accessToken);
+  const liveData = useLiveDashboard(session?.accessToken);
+  const deviceStatus = {
+    devices: liveData.devices,
+    error: liveData.errors.devices || '',
+    loading: liveData.loading,
+    refreshedAt: liveData.reconciledAt,
+    refresh: liveData.refresh,
+  };
 
-  const asOf = dashboardData.refreshedAt?.getTime();
-  const since24h = asOf ? asOf - (24 * 60 * 60 * 1000) : Number.POSITIVE_INFINITY;
-  const detectionsToday = countSince(dashboardData.detections, 'detected_at', since24h);
-  const foggingToday = countSince(dashboardData.fogging, 'triggered_at', since24h);
+  const metricsAsOf = Math.max(
+    liveData.reconciledAt?.getTime() || 0,
+    Date.parse(liveData.activity[0]?.received_at || '') || 0,
+  );
+  const since24h = metricsAsOf - (24 * 60 * 60 * 1000);
+  const candidatesToday = countSince(liveData.candidates, 'display_time', since24h);
+  const relaysToday = countSince(
+    liveData.relays.filter(relay => relay.recorded_relay_activation),
+    'started_at',
+    since24h,
+  );
   const onlineNodes = deviceStatus.devices.filter(device => device.operational_state === 'online').length;
   const attentionNodes = deviceStatus.devices.filter(device => device.needs_attention).length;
-  const avgConfidence = average(dashboardData.detections.map(record => record.confidence_score));
+  const avgCandidateScore = average(liveData.candidates.map(candidateScorePercent));
 
   // Render the active section component
   const ActiveSection = SECTIONS[activeSection];
@@ -70,10 +82,7 @@ export default function App() {
   }
 
   return (
-    <div style={{
-      display:    'flex',
-      height:     '100vh',
-      overflow:   'hidden',
+    <div className="app-shell" style={{
       background: C.bg,
       fontFamily: 'Syne, sans-serif',
     }}>
@@ -86,28 +95,33 @@ export default function App() {
         onLogout={() => setShowLogoutModal(true)}
       />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="app-main">
         <Topbar
           metrics={{
-            detections: detectionsToday,
-            fogs: foggingToday,
+            candidates: candidatesToday,
+            relays: relaysToday,
             onlineNodes,
             totalNodes: deviceStatus.devices.length,
-            avgConfidence,
+            avgCandidateScore,
             attentionNodes,
+            loading: liveData.loading,
+            candidateUnavailable: Boolean(liveData.errors.candidates),
+            relayUnavailable: Boolean(liveData.errors.relays),
+            deviceUnavailable: Boolean(liveData.errors.devices),
           }}
+          connectionState={liveData.connectionState}
+          reconciledAt={liveData.reconciledAt}
         />
 
-        {/* Scrollable section content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '28px' }}>
+        <main className="section-scroll">
           <Suspense fallback={<div style={{ color: C.textDim }}>Loading dashboard section…</div>}>
             <ActiveSection
               theme={theme}
               deviceStatus={deviceStatus}
-              dashboardData={dashboardData}
+              dashboardData={liveData}
             />
           </Suspense>
-        </div>
+        </main>
       </div>
 
       {showLogoutModal && (

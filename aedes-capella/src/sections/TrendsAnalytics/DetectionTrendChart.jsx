@@ -19,22 +19,22 @@ const CustomTooltip = ({ active, payload, label }) => {
     <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px 14px' }}>
       <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '12px', color: C.textDim }}>{label}</div>
       <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '14px', color: C.amber, marginTop: '4px' }}>
-        {payload[0].value} sensor activities
+        {payload[0].value} candidates
       </div>
     </div>
   );
 };
 
 /** Sensor-activity trend with plain labels. */
-export default function DetectionTrendChart({ events = [] }) {
+export default function DetectionTrendChart({ candidates = [] }) {
   const [view, setView] = useState('today');
-  const activeData = buildActivitySeries(events, view);
+  const activeData = buildActivitySeries(candidates, view);
 
   return (
     <Card style={{ marginBottom: '20px', background: C.surface2 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ fontFamily: 'Syne, sans-serif', fontSize: '16px', fontWeight: 700, color: C.textDim, letterSpacing: '0.08em' }}>
-          SENSOR ACTIVITY OVER TIME
+          CANDIDATES OVER TIME · ASIA/MANILA
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
           {VIEWS.map(({ key, label }) => (
@@ -60,23 +60,18 @@ export default function DetectionTrendChart({ events = [] }) {
         </div>
       </div>
 
-      {!activeData.length ? (
-        <EmptyState
-          title="No activity in this period"
-          message="The chart only uses actual sensor updates; it does not fill empty periods with sample numbers."
-          compact
-        />
-      ) : (
+      {candidates.length === 0 && <EmptyState title="No candidates in this period" message="Zero-filled buckets below use only committed candidate rows." compact />}
+      <div aria-label="Chronological candidate counts including zero-value time buckets">
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={activeData} margin={{ top: 5, right: 20, bottom: 0, left: -20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}cc`} vertical={false} />
             <XAxis dataKey="t" tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }} axisLine={false} tickLine={false} />
+            <YAxis allowDecimals={false} tick={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fill: C.textDim }} axisLine={false} tickLine={false} />
             <Tooltip content={<CustomTooltip />} />
             <Line type="monotone" dataKey="v" stroke={C.amber} strokeWidth={2} dot={{ fill: C.amber, r: 3 }} activeDot={{ r: 5, fill: C.amber }} />
           </LineChart>
         </ResponsiveContainer>
-      )}
+      </div>
     </Card>
   );
 }

@@ -116,7 +116,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
               fontSize: '15px',
               lineHeight: 1.6,
             }}>
-              Sign in to check sensor updates, see areas needing attention, and review fogging activity around the barangay.
+              Sign in to check sensor updates, see areas needing attention, and review recorded relay activity around the barangay.
             </div>
 
             <div style={{

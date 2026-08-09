@@ -4,12 +4,12 @@ import Card from './Card';
 import Mono from './Mono';
 
 const TERMS = [
-  ['Match strength', 'How closely the sound matches the mosquito sound being watched.'],
-  ['Wing sound', 'The sound made by mosquito wings.'],
-  ['Waiting time', 'A short pause that prevents repeated fogging too close together.'],
+  ['Candidate score', 'The model score saved with a possible match; it is not a species confirmation.'],
+  ['Possible mosquito match', 'A validated model and timing candidate that still needs human review.'],
+  ['Cooldown', 'A recorded pause that prevents relay activations too close together.'],
   ['Works offline', 'The sensor can check sound even without an internet connection.'],
-  ['Automatic fogging', 'A short fogging action started when the safety rules are met.'],
-  ['Sensor', 'A field device that listens for mosquito sounds and can control fogging.'],
+  ['Relay event', 'A saved command or state change. It does not prove physical fluid delivery.'],
+  ['Sensor', 'A field device that evaluates sound and reports health and runtime events.'],
 ];
 
 export default function Glossary() {

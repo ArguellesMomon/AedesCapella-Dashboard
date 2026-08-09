@@ -1,10 +1,11 @@
 # AedesCapella operator dashboard
 
-React/Vite dashboard for authenticated AedesCapella operations. Device health is
-read from the Supabase `dashboard_device_status` view, while runtime activity,
-stored classifier records, fogging history and 24-hour location summaries are
-read from their authenticated views/tables. The publishable key alone cannot
-read operational tables or views.
+React/Vite dashboard for authenticated AedesCapella operations. One shared live
+store reads the safe `dashboard_*` views and listens for authorized changes to
+the RLS-protected C3 event, heartbeat, device, and location tables. A 30-second
+REST reconciliation, focus refresh, and network-recovery refresh remain active
+when websocket notifications are missed. The publishable key alone cannot read
+operational tables or views.
 
 ## Local setup
 
@@ -35,24 +36,33 @@ npm run lint
 npm run build
 ```
 
-The Node Management screen distinguishes `never_seen`, `online`, `stale`,
+The Sensor Status screen distinguishes `never_seen`, `online`, `stale`,
 `offline`, and `logging_fault`; shows the canonical UUID, heartbeat, logging
 health, latest upload/event and time quality; and labels candidate counts as
 model outputs rather than biological detections.
 
-The remaining sections now preserve the same boundary:
+The operational sections use only device-originated data:
 
-- Live Backend Activity reads `dashboard_c3_activity` and excludes raw payloads.
-  Temporal candidates are explicitly not confirmed biological detections.
-- Fogging Log reads `fogging_events`; an empty table means no stored actuator
-  record, not proof that no physical pulse occurred.
-- Runtime Analytics uses engineering-event rows and stored classifier rows in
-  separate metrics and charts.
-- Risk Map shows `v_location_activity_24h` as the live location summary. The
-  polygon drawing is reference geometry until live locations are mapped to it.
+- Latest Sensor Activity reads `dashboard_runtime_activity`; `LIVE_ACCEPT` is a
+  validated temporal/model candidate, never a confirmed biological detection.
+- Recorded Relay History pairs C3 relay evidence from
+  `dashboard_relay_activity`. A saved relay command/event does not prove fluid
+  delivery.
+- Activity Summary uses candidate and runtime rows with explicit chronological
+  zero-filled buckets in `Asia/Manila`.
+- Live Device Map plots only valid coordinates from `dashboard_device_map`.
+  Null or invalid coordinates remain in an explicit unmapped list.
+- The top bar shows `Live`, `Reconnecting`, or `Polling fallback` separately
+  from device health, plus the last complete reconciliation.
 
 Empty, stale or unavailable reads remain visible; the UI does not substitute the
 old demo datasets for authenticated backend data.
+
+The database contract is defined by
+`supabase/migrations/202608090001_dashboard_live_integration.sql` in the shared
+project root. It creates the authenticated security-invoker views and adds only
+`edge_c3_runtime_events`, `device_health_heartbeat`, `devices`, and `locations`
+to `supabase_realtime`.
 
 ## Git workflow
 

@@ -1,12 +1,16 @@
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+const MANILA_OFFSET_MS = 8 * HOUR_MS;
+
 const EVENT_PRESENTATION = {
   BOOT: { label: 'Sensor started', color: 'blue' },
-  TEST_ACCEPT: { label: 'Test sound checked', color: 'gray' },
+  TEST_ACCEPT: { label: 'Test candidate checked', color: 'gray' },
   LIVE_ACCEPT: { label: 'Possible mosquito match', color: 'amber' },
-  RELAY_INTENT: { label: 'Fogging check', color: 'amber' },
-  RELAY_ON: { label: 'Fogging started', color: 'red' },
-  RELAY_OFF: { label: 'Fogging stopped', color: 'green' },
-  RELAY_REJECT: { label: 'Fogging not started', color: 'red' },
-  COOLDOWN_COMPLETE: { label: 'Waiting time complete', color: 'green' },
+  RELAY_INTENT: { label: 'Relay requested', color: 'amber' },
+  RELAY_ON: { label: 'Relay activation recorded', color: 'red' },
+  RELAY_OFF: { label: 'Relay stop recorded', color: 'green' },
+  RELAY_REJECT: { label: 'Relay request rejected', color: 'red' },
+  COOLDOWN_COMPLETE: { label: 'Cooldown completed', color: 'green' },
 };
 
 export function getEventPresentation(eventKind) {
@@ -15,10 +19,8 @@ export function getEventPresentation(eventKind) {
 
 export function formatDashboardTimestamp(value) {
   if (!value) return 'No timestamp';
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Invalid timestamp';
-
   return new Intl.DateTimeFormat('en-PH', {
     dateStyle: 'medium',
     timeStyle: 'medium',
@@ -28,10 +30,8 @@ export function formatDashboardTimestamp(value) {
 
 export function formatShortDashboardTimestamp(value) {
   if (!value) return '—';
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Invalid';
-
   return new Intl.DateTimeFormat('en-PH', {
     month: 'short',
     day: '2-digit',
@@ -44,103 +44,96 @@ export function formatShortDashboardTimestamp(value) {
 }
 
 export function average(values) {
-  const numeric = values
-    .map(Number)
-    .filter(value => Number.isFinite(value));
-  if (!numeric.length) return null;
-  return numeric.reduce((sum, value) => sum + value, 0) / numeric.length;
+  const numeric = values.map(Number).filter(Number.isFinite);
+  return numeric.length
+    ? numeric.reduce((sum, value) => sum + value, 0) / numeric.length
+    : null;
 }
 
 export function countSince(rows, timestampKey, since) {
   return rows.filter(row => {
-    const value = row?.[timestampKey];
-    return value && new Date(value).getTime() >= since;
+    const timestamp = new Date(row?.[timestampKey]).getTime();
+    return Number.isFinite(timestamp) && timestamp >= since;
   }).length;
 }
 
-export function buildRuntimeSummary(events, now = Date.now()) {
-  const since24h = now - (24 * 60 * 60 * 1000);
-  const candidateCount = events.filter(event => event.temporal_candidate).length;
-  const relayCount = events.filter(event => event.relay_energized).length;
-  const unresolvedCount = events.filter(event => event.time_quality === 'unresolved').length;
+export function candidateScorePercent(candidate) {
+  const score = Number(candidate?.candidate_score ?? candidate?.p_aedes);
+  return Number.isFinite(score) ? score * 100 : null;
+}
 
+export function buildRuntimeSummary(events, now = Date.now()) {
+  const since24h = now - DAY_MS;
   return {
     total: events.length,
     last24h: countSince(events, 'display_time', since24h),
-    candidateCount,
-    relayCount,
-    unresolvedCount,
+    candidateCount: events.filter(event => event.temporal_candidate).length,
+    relayCount: events.filter(event => event.relay_energized).length,
+    unresolvedCount: events.filter(event => event.time_quality === 'unresolved').length,
     latestAt: events[0]?.display_time || null,
   };
 }
 
-function bucketKey(date, view) {
-  if (view === 'today') {
-    const parts = new Intl.DateTimeFormat('en-PH', {
-      hour: '2-digit', hour12: false, timeZone: 'Asia/Manila',
-    }).formatToParts(date);
-    const hour = parts.find(part => part.type === 'hour')?.value || '—';
-    return `${hour}:00`;
+function formatBucket(timestamp, unit) {
+  const date = new Date(timestamp);
+  if (unit === HOUR_MS) {
+    return new Intl.DateTimeFormat('en-PH', {
+      month: 'short', day: '2-digit', hour: '2-digit', hour12: false,
+      timeZone: 'Asia/Manila',
+    }).format(date);
   }
-  if (view === 'week') {
-    return new Intl.DateTimeFormat('en-PH', { weekday: 'short', timeZone: 'Asia/Manila' }).format(date);
-  }
-  return new Intl.DateTimeFormat('en-PH', { month: 'short', day: '2-digit', timeZone: 'Asia/Manila' }).format(date);
+  return new Intl.DateTimeFormat('en-PH', {
+    month: 'short', day: '2-digit', timeZone: 'Asia/Manila',
+  }).format(date);
 }
 
-export function buildActivitySeries(events, view, now = Date.now()) {
-  const windows = {
-    today: 24 * 60 * 60 * 1000,
-    week: 7 * 24 * 60 * 60 * 1000,
-    month: 30 * 24 * 60 * 60 * 1000,
-  };
-  const since = now - windows[view];
-  const counts = new Map();
+function buildFilledSeries(rows, timestampKey, count, unit, now) {
+  const shiftedNow = now + MANILA_OFFSET_MS;
+  const currentBucket = Math.floor(shiftedNow / unit) * unit - MANILA_OFFSET_MS;
+  const starts = Array.from({ length: count }, (_, index) => (
+    currentBucket - ((count - index - 1) * unit)
+  ));
+  const totals = new Array(count).fill(0);
 
-  events.forEach(event => {
-    const timestamp = new Date(event.display_time).getTime();
-    if (!Number.isFinite(timestamp) || timestamp < since) return;
-    const key = bucketKey(new Date(timestamp), view);
-    counts.set(key, (counts.get(key) || 0) + 1);
+  rows.forEach(row => {
+    const timestamp = new Date(row?.[timestampKey]).getTime();
+    if (!Number.isFinite(timestamp)) return;
+    const index = Math.floor((timestamp - starts[0]) / unit);
+    if (index >= 0 && index < count) totals[index] += 1;
   });
 
-  return Array.from(counts, ([t, v]) => ({ t, v }))
-    .sort((a, b) => a.t.localeCompare(b.t, 'en', { numeric: true }));
+  return starts.map((start, index) => ({
+    start,
+    t: formatBucket(start, unit),
+    v: totals[index],
+  }));
 }
 
-export function buildHourlyFogSeries(events, now = Date.now()) {
-  const since = now - (12 * 60 * 60 * 1000);
-  const counts = new Map();
-
-  events.forEach(event => {
-    const timestamp = new Date(event.triggered_at).getTime();
-    if (!Number.isFinite(timestamp) || timestamp < since) return;
-    const date = new Date(timestamp);
-    const parts = new Intl.DateTimeFormat('en-PH', {
-      hour: '2-digit', hour12: false, timeZone: 'Asia/Manila',
-    }).formatToParts(date);
-    const hour = parts.find(part => part.type === 'hour')?.value || '—';
-    const key = `${hour}:00`;
-    counts.set(key, (counts.get(key) || 0) + 1);
-  });
-
-  return Array.from(counts, ([hour, fogs]) => ({ hour, fogs }))
-    .sort((a, b) => a.hour.localeCompare(b.hour));
+export function buildActivitySeries(candidates, view, now = Date.now()) {
+  if (view === 'today') return buildFilledSeries(candidates, 'display_time', 24, HOUR_MS, now);
+  if (view === 'week') return buildFilledSeries(candidates, 'display_time', 7, DAY_MS, now);
+  return buildFilledSeries(candidates, 'display_time', 30, DAY_MS, now);
 }
 
-export function buildConfidenceDistribution(records) {
+export function buildHourlyRelaySeries(relays, now = Date.now()) {
+  const started = relays.filter(relay => relay.started_at);
+  return buildFilledSeries(started, 'started_at', 12, HOUR_MS, now)
+    .map(point => ({ hour: point.t, relays: point.v, start: point.start }));
+}
+
+export function buildConfidenceDistribution(candidates) {
   const buckets = [
-    { range: '0–59%', min: 0, max: 59 },
-    { range: '60–79%', min: 60, max: 79 },
-    { range: '80–89%', min: 80, max: 89 },
-    { range: '90–100%', min: 90, max: 100 },
+    { range: '0–59%', min: 0, max: 60 },
+    { range: '60–79%', min: 60, max: 80 },
+    { range: '80–89%', min: 80, max: 90 },
+    { range: '90–100%', min: 90, max: 101 },
   ];
 
   return buckets.map(bucket => ({
     range: bucket.range,
-    count: records.filter(record => {
-      const score = Number(record.confidence_score);
-      return Number.isFinite(score) && score >= bucket.min && score <= bucket.max;
+    count: candidates.filter(candidate => {
+      const score = candidateScorePercent(candidate);
+      return score !== null && score >= bucket.min && score < bucket.max;
     }).length,
   }));
 }
@@ -151,9 +144,61 @@ export function buildNodeActivity(events, deviceLabels = {}) {
     const key = event.device_id || 'unknown';
     counts.set(key, (counts.get(key) || 0) + 1);
   });
-
   return Array.from(counts, ([deviceId, count]) => ({
     node: deviceLabels[deviceId] || deviceId.slice(0, 8),
     count,
   })).sort((a, b) => b.count - a.count);
+}
+
+export function formatRelayStatus(status) {
+  return ({
+    requested: 'Requested',
+    started: 'Activation recorded',
+    stopped: 'Stop recorded',
+    rejected: 'Rejected',
+    cooldown_complete: 'Cooldown completed',
+  })[status] || 'Recorded';
+}
+
+export function deriveRelayEpisodes(events) {
+  const relayKinds = new Set(['RELAY_INTENT', 'RELAY_ON', 'RELAY_OFF', 'RELAY_REJECT', 'COOLDOWN_COMPLETE']);
+  const episodes = new Map();
+
+  events.filter(event => relayKinds.has(event.event_kind)).forEach(event => {
+    const key = `${event.device_id}:${event.source_boot}:${event.source_sequence}`;
+    const episode = episodes.get(key) || {
+      relay_episode_key: key,
+      device_id: event.device_id,
+      source_boot: event.source_boot,
+      source_sequence: event.source_sequence,
+    };
+    const eventTime = event.occurred_at || event.received_at || event.display_time;
+    if (event.event_kind === 'RELAY_INTENT') episode.requested_at = eventTime;
+    if (event.event_kind === 'RELAY_ON') episode.started_at = eventTime;
+    if (event.event_kind === 'RELAY_OFF') episode.stopped_at = eventTime;
+    if (event.event_kind === 'RELAY_REJECT') {
+      episode.rejected_at = eventTime;
+      episode.rejection_reason = event.reason;
+    }
+    if (event.event_kind === 'COOLDOWN_COMPLETE') episode.cooldown_completed_at = eventTime;
+    episodes.set(key, episode);
+  });
+
+  return Array.from(episodes.values()).map(episode => {
+    const relayStatus = episode.rejected_at
+      ? 'rejected'
+      : episode.stopped_at ? 'stopped'
+        : episode.started_at ? 'started'
+          : episode.requested_at ? 'requested' : 'cooldown_complete';
+    const started = new Date(episode.started_at).getTime();
+    const stopped = new Date(episode.stopped_at).getTime();
+    return {
+      ...episode,
+      relay_status: relayStatus,
+      recorded_relay_activation: Boolean(episode.started_at),
+      duration_seconds: Number.isFinite(started) && Number.isFinite(stopped)
+        ? Math.max(0, (stopped - started) / 1000)
+        : null,
+    };
+  });
 }

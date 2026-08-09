@@ -5,10 +5,11 @@ import Glossary from '../../components/ui/Glossary';
 import PaletteGuide from '../../components/ui/PaletteGuide';
 import FeedTable from './FeedTable';
 import ActivitySummary from './ActivitySummary';
+import { filterOperatorActivity } from '../../utils/dashboardData';
 
 /** Section 1 - Latest sensor activity */
 export default function LiveFeed({ dashboardData, deviceStatus }) {
-  const events = dashboardData?.activity || [];
+  const events = filterOperatorActivity(dashboardData?.activity || []);
   const deviceLabels = (deviceStatus?.devices || []).reduce((lookup, device) => ({
     ...lookup,
     [device.device_id]: device.device_label,
@@ -23,7 +24,7 @@ export default function LiveFeed({ dashboardData, deviceStatus }) {
       />
       <Banner
         icon={Shield}
-        text="This list shows what the sensors sent. A possible mosquito match is not proof of mosquitoes. If the list is empty, check Sensor Status."
+        text="This list keeps sensor starts, possible matches, relay activations, and relay rejections. Test checks and detailed relay lifecycle rows stay out of this feed; review Fogging Log for relay details. A possible match is not proof of mosquitoes."
         color="blue"
       />
       <Banner

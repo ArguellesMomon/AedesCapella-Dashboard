@@ -90,7 +90,8 @@ export async function fetchRuntimeActivity(accessToken, signal) {
     'ingest_path',
   ].join(',');
 
-  return request(`/rest/v1/dashboard_runtime_activity?select=${columns}&order=display_time.desc&limit=500`, {
+  const operatorKinds = 'BOOT,LIVE_ACCEPT,RELAY_ON,RELAY_REJECT';
+  return request(`/rest/v1/dashboard_runtime_activity?select=${columns}&event_kind=in.(${operatorKinds})&order=display_time.desc&limit=100`, {
     accessToken,
     signal,
   });

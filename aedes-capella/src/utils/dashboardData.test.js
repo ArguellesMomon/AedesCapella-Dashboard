@@ -11,13 +11,36 @@ import {
 test('runtime summary separates candidates, relay activations, and unresolved time', () => {
   const now = Date.parse('2026-08-08T12:00:00Z');
   const events = [
-    { display_time: '2026-08-08T11:00:00Z', temporal_candidate: true, relay_energized: false, time_quality: 'boot_anchor' },
-    { display_time: '2026-08-08T10:00:00Z', temporal_candidate: false, relay_energized: true, time_quality: 'unresolved' },
-    { display_time: '2026-07-01T10:00:00Z', temporal_candidate: true, relay_energized: false, time_quality: 'boot_anchor' },
+    { event_kind: 'LIVE_ACCEPT', display_time: '2026-08-08T11:00:00Z', temporal_candidate: true, relay_energized: false, time_quality: 'boot_anchor' },
+    { event_kind: 'RELAY_ON', display_time: '2026-08-08T10:00:00Z', temporal_candidate: false, relay_energized: true, time_quality: 'unresolved' },
+    { event_kind: 'LIVE_ACCEPT', display_time: '2026-07-01T10:00:00Z', temporal_candidate: true, relay_energized: false, time_quality: 'boot_anchor' },
   ];
   assert.deepEqual(buildRuntimeSummary(events, now), {
     total: 3, last24h: 2, candidateCount: 2, relayCount: 1,
     unresolvedCount: 1, latestAt: '2026-08-08T11:00:00Z',
+  });
+});
+
+test('runtime summary excludes diagnostic and redundant relay lifecycle rows', () => {
+  const now = Date.parse('2026-08-09T12:00:00Z');
+  const events = [
+    { event_kind: 'BOOT', display_time: '2026-08-09T11:00:00Z' },
+    { event_kind: 'TEST_ACCEPT', display_time: '2026-08-09T11:01:00Z' },
+    { event_kind: 'LIVE_ACCEPT', display_time: '2026-08-09T11:02:00Z', temporal_candidate: true },
+    { event_kind: 'RELAY_INTENT', display_time: '2026-08-09T11:03:00Z' },
+    { event_kind: 'RELAY_ON', display_time: '2026-08-09T11:04:00Z', relay_energized: true },
+    { event_kind: 'RELAY_OFF', display_time: '2026-08-09T11:05:00Z' },
+    { event_kind: 'COOLDOWN_COMPLETE', display_time: '2026-08-09T11:06:00Z' },
+    { event_kind: 'RELAY_REJECT', display_time: '2026-08-09T11:07:00Z' },
+  ];
+
+  assert.deepEqual(buildRuntimeSummary(events, now), {
+    total: 4,
+    last24h: 4,
+    candidateCount: 1,
+    relayCount: 1,
+    unresolvedCount: 0,
+    latestAt: '2026-08-09T11:07:00Z',
   });
 });
 

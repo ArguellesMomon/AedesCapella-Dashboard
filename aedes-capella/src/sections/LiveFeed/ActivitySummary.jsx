@@ -42,11 +42,11 @@ export default function ActivitySummary({ events }) {
             Quick summary
           </div>
         </div>
-        <Tag color="blue">device-originated rows</Tag>
+        <Tag color="blue">operator-relevant rows</Tag>
       </div>
 
       <div className="info-grid info-grid-four">
-        <Metric icon={Activity} label="Activities listed" value={summary.total} tone={C.blue} note={`${summary.last24h} in the last 24 hours`} />
+        <Metric icon={Activity} label="Meaningful activities shown" value={summary.total} tone={C.blue} note={`${summary.last24h} shown from the last 24 hours`} />
         <Metric icon={Radio} label="Possible matches" value={summary.candidateCount} tone={C.amber} note="Please review before action" />
         <Metric icon={Droplets} label="Relay activations" value={summary.relayCount} tone={C.red} note="Recorded event; delivery not proven" />
         <Metric icon={Clock3} label="Time not confirmed" value={summary.unresolvedCount} tone={summary.unresolvedCount ? C.amber : C.green} note={summary.latestAt ? `latest ${formatDashboardTimestamp(summary.latestAt)}` : 'no recent activity'} />

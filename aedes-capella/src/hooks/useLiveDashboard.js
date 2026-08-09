@@ -14,6 +14,7 @@ import {
   fetchRuntimeActivityById,
 } from '../lib/supabaseApi';
 import { getFriendlyError } from '../utils/userMessages';
+import { isOperatorActivityEvent } from '../utils/dashboardData';
 import {
   connectionStateForChannelStatus,
   EMPTY_LIVE_DASHBOARD,
@@ -99,11 +100,14 @@ export function useLiveDashboard(accessToken) {
   const hydrateRuntimeEvent = useCallback(async (event, signal) => {
     const eventId = event.runtime_event_id;
     const tasks = [
-      fetchRuntimeActivityById(accessToken, eventId, signal).then(row => {
-        if (row) dispatch({ type: 'upsert_activity', row, live: true, at: Date.now() });
-      }),
       hydrateDevice(event.device_id, signal),
     ];
+
+    if (isOperatorActivityEvent(event)) {
+      tasks.push(fetchRuntimeActivityById(accessToken, eventId, signal).then(row => {
+        if (row) dispatch({ type: 'upsert_activity', row, live: true, at: Date.now() });
+      }));
+    }
 
     if (event.event_kind === 'LIVE_ACCEPT') {
       tasks.push(fetchCandidateActivityById(accessToken, eventId, signal).then(row => {
@@ -204,6 +208,7 @@ export function useLiveDashboard(accessToken) {
             type: 'connection',
             value: connectionStateForChannelStatus(status, navigator.onLine),
           });
+          if (status === 'SUBSCRIBED') reconcile();
         });
     }
 
@@ -216,7 +221,7 @@ export function useLiveDashboard(accessToken) {
       controller.abort();
       if (channel) client.removeChannel(channel);
     };
-  }, [accessToken, hydrateDevice, hydrateRuntimeEvent]);
+  }, [accessToken, hydrateDevice, hydrateRuntimeEvent, reconcile]);
 
   useEffect(() => () => {
     controllersRef.current.forEach(controller => controller.abort());

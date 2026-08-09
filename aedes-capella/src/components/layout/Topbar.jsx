@@ -1,115 +1,69 @@
 import { createElement } from 'react';
-import { Activity, Droplets, Server, Eye, AlertTriangle } from 'lucide-react';
+import { Activity, AlertTriangle, Droplets, Eye, Radio, Server } from 'lucide-react';
 import { C } from '../../constants/colors';
 import { usePHTime } from '../../hooks/usePHTime';
 import Tag from '../ui/Tag';
 
 const METRICS = [
-  { key: 'detections', label: 'Detections Today', icon: Activity, color: C.text, status: 'High', statusColor: 'amber' },
-  { key: 'fogs', label: 'Fog Events Today', icon: Droplets, color: C.text, status: 'Active', statusColor: 'amber' },
-  { key: 'nodes', label: 'Active Nodes', icon: Server, color: C.text, status: '2 online', statusColor: 'green' },
-  { key: 'confidence', label: 'Avg. Confidence', icon: Eye, color: C.text, status: 'High', statusColor: 'amber' },
+  { key: 'candidates', label: 'Candidates / 24h', icon: Activity },
+  { key: 'relays', label: 'Relay activations / 24h', icon: Droplets },
+  { key: 'nodes', label: 'Sensors online', icon: Server },
+  { key: 'score', label: 'Average candidate score', icon: Eye },
 ];
 
-/**
- * Persistent top bar with summary metrics, Sabang risk badge, and live PHT clock.
- * @param {object} metrics - { detections, fogs, nodes, confidence }
- */
-export default function Topbar({ metrics }) {
-  const { clock, date } = usePHTime();
+const CONNECTION = {
+  live: { label: 'Live', color: 'green' },
+  reconnecting: { label: 'Reconnecting', color: 'amber' },
+  polling_fallback: { label: 'Polling fallback', color: 'red' },
+};
 
+export default function Topbar({ metrics, connectionState, reconciledAt }) {
+  const { clock, date } = usePHTime();
+  const connection = CONNECTION[connectionState] || CONNECTION.polling_fallback;
   const values = {
-    detections: String(metrics.detections),
-    fogs:       '13',
-    nodes:      '2 / 3',
-    confidence: '90.2%',
+    candidates: metrics.loading ? 'Loading…' : metrics.candidateUnavailable ? 'Unavailable' : String(metrics.candidates ?? 0),
+    relays: metrics.loading ? 'Loading…' : metrics.relayUnavailable ? 'Unavailable' : String(metrics.relays ?? 0),
+    nodes: metrics.loading ? 'Loading…' : metrics.deviceUnavailable ? 'Unavailable' : `${metrics.onlineNodes ?? 0} / ${metrics.totalNodes ?? 0}`,
+    score: metrics.loading ? 'Loading…' : metrics.candidateUnavailable ? 'Unavailable'
+      : metrics.avgCandidateScore === null ? '—' : `${metrics.avgCandidateScore.toFixed(1)}%`,
   };
 
   return (
-    <div style={{
-      background:    C.surface,
-      borderBottom:  `1px solid ${C.border}`,
-      padding:       '0 24px',
-      height:        '64px',
-      display:       'flex',
-      alignItems:    'center',
-      gap:           '20px',
-      flexShrink:    0,
-      overflowX:     'auto',
-    }}>
-      {METRICS.map(({ key, label, icon: Icon, color, status, statusColor }) => (
-        <div key={key} style={{
-          display:      'flex',
-          alignItems:   'center',
-          gap:          '8px',
-          paddingRight: '20px',
-          borderRight:  `1px solid ${C.border}`,
-          flexShrink:   0,
-        }}>
-          {createElement(Icon, { size: 15, color })}
+    <header className="dashboard-topbar" aria-label="Live dashboard summary">
+      {METRICS.map(({ key, label, icon: Icon }) => (
+        <div key={key} className="topbar-metric">
+          {createElement(Icon, { size: 15, color: C.text })}
           <div>
-            <div style={{
-              fontFamily:    'IBM Plex Mono, monospace',
-              fontSize:      '12px',
-              color:         C.textDim,
-              letterSpacing: '0.06em',
-            }}>
-              {label}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{
-                fontFamily: 'IBM Plex Mono, monospace',
-                fontSize:   '17px',
-                fontWeight: 700,
-                color,
-              }}>
-                {values[key]}
-              </span>
-              <Tag color={statusColor}>{status}</Tag>
-            </div>
+            <div className="topbar-label">{label}</div>
+            <div className="topbar-value">{values[key]}</div>
           </div>
         </div>
       ))}
 
-      <div style={{
-        display:      'flex',
-        alignItems:   'center',
-        gap:          '8px',
-        paddingRight: '20px',
-        borderRight:  `1px solid ${C.border}`,
-        flexShrink:   0,
-      }}>
-        <AlertTriangle size={15} color={C.red} />
+      <div className="topbar-metric">
+        <AlertTriangle size={15} color={metrics.attentionNodes ? C.red : C.green} />
         <div>
-          <div style={{
-            fontFamily: 'IBM Plex Mono, monospace',
-            fontSize:   '12px',
-            color:      C.textDim,
-          }}>
-            Barangay Alert
-          </div>
-          <Tag color="red">Critical - inspect now</Tag>
+          <div className="topbar-label">Needs attention</div>
+          <Tag color={metrics.deviceUnavailable ? 'red' : metrics.totalNodes === 0 ? 'gray' : metrics.attentionNodes ? 'red' : 'green'}>
+            {metrics.deviceUnavailable ? 'Unavailable' : metrics.totalNodes === 0 ? 'No device data' : String(metrics.attentionNodes)}
+          </Tag>
         </div>
       </div>
 
-      <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>
-        <div style={{
-          fontFamily:    'IBM Plex Mono, monospace',
-          fontSize:      '20px',
-          fontWeight:    700,
-          color:         C.text,
-          letterSpacing: '0.05em',
-        }}>
-          {clock}
-        </div>
-        <div style={{
-          fontFamily: 'IBM Plex Mono, monospace',
-          fontSize:   '12px',
-          color:      C.textDim,
-        }}>
-          {date} PHT
+      <div className="topbar-connection" role="status" aria-live="polite">
+        <div className="topbar-label"><Radio size={12} /> Dashboard connection</div>
+        <Tag color={connection.color}>{connection.label}</Tag>
+        <div className="topbar-reconciled">
+          {reconciledAt
+            ? `Reconciled ${reconciledAt.toLocaleTimeString('en-PH', { timeZone: 'Asia/Manila' })}`
+            : 'Awaiting first reconciliation'}
         </div>
       </div>
-    </div>
+
+      <div className="topbar-clock">
+        <div>{clock}</div>
+        <span>{date} PHT</span>
+      </div>
+    </header>
   );
 }

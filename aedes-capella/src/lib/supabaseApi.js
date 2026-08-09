@@ -1,0 +1,187 @@
+import {
+  isSupabaseConfigured,
+  supabaseAnonKey,
+  supabaseUrl,
+} from './supabaseClient';
+
+export { isSupabaseConfigured } from './supabaseClient';
+
+function normalizeSession(payload) {
+  return {
+    accessToken: payload.access_token,
+    refreshToken: payload.refresh_token,
+    expiresAt: Date.now() + payload.expires_in * 1000,
+    user: { id: payload.user.id, email: payload.user.email },
+  };
+}
+
+async function request(path, { accessToken, body, method = 'GET', signal } = {}) {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured for this dashboard.');
+  }
+
+  const response = await fetch(`${supabaseUrl}${path}`, {
+    method,
+    signal,
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${accessToken || supabaseAnonKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+
+  const payload = response.status === 204 ? null : await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload?.msg || payload?.message || payload?.error_description || payload?.error;
+    throw new Error(message || `Supabase request failed (${response.status}).`);
+  }
+
+  return payload;
+}
+
+export async function signInWithPassword(email, password) {
+  const payload = await request('/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    body: { email, password },
+  });
+
+  return normalizeSession(payload);
+}
+
+export async function refreshOperatorSession(refreshToken) {
+  const payload = await request('/auth/v1/token?grant_type=refresh_token', {
+    method: 'POST',
+    body: { refresh_token: refreshToken },
+  });
+  return normalizeSession(payload);
+}
+
+export async function signOut(accessToken) {
+  await request('/auth/v1/logout', { method: 'POST', accessToken });
+}
+
+export async function fetchDeviceStatus(accessToken, signal) {
+  const columns = [
+    'device_id', 'device_label', 'last_seen_at', 'has_ever_reported',
+    'heartbeat_state', 'operational_state', 'is_online', 'log_healthy',
+    'relay_safe_high', 'wifi_rssi_dbm', 'uptime_ms', 'heartbeat_age_seconds',
+    'expected_heartbeat_cadence_minutes', 'stale_after_minutes',
+    'offline_after_minutes', 'latest_event_at', 'latest_event_received_at',
+    'latest_upload_or_event_at', 'latest_event_time_quality', 'latest_event_kind',
+    'latest_activity_at', 'needs_attention', 'mist_events_last_7d',
+    'candidates_last_7d', 'free_heap_bytes', 'c3_boot', 'last_ordinal',
+  ].join(',');
+
+  return request(`/rest/v1/dashboard_device_status?select=${columns}&order=device_label.asc`, {
+    accessToken,
+    signal,
+  });
+}
+
+export async function fetchRuntimeActivity(accessToken, signal) {
+  const columns = [
+    'runtime_event_id', 'device_id', 'device_label', 'location_id',
+    'location_name', 'barangay_name', 'occurred_at', 'received_at',
+    'display_time', 'time_quality',
+    'event_kind', 'source_boot', 'source_sequence', 'bag_index',
+    'p_aedes', 'p_other_mosquito', 'p_background_noise',
+    'temporal_candidate', 'relay_energized', 'reason', 'c3_boot', 'ordinal',
+    'ingest_path',
+  ].join(',');
+
+  return request(`/rest/v1/dashboard_runtime_activity?select=${columns}&order=display_time.desc&limit=500`, {
+    accessToken,
+    signal,
+  });
+}
+
+export async function fetchRuntimeActivityById(accessToken, runtimeEventId, signal) {
+  const rows = await request(
+    `/rest/v1/dashboard_runtime_activity?select=*&runtime_event_id=eq.${encodeURIComponent(runtimeEventId)}&limit=1`,
+    { accessToken, signal },
+  );
+  return rows[0] || null;
+}
+
+export async function fetchCandidateActivity(accessToken, signal) {
+  const columns = [
+    'candidate_event_id', 'device_id', 'device_label', 'location_id',
+    'location_name', 'barangay_name', 'occurred_at', 'received_at',
+    'display_time', 'time_quality', 'source_boot', 'source_sequence',
+    'bag_index', 'candidate_score', 'p_other_mosquito',
+    'p_background_noise', 'c3_boot', 'ordinal', 'ingest_path',
+  ].join(',');
+
+  return request(`/rest/v1/dashboard_candidate_activity?select=${columns}&order=display_time.desc&limit=500`, {
+    accessToken,
+    signal,
+  });
+}
+
+export async function fetchCandidateActivityById(accessToken, runtimeEventId, signal) {
+  const rows = await request(
+    `/rest/v1/dashboard_candidate_activity?select=*&candidate_event_id=eq.${encodeURIComponent(runtimeEventId)}&limit=1`,
+    { accessToken, signal },
+  );
+  return rows[0] || null;
+}
+
+export async function fetchRelayActivity(accessToken, signal) {
+  return request('/rest/v1/dashboard_relay_activity?select=*&order=display_time.desc&limit=500', {
+    accessToken,
+    signal,
+  });
+}
+
+export async function fetchRelayActivityForSource(
+  accessToken,
+  deviceId,
+  sourceBoot,
+  sourceSequence,
+  signal,
+) {
+  const query = [
+    `device_id=eq.${encodeURIComponent(deviceId)}`,
+    `source_boot=eq.${encodeURIComponent(sourceBoot)}`,
+    `source_sequence=eq.${encodeURIComponent(sourceSequence)}`,
+  ].join('&');
+  const rows = await request(`/rest/v1/dashboard_relay_activity?select=*&${query}&limit=1`, {
+    accessToken,
+    signal,
+  });
+  return rows[0] || null;
+}
+
+export async function fetchDeviceMap(accessToken, signal) {
+  return request('/rest/v1/dashboard_device_map?select=*&order=device_label.asc', {
+    accessToken,
+    signal,
+  });
+}
+
+export async function fetchDeviceStatusById(accessToken, deviceId, signal) {
+  const rows = await request(
+    `/rest/v1/dashboard_device_status?select=*&device_id=eq.${encodeURIComponent(deviceId)}&limit=1`,
+    { accessToken, signal },
+  );
+  return rows[0] || null;
+}
+
+export async function fetchDeviceMapById(accessToken, deviceId, signal) {
+  const rows = await request(
+    `/rest/v1/dashboard_device_map?select=*&device_id=eq.${encodeURIComponent(deviceId)}&limit=1`,
+    { accessToken, signal },
+  );
+  return rows[0] || null;
+}
+
+export async function fetchDeviceMapByLocation(accessToken, locationId, signal) {
+  return request(
+    `/rest/v1/dashboard_device_map?select=*&location_id=eq.${encodeURIComponent(locationId)}&order=device_label.asc`,
+    {
+    accessToken,
+    signal,
+    },
+  );
+}

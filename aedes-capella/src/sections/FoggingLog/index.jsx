@@ -1,27 +1,44 @@
-import { Droplets, Zap } from 'lucide-react';
+import { Database, Droplets, Zap } from 'lucide-react';
 import SectionHeader from '../../components/ui/SectionHeader';
 import Banner from '../../components/ui/Banner';
 import FogSummaryCards from './FogSummaryCards';
 import HourlyFogChart from './HourlyFogChart';
 import FogTable from './FogTable';
+import { buildHourlyRelaySeries } from '../../utils/dashboardData';
 
-/** Section 3 - Fogging Log */
-export default function FoggingLog() {
+export default function FoggingLog({ dashboardData }) {
+  const relays = dashboardData?.relays || [];
+
   return (
     <div>
       <SectionHeader
         icon={Droplets}
-        title="Fogging Log"
-        subtitle="Automatic fogging history and trigger reasons - Sabang deployment"
+        title="Recorded Relay History"
+        subtitle="Requested, started, stopped, and rejected device relay episodes"
       />
       <Banner
         icon={Zap}
-        text="Auto-fogging starts only when confidence is at least 80%, the node is armed, and cooldown is clear. Each burst lasts 8 seconds."
+        text="These are saved relay command/events from the C3. They do not by themselves prove that physical fluid was delivered."
         color="amber"
       />
-      <FogSummaryCards />
-      <HourlyFogChart />
-      <FogTable />
+      <Banner
+        icon={Database}
+        text={dashboardData?.reconciledAt
+          ? `Last full reconciliation: ${dashboardData.reconciledAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}.`
+          : 'Waiting for the first complete relay-history reconciliation.'}
+        color="blue"
+      />
+      {!dashboardData?.loading && !dashboardData?.errors?.relays && (
+        <>
+          <FogSummaryCards relays={relays} />
+          <HourlyFogChart data={buildHourlyRelaySeries(relays)} />
+        </>
+      )}
+      <FogTable
+        relays={relays}
+        loading={dashboardData?.loading}
+        error={dashboardData?.errors?.relays}
+      />
     </div>
   );
 }

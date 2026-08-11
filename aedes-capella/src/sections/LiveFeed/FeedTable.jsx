@@ -1,166 +1,121 @@
-import { useRef, useEffect } from 'react';
-import { Search, ClipboardCheck } from 'lucide-react';
-import { C, RISK_COLORS } from '../../constants/colors';
-import { SITIO_LIST } from '../../constants/MockData';
-import { getRecommendedAction, getRiskAction } from '../../utils/decisionLabels';
-import Mono from '../../components/ui/Mono';
+import { C } from '../../constants/colors';
 import EmptyState from '../../components/ui/EmptyState';
-import ConfidenceBar from '../../components/charts/ConfidenceBar';
-import AutoResponseBadge from './AutoResponseBadge';
-import { offsetTime } from '../../utils/helpers';
+import Mono from '../../components/ui/Mono';
+import Tag from '../../components/ui/Tag';
+import TablePlate from '../../components/ui/TablePlate';
+import {
+  formatDashboardTimestamp,
+  formatShortDashboardTimestamp,
+  getEventPresentation,
+} from '../../utils/dashboardData';
 
-const HEADERS = ['TIMESTAMP', 'NODE', 'SITIO', 'WINGBEAT', 'CONFIDENCE', 'AUTO ACTION', 'NEXT STEP'];
-const HIGH_RISK_LEVELS = ['Critical', 'High'];
-const RISK_BY_SITIO = SITIO_LIST.reduce((lookup, sitio) => ({
-  ...lookup,
-  [sitio.name]: sitio.risk,
-}), {});
+const HEADERS = ['OCCURRED', 'RECEIVED', 'SENSOR', 'ACTIVITY', 'TIME QUALITY', 'DETAIL'];
+const COLUMNS = ['14%', '14%', '16%', '20%', '14%', '22%'];
 
-/** Scrollable detection table. Scrolls to top whenever new detections arrive. */
-export default function FeedTable({ detections }) {
-  const feedRef = useRef(null);
+function deviceLabel(deviceId, deviceLabels) {
+  return deviceLabels[deviceId] || (deviceId ? deviceId.slice(0, 8) : 'Unknown device');
+}
 
-  useEffect(() => {
-    if (feedRef.current) feedRef.current.scrollTop = 0;
-  }, [detections]);
-
-  if (!detections.length) {
+/** Recent sensor activity table with plain-language labels. */
+export default function FeedTable({ events = [], deviceLabels = {}, loading = false, error = '' }) {
+  if (loading) {
     return (
-      <div style={{ marginBottom: '24px' }}>
-        <EmptyState
-          title="No confirmed detections yet"
-          message="The live feed will populate when a node confirms a mosquito wingbeat signature."
-          action="Suggested action: keep nodes online and check signal status."
-        />
-      </div>
+      <EmptyState
+        title="Loading Recent Activity"
+        message="Please wait while the latest sensor updates load."
+        variant="startup"
+      />
     );
   }
 
-  return (
-    <div
-      ref={feedRef}
-      style={{
-        maxHeight:     '380px',
-        overflowY:     'auto',
-        marginBottom:  '24px',
-        scrollbarWidth:'thin',
-        scrollbarColor:`${C.border} transparent`,
-      }}
-    >
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-          <tr style={{ background: C.surface2 }}>
-            {HEADERS.map(h => (
-              <th key={h} style={{
-                padding:       '10px 14px',
-                textAlign:     'left',
-                fontFamily:    'IBM Plex Mono, monospace',
-                fontSize:      '12px',
-                color:         C.textDim,
-                fontWeight:    600,
-                letterSpacing: '0.08em',
-                borderBottom:  `1px solid ${C.border}`,
-                whiteSpace:    'nowrap',
-              }}>
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {detections.map((d, i) => {
-            const risk = RISK_BY_SITIO[d.sitio];
-            const isHighRisk = HIGH_RISK_LEVELS.includes(risk);
-            const riskColor = risk ? RISK_COLORS[risk] : null;
-            const action = getRiskAction(risk);
-            const recommendation = getRecommendedAction(d);
+  if (error) {
+    return (
+      <EmptyState
+        title="Recent Activity Unavailable"
+        message={error}
+        action="Check your connection or ask the system administrator, then try again."
+        variant="warning"
+      />
+    );
+  }
 
-            return (
+  if (!events.length) {
+    return (
+      <EmptyState
+        title="No Recent Activity"
+        message="No sensor updates are showing right now. This does not prove that everything is okay."
+        action="Open Sensor Status and check whether the sensors are reporting."
+      />
+    );
+  }
+
+  const ordinals = events.map(event => event.ordinal).filter(Number.isFinite);
+  const ordinalRange = ordinals.length
+    ? `ordinal ${Math.min(...ordinals)}–${Math.max(...ordinals)}`
+    : null;
+
+  return (
+    <TablePlate
+      title="Recorded Events"
+      note={`${ordinalRange ? `${ordinalRange} · ` : ''}${events.length} rows held`}
+      label="Event log"
+      fig="FIG.01"
+      headers={HEADERS}
+      columns={COLUMNS}
+      rows={events}
+      resetScrollOn={events}
+      renderRow={(event, index) => {
+        const presentation = getEventPresentation(event.event_kind);
+        const isNewCandidate = event.temporal_candidate && Boolean(event.live_arrival_at);
+
+        return (
               <tr
-                key={d.id}
+                key={event.runtime_event_id || `${event.device_id}-${event.c3_boot}-${event.ordinal}`}
                 style={{
-                  background: isHighRisk
-                    ? riskColor.bg
-                    : i % 2 === 0 ? 'transparent' : `${C.surface2}66`,
-                  borderBottom: `1px solid ${isHighRisk ? riskColor.border : `${C.border}22`}`,
-                  boxShadow: isHighRisk ? `inset 3px 0 0 ${riskColor.fill}` : 'none',
-                  animation: i === 0 ? 'fadeIn 0.5s ease' : 'none',
+                  boxShadow: isNewCandidate ? `inset 3px 0 var(--pd-accent)` : 'none',
+                  animation: index === 0 ? 'fadeIn 0.5s ease' : 'none',
                 }}
               >
-                <td style={{ padding: '10px 14px' }}>
-                  <Mono size="12px" color={isHighRisk ? riskColor.text : C.textDim} style={{ fontWeight: 700 }}>
-                    {offsetTime(d.minsAgo)}
+                <td>
+                  <Mono size="12px" color={event.occurred_at ? C.textDim : C.amber} style={{ fontWeight: 700 }} title={formatDashboardTimestamp(event.occurred_at)}>
+                    {event.occurred_at ? formatShortDashboardTimestamp(event.occurred_at) : 'Unresolved'}
                   </Mono>
                 </td>
-                <td style={{ padding: '10px 14px' }}>
-                  <Mono size="12px" color={isHighRisk ? riskColor.text : C.text} style={{ fontWeight: 700 }}>
-                    {d.nodeId}
+                <td>
+                  <Mono size="12px" color={C.textDim} title={formatDashboardTimestamp(event.received_at)}>
+                    {formatShortDashboardTimestamp(event.received_at)}
                   </Mono>
                 </td>
-                <td style={{ padding: '10px 14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Mono size="12px" color={isHighRisk ? riskColor.text : undefined} style={{ fontWeight: 700 }}>
-                      {d.sitio}
+                <td>
+                  <Mono size="12px" color={C.text} style={{ fontWeight: 700 }}>
+                    {event.device_label || deviceLabel(event.device_id, deviceLabels)}
+                  </Mono>
+                </td>
+                <td>
+                  <Tag color={presentation.color}>{presentation.label}</Tag>
+                  {event.temporal_candidate && (
+                    <Mono size="11px" color={C.textDim} style={{ display: 'block', marginTop: '5px' }}>
+                      {isNewCandidate ? 'newly committed candidate' : 'candidate — please review'}
                     </Mono>
-                    {isHighRisk && (
-                      <span style={{
-                        border: `1px solid ${riskColor.border}`,
-                        background: C.surface,
-                        color: riskColor.text,
-                        borderRadius: '4px',
-                        padding: '2px 6px',
-                        fontFamily: 'IBM Plex Mono, monospace',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        letterSpacing: '0.04em',
-                      }}>
-                        {risk.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </td>
-                <td style={{ padding: '10px 14px' }}>
-                  <Mono
-                    size="12px"
-                    color={isHighRisk ? riskColor.text : C.textDim}
-                    style={{ cursor: 'help', fontWeight: 700 }}
-                  >
-                    <span title="Wingbeat frequency detected by the acoustic sensor.">{d.freq} Hz</span>
+                <td>
+                  <Mono size="12px" color={event.time_quality === 'unresolved' ? C.amber : C.green} style={{ fontWeight: 700 }}>
+                    {event.time_quality === 'unresolved'
+                      ? 'Occurrence unresolved'
+                      : event.time_quality === 'ntp' ? 'NTP time' : 'Boot-anchored time'}
                   </Mono>
                 </td>
-                <td style={{ padding: '10px 14px' }}>
-                  <ConfidenceBar confidence={d.confidence} />
-                </td>
-                <td style={{ padding: '10px 14px' }}>
-                  <AutoResponseBadge status={d.autoResponse} confidence={d.confidence} />
-                </td>
-                <td style={{ padding: '10px 14px' }}>
-                  <button
-                    title={`${recommendation.reason} ${recommendation.why}`}
-                    style={{
-                      border: `1px solid ${isHighRisk ? riskColor.border : C.border}`,
-                      background: C.surface,
-                      color: isHighRisk ? riskColor.text : C.text,
-                      borderRadius: '6px',
-                      padding: '6px 8px',
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontFamily: 'IBM Plex Mono, monospace',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {isHighRisk ? <Search size={12} /> : <ClipboardCheck size={12} />}
-                    {recommendation.action || action}
-                  </button>
+                <td style={{ maxWidth: '280px' }}>
+                  <Mono size="12px" color={C.textDim} style={{ lineHeight: 1.45 }}>
+                    {event.temporal_candidate
+                      ? 'Validated model/temporal candidate; not a confirmed biological detection.'
+                      : event.reason || 'Device-originated event recorded.'}
+                  </Mono>
                 </td>
               </tr>
             );
-          })}
-        </tbody>
-      </table>
-    </div>
+      }}
+    />
   );
 }

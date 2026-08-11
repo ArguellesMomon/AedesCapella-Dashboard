@@ -1,26 +1,55 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap');
 
+/*
+ * Visual language: technical-drawing, after the PioneerDev.ai light system.
+ *
+ * The identity is structural, not chromatic. Four things carry it, and none of
+ * them is a colour: dashed plate edges with solid corner brackets, a faint
+ * square grid inside figure zones, monospace FIG.0x corner labels, and tiny
+ * tracked overlines above heavy display headings. Recolouring without those
+ * yields a generic dashboard, which is exactly what the first attempt proved.
+ *
+ * Orange replaces the source system's blue. That swap is not symmetric: blue
+ * is dark enough to carry small text on white at 4.5:1, and a vivid orange is
+ * not. Hence two accent tokens rather than one, --pd-accent for graphics and
+ * --pd-accent-ink for anything that has to be read.
+ */
 :root {
   color-scheme: light;
-  --color-bg: #f5f0e8;
+  --color-bg: #fbfcfd;
   --color-surface: #ffffff;
-  --color-surface-2: #faf6f0;
-  --color-surface-3: #f0e9dd;
-  --color-amber: #ff9d00;
-  --color-amber-dim: #fef3c7;
+  --color-surface-2: #f6f8fa;
+  --color-surface-3: #eef2f6;
+  --color-amber: #e07b13;
+  --color-amber-dim: #fdf1e3;
   --color-red: #dc2626;
   --color-red-dim: #fee2e2;
   --color-green: #16a34a;
   --color-green-dim: #dcfce7;
   --color-blue: #2563eb;
-  --color-gray: #9ca3af;
-  --color-text: #1c1917;
-  --color-text-dim: #78716c;
-  --color-border: #e7dfd3;
-  --color-border-bright: #d1c7b7;
-  --shadow-card: 0 12px 28px rgba(120, 113, 108, 0.12);
-  --scrollbar-thumb: #d1c7b7;
-  --scrollbar-thumb-hover: #b8ad9e;
+  --color-gray: #8a94a6;
+  --color-text: #0e1726;
+  --color-text-dim: #5a6675;
+  --color-border: rgba(14, 23, 38, 0.14);
+  --color-border-bright: rgba(14, 23, 38, 0.26);
+  --shadow-card: 0 1px 2px rgba(14, 23, 38, 0.04), 0 12px 24px -10px rgba(14, 23, 38, 0.10);
+  --scrollbar-thumb: #cdd5df;
+  --scrollbar-thumb-hover: #aab4c2;
+
+  /* Technical-plate primitives. */
+  --pd-accent: #e07b13;          /* brackets, rules, icons, chart fills */
+  --pd-accent-ink: #b4560a;      /* accent TEXT and links, 4.5:1 on white */
+  --pd-accent-dim: rgba(224, 123, 19, 0.08);
+  --pd-accent-border: rgba(224, 123, 19, 0.34);
+  --pd-grid-line: rgba(14, 23, 38, 0.055);
+  --pd-grid-size: 16px;
+  --pd-dash: rgba(14, 23, 38, 0.18);
+  --pd-bracket: rgba(14, 23, 38, 0.40);
+  --pd-radius-xs: 12px;
+  --pd-radius-s: 16px;
+  --pd-corner: 18px;              /* bracket arm length; must exceed radius-s */
+  --pd-scrollbar: 6px;            /* shared by ::-webkit-scrollbar and .feed-head */
+  --pd-chrome-h: 88px;            /* topbar and sidebar brand share this height */
   --risk-critical-bg: #fee2e2;
   --risk-critical-border: #fca5a5;
   --risk-critical-text: #991b1b;
@@ -67,14 +96,26 @@
   --banner-red-text: #991b1b;
 }
 
+/*
+ * Dark remains available because the sidebar toggle ships it, but the plate
+ * language is tuned for paper: on a dark field the dashed edges and grid read
+ * as noise rather than as draughting. Dark is kept coherent, not elaborated.
+ */
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --color-bg: #111827;
-  --color-surface: #18212f;
-  --color-surface-2: #1d2939;
-  --color-surface-3: #243244;
-  --color-amber: #f59e0b;
-  --color-amber-dim: #5b3a05;
+  --color-bg: #0b1017;
+  --color-surface: #111a25;
+  --color-surface-2: #182232;
+  --color-surface-3: #1f2b3d;
+  --color-amber: #f0a45c;
+  --color-amber-dim: #3a2408;
+  --pd-accent: #f0a45c;
+  --pd-accent-ink: #f7d9ae;
+  --pd-accent-dim: rgba(240, 164, 92, 0.10);
+  --pd-accent-border: rgba(240, 164, 92, 0.34);
+  --pd-grid-line: rgba(223, 241, 255, 0.05);
+  --pd-dash: rgba(223, 241, 255, 0.16);
+  --pd-bracket: rgba(223, 241, 255, 0.38);
   --color-red: #f87171;
   --color-red-dim: #4b1f24;
   --color-green: #4ade80;
@@ -144,15 +185,197 @@ html, body, #root {
   height: 100%;
   background: var(--color-bg);
   color: var(--color-text);
+  font-family: 'Outfit', system-ui, sans-serif;
 }
+
+/* ---------------------------------------------------------------------------
+   Technical-plate primitives
+   --------------------------------------------------------------------------- */
+
+/*
+ * The grid is drawn with two repeating gradients rather than a background
+ * image so it inherits the token and costs no request. It is deliberately
+ * near-invisible: at 0.055 alpha it reads as paper texture, and any darker it
+ * competes with the data sitting on top of it.
+ */
+.pd-grid {
+  background-image:
+    repeating-linear-gradient(to right, var(--pd-grid-line) 0 1px, transparent 1px var(--pd-grid-size)),
+    repeating-linear-gradient(to bottom, var(--pd-grid-line) 0 1px, transparent 1px var(--pd-grid-size));
+}
+
+/*
+ * The plate edge is drawn as four background gradients rather than as a
+ * `border`, because a real border runs behind the solid corner brackets and
+ * the dashes stay visible through them. Each gradient edge stops short of the
+ * corner by --pd-corner, leaving clean space for the bracket to own. Nothing
+ * is layered over anything, so the corner is genuinely solid rather than
+ * solid-on-top-of-dashed.
+ */
+.pd-plate {
+  position: relative;
+  background-color: var(--color-surface);
+  border-radius: var(--pd-radius-s);
+  background-repeat: no-repeat;
+  background-image:
+    repeating-linear-gradient(to right,  var(--pd-dash) 0 5px, transparent 5px 11px),
+    repeating-linear-gradient(to right,  var(--pd-dash) 0 5px, transparent 5px 11px),
+    repeating-linear-gradient(to bottom, var(--pd-dash) 0 5px, transparent 5px 11px),
+    repeating-linear-gradient(to bottom, var(--pd-dash) 0 5px, transparent 5px 11px);
+  background-size:
+    calc(100% - 2 * var(--pd-corner)) 1px,
+    calc(100% - 2 * var(--pd-corner)) 1px,
+    1px calc(100% - 2 * var(--pd-corner)),
+    1px calc(100% - 2 * var(--pd-corner));
+  background-position:
+    var(--pd-corner) 0,
+    var(--pd-corner) 100%,
+    0 var(--pd-corner),
+    100% var(--pd-corner);
+}
+
+/*
+ * Four solid corner brackets. Two live on the plate itself, two on a child
+ * <i class="pd-corners"> so all four exist without wrapper divs in the markup.
+ */
+.pd-corners {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pd-plate::before,
+.pd-plate::after,
+.pd-corners::before,
+.pd-corners::after {
+  content: '';
+  position: absolute;
+  width: var(--pd-corner);
+  height: var(--pd-corner);
+  pointer-events: none;
+  border-color: var(--pd-bracket);
+  border-style: solid;
+  border-width: 0;
+  transition: border-color 0.18s ease;
+}
+
+.pd-plate::before {
+  top: 0; left: 0;
+  border-top-width: 2px; border-left-width: 2px;
+  border-top-left-radius: var(--pd-radius-s);
+}
+
+.pd-plate::after {
+  right: 0; bottom: 0;
+  border-bottom-width: 2px; border-right-width: 2px;
+  border-bottom-right-radius: var(--pd-radius-s);
+}
+
+.pd-corners::before {
+  top: 0; right: 0;
+  border-top-width: 2px; border-right-width: 2px;
+  border-top-right-radius: var(--pd-radius-s);
+}
+
+.pd-corners::after {
+  bottom: 0; left: 0;
+  border-bottom-width: 2px; border-left-width: 2px;
+  border-bottom-left-radius: var(--pd-radius-s);
+}
+
+.pd-plate-accent::before,
+.pd-plate-accent::after,
+.pd-plate-accent .pd-corners::before,
+.pd-plate-accent .pd-corners::after {
+  border-color: var(--pd-accent);
+}
+
+/* The figure zone: gridded, holds a diagram or a headline figure. */
+.pd-figure {
+  position: relative;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: var(--pd-radius-s) var(--pd-radius-s) 0 0;
+  padding: 18px 18px 30px;
+}
+
+/* Monospace corner labels sitting on the rule under the figure zone. */
+.pd-figlabel {
+  position: absolute;
+  bottom: 8px;
+  font: 500 10.5px 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.pd-figlabel-left  { left: 18px; color: var(--pd-accent-ink); }
+.pd-figlabel-right { right: 18px; color: var(--color-gray); text-transform: uppercase; }
+
+/* Dot-separated metadata footer, as in "stack=React . Node.js . Docker". */
+.pd-metafoot {
+  border-top: 1px dashed var(--pd-dash);
+  padding: 11px 18px;
+  color: var(--color-gray);
+  font: 500 11px 'IBM Plex Mono', monospace;
+}
+
+.pd-metafoot b { color: var(--pd-accent-ink); font-weight: 500; }
+.pd-metafoot i { color: var(--color-border-bright); font-style: normal; padding: 0 6px; }
+
+/* ---------------------------------------------------------------------------
+   Display typography
+   --------------------------------------------------------------------------- */
+
+.pd-overline {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--pd-accent-ink);
+  font: 600 11px 'Outfit', sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.pd-display {
+  margin: 0;
+  color: var(--color-text);
+  font: 800 clamp(1.75rem, 2.6vw, 2.25rem) 'Outfit', sans-serif;
+  letter-spacing: -0.022em;
+  line-height: 1.08;
+}
+
+.pd-h2 {
+  margin: 0;
+  color: var(--color-text);
+  font: 700 1.375rem 'Outfit', sans-serif;
+  letter-spacing: -0.015em;
+}
+
+/* The sparkle that trails a heading in the source system, as a lozenge. */
+.pd-spark {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-left: 10px;
+  background: var(--pd-accent);
+  transform: rotate(45deg) translateY(-3px);
+  border-radius: 2px;
+}
+
+/* Dotted underline, never text-decoration. */
+.pd-link {
+  color: var(--pd-accent-ink);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--pd-accent-border);
+  cursor: pointer;
+}
+
+.pd-link:hover { border-bottom-color: var(--pd-accent-ink); }
 
 body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: var(--pd-scrollbar);
+  height: var(--pd-scrollbar);
 }
 
 ::-webkit-scrollbar-track {
@@ -194,6 +417,147 @@ button {
   font-family: inherit;
 }
 
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible,
+.leaflet-interactive:focus-visible {
+  outline: 3px solid var(--color-blue);
+  outline-offset: 3px;
+}
+
+.app-shell {
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.section-scroll {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 28px;
+}
+
+.dashboard-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+}
+
+/*
+ * The wordmark block is height-locked to the topbar rather than padded to
+ * roughly the same size, so the sidebar's bottom rule and the topbar's bottom
+ * rule read as one continuous line across the chrome.
+ */
+.sidebar-brand {
+  height: var(--pd-chrome-h);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 18px;
+  border-bottom: 1px dashed var(--pd-dash);
+}
+
+/*
+ * The strip is a grid, not a flex row with margin-left:auto on the clock.
+ * The old arrangement pinned every metric to the left at its natural width and
+ * dumped the entire surplus into one gap before the clock. Equal fractional
+ * columns spread that surplus across all of them instead, so the cells stay
+ * evenly measured at any width.
+ */
+/*
+ * height, not min-height. The connection cell stacks three items and pushed the
+ * bar past a min-height, so the sidebar wordmark block sat short of it. A fixed
+ * height on both makes the two bottom rules the same line by construction.
+ */
+.dashboard-topbar {
+  height: var(--pd-chrome-h);
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) auto;
+  align-items: stretch;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border-bottom: 1px dashed var(--pd-dash);
+}
+
+.topbar-metric,
+.topbar-connection {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px 18px;
+  border-right: 1px dashed var(--pd-dash);
+}
+
+.topbar-label,
+.topbar-reconciled {
+  font: 500 10px 'IBM Plex Mono', monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Metric names are headings for their figure, so they carry ink, not grey. */
+.topbar-label {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.topbar-reconciled { color: var(--color-gray); }
+
+.topbar-value {
+  color: var(--color-text);
+  font: 700 20px 'IBM Plex Mono', monospace;
+  letter-spacing: -0.02em;
+}
+
+.topbar-reconciled {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.topbar-clock {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 22px;
+  text-align: right;
+  color: var(--color-text);
+  font: 700 20px 'IBM Plex Mono', monospace;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.topbar-clock span {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-gray);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 1280px) {
+  .dashboard-topbar {
+    height: auto;
+    min-height: var(--pd-chrome-h);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .topbar-clock { grid-column: span 3; text-align: left; border-top: 1px dashed var(--pd-dash); }
+}
+
 .info-grid {
   display: grid;
   gap: 12px;
@@ -207,11 +571,241 @@ button {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.info-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .risk-map-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
   gap: 20px;
 }
+
+.node-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.status-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border-radius: 7px;
+  padding: 8px 11px;
+  cursor: pointer;
+  font: 700 12px 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+}
+
+.status-refresh-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.metric-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.metric-card-label,
+.metric-card-note,
+.metric-card-value,
+.chart-title,
+.table-section-title,
+.unmapped-heading {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.metric-card-label { margin: 10px 0 6px; color: var(--color-text); font-size: 12px; font-weight: 600; }
+.metric-card-value { color: var(--color-text); font-size: 22px; font-weight: 700; }
+.metric-card-note { margin-top: 5px; color: var(--color-text-dim); font-size: 11px; line-height: 1.4; }
+.chart-title { color: var(--color-text); font-size: 13px; font-weight: 700; letter-spacing: .06em; margin-bottom: 16px; }
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  padding: 12px 16px;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--color-text-dim);
+  background: var(--color-surface-2);
+  border-bottom: 1px solid var(--color-border);
+  font: 600 11px 'IBM Plex Mono', monospace;
+  letter-spacing: .06em;
+}
+
+.data-table td {
+  padding: 11px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent);
+  color: var(--color-text);
+  vertical-align: top;
+  font: 500 12px 'IBM Plex Mono', monospace;
+}
+
+.data-table tr:last-child td { border-bottom: 0; }
+
+/*
+ * Split header/body feed table.
+ *
+ * A sticky thead inside the scroll container leaves the scrollbar running the
+ * full height, cutting across the header row. Putting the header in its own
+ * table outside the scrolling element keeps the header spanning the full width
+ * and starts the scrollbar beneath it. The cost is that column widths must be
+ * pinned identically on both tables, hence table-layout:fixed and a shared
+ * colgroup, plus a reserved gutter so the header does not sit a scrollbar's
+ * width wider than the body.
+ */
+.feed-head .data-table,
+.feed-body .data-table {
+  table-layout: fixed;
+  margin: 0;
+}
+
+.feed-head {
+  padding-right: var(--pd-scrollbar);
+  background: var(--color-surface-2);
+}
+
+.feed-body {
+  max-height: 430px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.feed-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.feed-more {
+  border: 0;
+  border-radius: var(--pd-radius-xs);
+  background: var(--pd-accent-dim);
+  box-shadow: inset 0 0 0 1px var(--pd-accent-border);
+  color: var(--pd-accent-ink);
+  padding: 6px 12px;
+  cursor: pointer;
+  font: 600 11px 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background-color 0.15s ease;
+}
+
+.feed-more:hover { background: var(--pd-accent); color: #fff; }
+.feed-more:active { transform: translateY(1px); }
+
+/* Nav buttons carry no edge of any kind; only the fill marks the active item. */
+.dashboard-nav button {
+  border: 0 !important;
+  outline: none;
+  background-clip: padding-box;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.dashboard-nav button:focus-visible {
+  outline: 2px solid var(--pd-accent-ink);
+  outline-offset: -2px;
+}
+
+/* Tags are inline objects; inside a column flex cell they would stretch. */
+.topbar-metric > div > span,
+.topbar-connection > span {
+  align-self: flex-start;
+}
+
+.table-section-title {
+  padding: 14px 16px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.map-data-lists {
+  display: grid;
+  gap: 20px;
+}
+
+.unmapped-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+  color: var(--color-amber);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.map-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  color: var(--color-text);
+  font: 700 13px 'IBM Plex Mono', monospace;
+}
+
+.map-heading strong,
+.map-heading > div > span { display: block; }
+
+.map-legend {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  color: var(--color-text-dim);
+  font-size: 10px;
+}
+
+.map-legend span { display: flex; align-items: center; gap: 4px; }
+.map-legend i { width: 8px; height: 8px; border-radius: 50%; }
+
+.device-map {
+  width: 100%;
+  height: clamp(340px, 55vh, 620px);
+  border-radius: 8px;
+  background: var(--color-surface-3);
+}
+
+.tile-warning {
+  padding: 9px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--color-amber);
+  border-radius: 7px;
+  background: var(--color-amber-dim);
+  color: var(--banner-amber-text);
+  font: 600 12px 'IBM Plex Mono', monospace;
+}
+
+.map-popup { display: grid; gap: 6px; color: #1c1917; font: 12px 'IBM Plex Mono', monospace; }
+.map-popup > strong { font-size: 14px; }
+.map-popup-list { display: grid; gap: 3px; padding-top: 4px; border-top: 1px solid #e7dfd3; }
+.map-popup-list span { font-size: 10px; }
 
 @media (max-width: 1100px) {
   .info-grid-four {
@@ -221,15 +815,71 @@ button {
   .risk-map-layout {
     grid-template-columns: 1fr;
   }
+
+  .metric-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    min-height: 100dvh;
+    height: auto;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .app-main { overflow: visible; }
+
+  .dashboard-sidebar {
+    width: 100%;
+    overflow: visible !important;
+  }
+
+  .dashboard-nav {
+    display: flex;
+    overflow-x: auto !important;
+    flex: none !important;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .dashboard-nav button { min-width: max-content; }
+  .sidebar-device-status { display: none; }
+  .sidebar-settings { display: flex; gap: 8px; }
+  .sidebar-settings > div { display: none !important; }
+  .sidebar-settings button { width: auto !important; margin: 0 !important; }
+  .dashboard-topbar { position: sticky; top: 0; z-index: 500; }
+  .section-scroll { overflow: visible; padding: 22px; }
 }
 
 @media (max-width: 720px) {
   .info-grid-three,
-  .info-grid-four {
+  .info-grid-four,
+  .info-grid-two {
     grid-template-columns: 1fr;
   }
 
   .risk-map-legend {
     justify-content: flex-start !important;
+  }
+
+  .metric-card-grid,
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-scroll { padding: 16px; }
+  .dashboard-topbar { min-height: 64px; padding: 8px 14px; }
+  .map-heading { flex-direction: column; }
+  .map-legend { justify-content: flex-start; }
+  .device-map { height: 360px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -32,7 +32,7 @@ export default function EmptyState({
       {createElement(Icon, { size: compact ? 18 : 22, color: accent })}
       <div style={{
         marginTop: compact ? '8px' : '10px',
-        fontFamily: 'Syne, sans-serif',
+        fontFamily: 'Outfit, sans-serif',
         fontSize: compact ? '13px' : '16px',
         fontWeight: 700,
         color: C.text,

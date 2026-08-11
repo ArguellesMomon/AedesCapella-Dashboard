@@ -1,5 +1,4 @@
-import { Server, Cpu } from 'lucide-react';
-import { NODES_DATA } from '../../constants/MockData';
+import { Cpu, AlertTriangle, RefreshCw } from 'lucide-react';
 import SectionHeader from '../../components/ui/SectionHeader';
 import Banner from '../../components/ui/Banner';
 import EmptyState from '../../components/ui/EmptyState';
@@ -7,36 +6,69 @@ import DeviceStateGuide from './DeviceStateGuide';
 import NodeCard from './NodeCard';
 
 /** Section 4 - Node Management */
-export default function NodeManagement() {
+export default function NodeManagement({ deviceStatus }) {
+  const { devices, error, loading, refresh, refreshedAt } = deviceStatus;
+  const loggingFaults = devices.filter(device => device.operational_state === 'logging_fault');
+
   return (
     <div>
       <SectionHeader
-        icon={Server}
-        title="Node Management"
-        subtitle="Sensor node health, battery status, and fogger readiness"
+        fig="FIG.04"
+        title="Sensor Status"
+        subtitle="See which sensors are working and which ones need checking"
       />
       <Banner
         icon={Cpu}
-        text="Each node detects mosquito wingbeats locally and controls its fogger without waiting for the cloud."
+        text="This page shows the latest information from each sensor. A possible mosquito match still needs a person to check it."
         color="blue"
       />
+
+      {loggingFaults.length > 0 && (
+        <Banner
+          icon={AlertTriangle}
+          text={`${loggingFaults.length} sensor${loggingFaults.length === 1 ? '' : 's'} may not be saving records. The sensor is sending a signal, but some information may be missing.`}
+          color="red"
+        />
+      )}
+
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '12px',
+        marginBottom: '20px',
+        fontFamily: 'IBM Plex Mono, monospace',
+        fontSize: '12px',
+      }}>
+        <span style={{ color: 'var(--color-text-dim)' }}>
+          {refreshedAt ? `Last checked ${refreshedAt.toLocaleTimeString('en-PH')}` : 'Waiting for sensor information'}
+        </span>
+        <button className="status-refresh-button" onClick={refresh} disabled={loading}>
+          <RefreshCw size={13} /> {loading ? 'Refreshing…' : 'Refresh'}
+        </button>
+      </div>
+
       <DeviceStateGuide />
 
-      {NODES_DATA.length ? (
-        <div style={{
-          display:             'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap:                 '20px',
-        }}>
-          {NODES_DATA.map(node => (
-            <NodeCard key={node.id} node={node} />
-          ))}
+      {error ? (
+        <EmptyState
+          title="Sensor Information Unavailable"
+          message={error}
+          action="Check your connection or ask the system administrator, then try again."
+          icon={AlertTriangle}
+          variant="critical"
+        />
+      ) : loading ? (
+        <EmptyState title="Checking Sensor Status" message="Please wait while the latest sensor information loads." />
+      ) : devices.length ? (
+        <div className="node-status-grid">
+          {devices.map(device => <NodeCard key={device.device_id} device={device} />)}
         </div>
       ) : (
         <EmptyState
-          title="No nodes registered"
-          message="Node cards will appear after devices are added to the deployment list."
-          action="Suggested action: register a sensor node before field testing."
+          title="No Sensors Found"
+          message="No sensor information is available yet."
+          action="Ask the system administrator to add a sensor. Missing information is not the same as working normally."
         />
       )}
     </div>

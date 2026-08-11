@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { C } from './constants/colors';
-import { useLiveDetections } from './hooks/useLiveDetections';
+import { useOperatorSession } from './hooks/useOperatorSession';
+import { useLiveDashboard } from './hooks/useLiveDashboard';
+import { average, candidateScorePercent, countSince } from './utils/dashboardData';
 import LoginPage from './components/auth/LoginPage';
 import LogoutConfirmModal from './components/auth/LogoutConfirmModal';
 
@@ -8,12 +10,11 @@ import LogoutConfirmModal from './components/auth/LogoutConfirmModal';
 import Sidebar from './components/layout/Sidebar';
 import Topbar  from './components/layout/Topbar';
 
-// Sections
-import LiveFeed       from './sections/LiveFeed';
-import RiskMap        from './sections/RiskMap';
-import FoggingLog     from './sections/FoggingLog';
-import NodeManagement from './sections/NodeManagement';
-import TrendsAnalytics from './sections/TrendsAnalytics';
+const LiveFeed = lazy(() => import('./sections/LiveFeed'));
+const RiskMap = lazy(() => import('./sections/RiskMap'));
+const FoggingLog = lazy(() => import('./sections/FoggingLog'));
+const NodeManagement = lazy(() => import('./sections/NodeManagement'));
+const TrendsAnalytics = lazy(() => import('./sections/TrendsAnalytics'));
 
 const SECTIONS = {
   feed:   LiveFeed,
@@ -24,8 +25,6 @@ const SECTIONS = {
 };
 
 const THEME_STORAGE_KEY = 'aedes-capella-theme';
-const SESSION_STORAGE_KEY = 'aedes-capella-session';
-
 function getInitialTheme() {
   if (typeof window === 'undefined') return 'light';
 
@@ -39,16 +38,30 @@ export default function App() {
   const [activeSection, setActiveSection] = useState('feed');
   const [theme, setTheme] = useState(getInitialTheme);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [session, setSession] = useState(() => {
-    if (typeof window === 'undefined') return null;
+  const { session, login, logout } = useOperatorSession();
+  const liveData = useLiveDashboard(session?.accessToken);
+  const deviceStatus = {
+    devices: liveData.devices,
+    error: liveData.errors.devices || '',
+    loading: liveData.loading,
+    refreshedAt: liveData.reconciledAt,
+    refresh: liveData.refresh,
+  };
 
-    const stored = window.localStorage.getItem(SESSION_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
-  });
-  const { detections, alertPulse } = useLiveDetections();
-
-  // Derive topbar detection count from live feed
-  const detectionCount = detections.length + 89;
+  const metricsAsOf = Math.max(
+    liveData.reconciledAt?.getTime() || 0,
+    Date.parse(liveData.activity[0]?.received_at || '') || 0,
+  );
+  const since24h = metricsAsOf - (24 * 60 * 60 * 1000);
+  const candidatesToday = countSince(liveData.candidates, 'display_time', since24h);
+  const relaysToday = countSince(
+    liveData.relays.filter(relay => relay.recorded_relay_activation),
+    'started_at',
+    since24h,
+  );
+  const onlineNodes = deviceStatus.devices.filter(device => device.operational_state === 'online').length;
+  const attentionNodes = deviceStatus.devices.filter(device => device.needs_attention).length;
+  const avgCandidateScore = average(liveData.candidates.map(candidateScorePercent));
 
   // Render the active section component
   const ActiveSection = SECTIONS[activeSection];
@@ -58,51 +71,57 @@ export default function App() {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
-  useEffect(() => {
-    if (session) {
-      window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
-      return;
-    }
-
-    window.localStorage.removeItem(SESSION_STORAGE_KEY);
-  }, [session]);
-
   if (!session) {
     return (
       <LoginPage
         theme={theme}
         onToggleTheme={() => setTheme(currentTheme => currentTheme === 'dark' ? 'light' : 'dark')}
-        onLogin={setSession}
+        onLogin={login}
       />
     );
   }
 
   return (
-    <div style={{
-      display:    'flex',
-      height:     '100vh',
-      overflow:   'hidden',
+    <div className="app-shell" style={{
       background: C.bg,
-      fontFamily: 'Syne, sans-serif',
+      fontFamily: 'Outfit, sans-serif',
     }}>
       <Sidebar
         activeSection={activeSection}
         onNavigate={setActiveSection}
-        alertPulse={alertPulse}
+        deviceStatus={deviceStatus}
         theme={theme}
         onToggleTheme={() => setTheme(currentTheme => currentTheme === 'dark' ? 'light' : 'dark')}
         onLogout={() => setShowLogoutModal(true)}
       />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="app-main">
         <Topbar
-          metrics={{ detections: detectionCount }}
+          metrics={{
+            candidates: candidatesToday,
+            relays: relaysToday,
+            onlineNodes,
+            totalNodes: deviceStatus.devices.length,
+            avgCandidateScore,
+            attentionNodes,
+            loading: liveData.loading,
+            candidateUnavailable: Boolean(liveData.errors.candidates),
+            relayUnavailable: Boolean(liveData.errors.relays),
+            deviceUnavailable: Boolean(liveData.errors.devices),
+          }}
+          connectionState={liveData.connectionState}
+          reconciledAt={liveData.reconciledAt}
         />
 
-        {/* Scrollable section content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '28px' }}>
-          <ActiveSection detections={detections} theme={theme} />
-        </div>
+        <main className="section-scroll">
+          <Suspense fallback={<div style={{ color: C.textDim }}>Loading dashboard section…</div>}>
+            <ActiveSection
+              theme={theme}
+              deviceStatus={deviceStatus}
+              dashboardData={liveData}
+            />
+          </Suspense>
+        </main>
       </div>
 
       {showLogoutModal && (
@@ -110,7 +129,7 @@ export default function App() {
           onCancel={() => setShowLogoutModal(false)}
           onConfirm={() => {
             setShowLogoutModal(false);
-            setSession(null);
+            logout();
           }}
         />
       )}

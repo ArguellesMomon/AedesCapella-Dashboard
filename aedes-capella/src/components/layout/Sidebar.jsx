@@ -1,82 +1,58 @@
-import { createElement } from 'react';
-import { Activity, MapPin, Droplets, Server, TrendingUp, Bug, LogOut, Moon, Settings, Sun } from 'lucide-react';
+import { LogOut, Moon, Settings, Sun } from 'lucide-react';
 import { C } from '../../constants/colors';
-import { NODES_DATA } from '../../constants/MockData';
+import { getStatusPresentation } from '../../utils/deviceStatus';
 import Mono from '../ui/Mono';
 
+/* Figure numbers, not glyphs. They match the FIG.0x on each section header so
+   the sidebar doubles as the plate index. */
 const NAV_ITEMS = [
-  { id: 'feed',   icon: Activity,   label: 'Live Detection Feed' },
-  { id: 'map',    icon: MapPin,      label: 'Risk Map' },
-  { id: 'fog',    icon: Droplets,    label: 'Fogging Log' },
-  { id: 'nodes',  icon: Server,      label: 'Node Management' },
-  { id: 'trends', icon: TrendingUp,  label: 'Trends & Analytics' },
+  { id: 'feed',   fig: '01', label: 'Latest Sensor Activity' },
+  { id: 'map',    fig: '02', label: 'Barangay Map' },
+  { id: 'fog',    fig: '03', label: 'Relay History' },
+  { id: 'nodes',  fig: '04', label: 'Sensor Status' },
+  { id: 'trends', fig: '05', label: 'Activity Summary' },
 ];
 
-export default function Sidebar({ activeSection, onNavigate, alertPulse, theme, onToggleTheme, onLogout }) {
+export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme, onToggleTheme, onLogout }) {
   const ThemeIcon = theme === 'dark' ? Sun : Moon;
 
   return (
-    <div style={{
-      width:         '280px',
-      flexShrink:    0,
+    <aside className="dashboard-sidebar" style={{
       background:    C.surface,
-      borderRight:   `1px solid ${C.border}`,
+      borderRight:   '1px dashed var(--pd-dash)',
       display:       'flex',
       flexDirection: 'column',
       overflow:      'hidden',
     }}>
 
-      {/* Logo */}
-      <div style={{ padding: '20px 18px', borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-          <div style={{
-            width:          '32px',
-            height:         '32px',
-            borderRadius:   '8px',
-            background:     `linear-gradient(135deg, ${C.amberDim}, ${C.redDim})`,
-            border:         `1px solid ${C.amber}44`,
-            display:        'flex',
-            alignItems:     'center',
-            justifyContent: 'center',
-            flexShrink:     0,
-          }}>
-            <Bug size={16} color={C.amber} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontFamily:    'Syne, sans-serif',
-              fontWeight:    800,
-              fontSize:      '17px',
-              color:         C.text,
-              letterSpacing: '0.01em',
-              lineHeight:    1,
-              whiteSpace:    'nowrap',
-            }}>
-              AedesCapella
-            </div>
-            <div style={{
-              fontFamily:    'IBM Plex Mono, monospace',
-              fontSize:      '12px',
-              color:         C.amber,
-              letterSpacing: '0.1em',
-            }}>
-              AIoT VECTOR SURVEILLANCE
-            </div>
-          </div>
+      {/* Wordmark. No glyph: the type carries the mark. Height is pinned to the
+          topbar so the two chrome edges form one continuous line. */}
+      <div className="sidebar-brand">
+        <div style={{
+          fontFamily:    'Outfit, sans-serif',
+          fontWeight:    800,
+          fontSize:      '19px',
+          color:         C.text,
+          letterSpacing: '-0.01em',
+          lineHeight:    1,
+          whiteSpace:    'nowrap',
+        }}>
+          AedesCapella
         </div>
         <div style={{
-          fontFamily: 'IBM Plex Mono, monospace',
-          fontSize:   '12px',
-          color:      C.textDim,
-          marginTop:  '6px',
+          fontFamily:    'IBM Plex Mono, monospace',
+          fontSize:      '10px',
+          color:         'var(--pd-accent-ink)',
+          letterSpacing: '0.14em',
+          marginTop:     '7px',
         }}>
-          Sabang · Lipa City · Batangas
+          BARANGAY MOSQUITO WATCH
         </div>
       </div>
 
       {/* Navigation */}
-      <nav style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
-        {NAV_ITEMS.map(({ id, icon: Icon, label }) => {
+      <nav className="dashboard-nav" style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
+        {NAV_ITEMS.map(({ id, fig, label }) => {
           const active = activeSection === id;
           return (
             <button
@@ -88,43 +64,39 @@ export default function Sidebar({ activeSection, onNavigate, alertPulse, theme, 
                 alignItems:   'center',
                 gap:          '10px',
                 padding:      '10px 10px',
-                borderRadius: '8px',
+                borderRadius: 'var(--pd-radius-xs)',
                 border:       'none',
-                borderLeft:   active ? `2px solid ${C.amber}` : '2px solid transparent',
-                background:   active ? `${C.amber}18` : 'transparent',
-                color:        active ? C.amber : C.textDim,
+                background:   active ? 'var(--pd-accent)' : 'transparent',
+                color:        active ? '#ffffff' : C.textDim,
                 cursor:       'pointer',
                 textAlign:    'left',
                 marginBottom: '2px',
                 transition:   'all 0.15s',
               }}
             >
-              {createElement(Icon, { size: 15 })}
               <span style={{
-                fontFamily: 'Syne, sans-serif',
-                fontSize:   '14px',
-                fontWeight: active ? 700 : 500,
+                fontFamily: 'Outfit, sans-serif',
+                fontSize:   '13.5px',
+                fontWeight: active ? 600 : 500,
+                flex:       1,
               }}>
                 {label}
               </span>
-              {/* Live alert dot on feed item */}
-              {id === 'feed' && alertPulse && (
-                <div style={{
-                  marginLeft:  'auto',
-                  width:       '6px',
-                  height:      '6px',
-                  borderRadius:'50%',
-                  background:  C.red,
-                  animation:   'blink 0.5s infinite',
-                }} />
-              )}
+              <span style={{
+                fontFamily:    'IBM Plex Mono, monospace',
+                fontSize:      '10px',
+                letterSpacing: '0.08em',
+                color:         active ? 'rgba(255,255,255,0.72)' : C.gray,
+              }}>
+                {fig}
+              </span>
             </button>
           );
         })}
       </nav>
 
       {/* Node mini status */}
-      <div style={{ padding: '14px', borderTop: `1px solid ${C.border}` }}>
+      <div className="sidebar-device-status" style={{ padding: '14px', borderTop: '1px dashed var(--pd-dash)' }}>
         <div style={{
           fontFamily:    'IBM Plex Mono, monospace',
           fontSize:      '12px',
@@ -132,35 +104,48 @@ export default function Sidebar({ activeSection, onNavigate, alertPulse, theme, 
           letterSpacing: '0.1em',
           marginBottom:  '10px',
         }}>
-          NODE STATUS
+          SENSOR STATUS
         </div>
-        {NODES_DATA.map(node => (
-          <div key={node.id} style={{
-            display:     'flex',
-            alignItems:  'center',
-            gap:         '8px',
-            marginBottom:'7px',
-          }}>
-            {/* Online indicator dot */}
-            <div style={{
-              width:        '7px',
-              height:       '7px',
-              borderRadius: '50%',
-              background:   node.online ? C.green : C.gray,
-              boxShadow:    node.online ? `0 0 6px ${C.green}` : 'none',
-              animation:    node.online ? 'pulse 2s infinite' : 'none',
-            }} />
-            <Mono size="12px" color={node.online ? C.text : C.textDim} style={{ flex: 1, fontWeight: 700 }}>
-              {node.id}
-            </Mono>
-            <Mono size="12px" color={node.batteryLow ? C.amber : C.textDim}>
-              {node.battery}%
-            </Mono>
-          </div>
-        ))}
+        {deviceStatus.loading && (
+          <Mono size="12px" color={C.textDim}>Checking sensors…</Mono>
+        )}
+        {!deviceStatus.loading && deviceStatus.error && (
+          <Mono size="12px" color={C.red}>Sensor information unavailable</Mono>
+        )}
+        {!deviceStatus.loading && !deviceStatus.error && !deviceStatus.devices.length && (
+          <Mono size="12px" color={C.textDim}>No sensors listed</Mono>
+        )}
+        {!deviceStatus.loading && !deviceStatus.error && deviceStatus.devices.map(device => {
+          const presentation = getStatusPresentation(device.operational_state);
+          const isHealthy = device.operational_state === 'online';
+
+          return (
+            <div key={device.device_id} style={{
+              display:     'flex',
+              alignItems:  'center',
+              gap:         '8px',
+              marginBottom:'7px',
+            }}>
+              <div style={{
+                width:        '7px',
+                height:       '7px',
+                borderRadius: '50%',
+                background:   isHealthy ? C.green : C.gray,
+                boxShadow:    isHealthy ? `0 0 6px ${C.green}` : 'none',
+                animation:    isHealthy ? 'pulse 2s infinite' : 'none',
+              }} />
+              <Mono size="12px" color={isHealthy ? C.text : C.textDim} style={{ flex: 1, fontWeight: 700 }}>
+                {device.device_label}
+              </Mono>
+              <Mono size="12px" color={presentation.color === 'red' ? C.red : C.textDim}>
+                {presentation.label}
+              </Mono>
+            </div>
+          );
+        })}
       </div>
 
-      <div style={{ padding: '14px', borderTop: `1px solid ${C.border}` }}>
+      <div className="sidebar-settings" style={{ padding: '14px', borderTop: '1px dashed var(--pd-dash)' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -227,6 +212,6 @@ export default function Sidebar({ activeSection, onNavigate, alertPulse, theme, 
           </button>
         )}
       </div>
-    </div>
+    </aside>
   );
 }

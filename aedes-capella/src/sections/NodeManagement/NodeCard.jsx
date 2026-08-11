@@ -1,8 +1,3 @@
-import {
-  Activity, AlertTriangle, CheckCircle2, Clock, Database,
-  Hash, MemoryStick, Radio, ShieldCheck, Upload, Wifi,
-} from 'lucide-react';
-import { createElement } from 'react';
 import { C } from '../../constants/colors';
 import Card from '../../components/ui/Card';
 import Mono from '../../components/ui/Mono';
@@ -16,11 +11,10 @@ import {
 } from '../../utils/deviceStatus';
 import { getEventPresentation } from '../../utils/dashboardData';
 
-function Metric({ icon: Icon, label, children }) {
+function Metric({ label, children }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-        {createElement(Icon, { size: 13, color: C.textDim })}
         <Mono size="12px" color={C.textDim}>{label}</Mono>
       </div>
       <div style={{ textAlign: 'right', minWidth: 0 }}>{children}</div>
@@ -68,41 +62,41 @@ export default function NodeCard({ device }) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <Metric icon={Clock} label="Last update">
+        <Metric label="Last Update">
           <Mono size="12px" color={C.text}>{formatTimestamp(device.last_seen_at)}</Mono>
         </Metric>
 
-        <Metric icon={Database} label="Records saved">
+        <Metric label="Records Saved">
           <Tag color={device.log_healthy ? 'green' : device.has_ever_reported ? 'red' : 'gray'}>
             {device.has_ever_reported ? device.log_healthy ? 'Okay' : 'Problem' : 'No update yet'}
           </Tag>
         </Metric>
 
-        <Metric icon={ShieldCheck} label="Relay-safe state">
+        <Metric label="Relay-Safe State">
           <Tag color={device.relay_safe_high ? 'green' : 'red'}>
             {device.relay_safe_high ? 'Safe-high reported' : 'Unsafe — check device'}
           </Tag>
         </Metric>
 
-        <Metric icon={Wifi} label="Signal strength">
+        <Metric label="Signal Strength">
           {device.wifi_rssi_dbm === null ? <Mono size="12px" color={C.textDim}>Not available</Mono> : <WifiSignal dbm={device.wifi_rssi_dbm} />}
         </Metric>
 
-        <Metric icon={Activity} label="Time running">
+        <Metric label="Time Running">
           <Mono size="12px" color={C.text}>{formatDuration(device.uptime_ms)}</Mono>
         </Metric>
 
-        <Metric icon={Clock} label="Heartbeat age">
+        <Metric label="Heartbeat Age">
           <Mono size="12px" color={device.needs_attention ? C.amber : C.text}>
             {device.heartbeat_age_seconds === null ? 'Never reported' : formatDuration(Number(device.heartbeat_age_seconds) * 1000)}
           </Mono>
         </Metric>
 
-        <Metric icon={Hash} label="C3 boot / ordinal">
+        <Metric label="C3 boot / ordinal">
           <Mono size="12px" color={C.text}>{device.c3_boot ?? '—'} / {device.last_ordinal ?? '—'}</Mono>
         </Metric>
 
-        <Metric icon={MemoryStick} label="Free heap">
+        <Metric label="Free Heap">
           <Mono size="12px" color={C.text}>
             {device.free_heap_bytes === null ? 'Not available' : `${Math.round(device.free_heap_bytes / 1024)} KiB`}
           </Mono>
@@ -110,11 +104,11 @@ export default function NodeCard({ device }) {
 
         <div style={{ height: 1, background: C.border }} />
 
-        <Metric icon={Upload} label="Latest update">
+        <Metric label="Latest Update">
           <Mono size="12px" color={C.text}>{formatTimestamp(device.latest_upload_or_event_at)}</Mono>
         </Metric>
 
-        <Metric icon={Radio} label="Latest activity">
+        <Metric label="Latest Activity">
           <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
             <Mono size="12px" color={C.text}>{device.latest_event_kind ? latestEvent.label : 'No activity yet'}</Mono>
             {device.latest_event_time_quality && <Tag color="blue">{device.latest_event_time_quality === 'unresolved' ? 'Time not confirmed' : 'Time confirmed'}</Tag>}
@@ -135,14 +129,12 @@ export default function NodeCard({ device }) {
 
       {isFault ? (
         <div style={{ marginTop: '16px', display: 'flex', gap: '8px', alignItems: 'flex-start', color: C.red }}>
-          <AlertTriangle size={15} style={{ marginTop: 2, flexShrink: 0 }} />
           <Mono size="11px" color={C.red} style={{ lineHeight: 1.5 }}>
             A later healthy update is needed. The earlier problem remains in the records.
           </Mono>
         </div>
       ) : device.log_healthy ? (
         <div style={{ marginTop: '16px', display: 'flex', gap: '8px', alignItems: 'center', color: C.green }}>
-          <CheckCircle2 size={14} />
           <Mono size="11px" color={C.green}>The latest update says records are being saved.</Mono>
         </div>
       ) : null}

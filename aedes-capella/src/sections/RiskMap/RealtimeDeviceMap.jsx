@@ -48,9 +48,9 @@ export default function RealtimeDeviceMap({ devices = [], candidates = [], relay
   const [tilesFailed, setTilesFailed] = useState(false);
   const mapped = filterMappedDevices(devices);
 
-  if (loading) return <EmptyState title="Loading configured coordinates" message="Reading the live device map view." variant="startup" />;
-  if (error) return <EmptyState title="Map data unavailable" message={error} action="The 30-second reconciliation will retry." variant="warning" />;
-  if (!mapped.length) return <EmptyState title="No mapped devices" message="No device currently has a valid latitude and longitude. See Location not mapped below." />;
+  if (loading) return <EmptyState title="Loading Configured Coordinates" message="Reading the live device map view." variant="startup" />;
+  if (error) return <EmptyState title="Map Data Unavailable" message={error} action="The 30-second reconciliation will retry." variant="warning" />;
+  if (!mapped.length) return <EmptyState title="No Mapped Devices" message="No device currently has a valid latitude and longitude. See Location not mapped below." />;
 
   return (
     <Card style={{ padding: '12px', marginBottom: '20px' }}>
@@ -59,7 +59,7 @@ export default function RealtimeDeviceMap({ devices = [], candidates = [], relay
           <strong>REAL COORDINATE MAP</strong>
           <Mono size="11px" color={C.textDim}>OpenStreetMap tiles · markers from dashboard_device_map</Mono>
         </div>
-        <div className="map-legend" aria-label="Device state legend">
+        <div className="map-legend" aria-label="Device State Legend">
           {Object.entries(STATE_COLORS).map(([state, color]) => (
             <span key={state}><i style={{ background: color }} />{state.replace('_', ' ')}</span>
           ))}
@@ -101,8 +101,8 @@ export default function RealtimeDeviceMap({ devices = [], candidates = [], relay
                   </Tag>
                   <span>{device.candidates_last_24h ?? 0} candidates · {device.relay_activations_last_24h ?? 0} relay activations / 24h</span>
                   <span>Latest activity: {formatDashboardTimestamp(device.latest_activity_at)}</span>
-                  <RecentRows label="Recent candidates" rows={recentCandidates} timestampKey="display_time" />
-                  <RecentRows label="Recent relay episodes" rows={recentRelays} timestampKey="display_time" />
+                  <RecentRows label="Recent Candidates" rows={recentCandidates} timestampKey="display_time" />
+                  <RecentRows label="Recent Relay Episodes" rows={recentRelays} timestampKey="display_time" />
                 </div>
               </Popup>
             </CircleMarker>

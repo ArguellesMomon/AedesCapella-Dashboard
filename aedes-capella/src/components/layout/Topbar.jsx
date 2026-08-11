@@ -1,14 +1,11 @@
-import { createElement } from 'react';
-import { Activity, AlertTriangle, Droplets, Eye, Radio, Server } from 'lucide-react';
-import { C } from '../../constants/colors';
 import { usePHTime } from '../../hooks/usePHTime';
 import Tag from '../ui/Tag';
 
 const METRICS = [
-  { key: 'candidates', label: 'Candidates / 24h', icon: Activity },
-  { key: 'relays', label: 'Relay activations / 24h', icon: Droplets },
-  { key: 'nodes', label: 'Sensors online', icon: Server },
-  { key: 'score', label: 'Average candidate score', icon: Eye },
+  { key: 'candidates', label: 'Candidates / 24h' },
+  { key: 'relays', label: 'Relay Activations / 24h' },
+  { key: 'nodes', label: 'Sensors Online' },
+  { key: 'score', label: 'Average Candidate Score' },
 ];
 
 const CONNECTION = {
@@ -30,28 +27,22 @@ export default function Topbar({ metrics, connectionState, reconciledAt }) {
 
   return (
     <header className="dashboard-topbar" aria-label="Live dashboard summary">
-      {METRICS.map(({ key, label, icon: Icon }) => (
+      {METRICS.map(({ key, label }) => (
         <div key={key} className="topbar-metric">
-          {createElement(Icon, { size: 15, color: C.text })}
-          <div>
-            <div className="topbar-label">{label}</div>
-            <div className="topbar-value">{values[key]}</div>
-          </div>
+          <div className="topbar-label">{label}</div>
+          <div className="topbar-value">{values[key]}</div>
         </div>
       ))}
 
       <div className="topbar-metric">
-        <AlertTriangle size={15} color={metrics.attentionNodes ? C.red : C.green} />
-        <div>
-          <div className="topbar-label">Needs attention</div>
-          <Tag color={metrics.deviceUnavailable ? 'red' : metrics.totalNodes === 0 ? 'gray' : metrics.attentionNodes ? 'red' : 'green'}>
+          <div className="topbar-label">Needs Attention</div>
+          <div><Tag color={metrics.deviceUnavailable ? 'red' : metrics.totalNodes === 0 ? 'gray' : metrics.attentionNodes ? 'red' : 'green'}>
             {metrics.deviceUnavailable ? 'Unavailable' : metrics.totalNodes === 0 ? 'No device data' : String(metrics.attentionNodes)}
-          </Tag>
-        </div>
+          </Tag></div>
       </div>
 
       <div className="topbar-connection" role="status" aria-live="polite">
-        <div className="topbar-label"><Radio size={12} /> Dashboard connection</div>
+        <div className="topbar-label">Dashboard Connection</div>
         <Tag color={connection.color}>{connection.label}</Tag>
         <div className="topbar-reconciled">
           {reconciledAt

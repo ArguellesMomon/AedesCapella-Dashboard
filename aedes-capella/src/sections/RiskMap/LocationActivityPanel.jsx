@@ -9,7 +9,7 @@ import { filterMappedDevices, filterUnmappedDevices } from '../../utils/liveDash
 
 function DeviceTable({ devices, title }) {
   return (
-    <Card style={{ padding: 0, overflow: 'hidden' }}>
+    <Card padding={0} style={{ overflow: 'hidden' }}>
       <div className="table-section-title">{title}</div>
       <div className="table-scroll">
         <table className="data-table">

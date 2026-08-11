@@ -18,7 +18,7 @@ export default function Glossary() {
       <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '9px' }}>
         <BookOpen size={16} color={C.textDim} />
         <span style={{
-          fontFamily: 'Syne, sans-serif',
+          fontFamily: 'Outfit, sans-serif',
           fontSize: '16px',
           fontWeight: 700,
           color: C.text,

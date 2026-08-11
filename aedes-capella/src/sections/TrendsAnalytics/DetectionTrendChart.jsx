@@ -33,7 +33,7 @@ export default function DetectionTrendChart({ candidates = [] }) {
   return (
     <Card style={{ marginBottom: '20px', background: C.surface2 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px', flexWrap: 'wrap' }}>
-        <div style={{ fontFamily: 'Syne, sans-serif', fontSize: '16px', fontWeight: 700, color: C.textDim, letterSpacing: '0.08em' }}>
+        <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: '16px', fontWeight: 700, color: C.textDim, letterSpacing: '0.08em' }}>
           CANDIDATES OVER TIME · ASIA/MANILA
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
@@ -60,7 +60,7 @@ export default function DetectionTrendChart({ candidates = [] }) {
         </div>
       </div>
 
-      {candidates.length === 0 && <EmptyState title="No candidates in this period" message="Zero-filled buckets below use only committed candidate rows." compact />}
+      {candidates.length === 0 && <EmptyState title="No Candidates In This Period" message="Zero-filled buckets below use only committed candidate rows." compact />}
       <div aria-label="Chronological candidate counts including zero-value time buckets">
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={activeData} margin={{ top: 5, right: 20, bottom: 0, left: -20 }}>

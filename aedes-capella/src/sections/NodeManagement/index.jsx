@@ -1,4 +1,4 @@
-import { Server, Cpu, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Cpu, AlertTriangle, RefreshCw } from 'lucide-react';
 import SectionHeader from '../../components/ui/SectionHeader';
 import Banner from '../../components/ui/Banner';
 import EmptyState from '../../components/ui/EmptyState';
@@ -13,7 +13,7 @@ export default function NodeManagement({ deviceStatus }) {
   return (
     <div>
       <SectionHeader
-        icon={Server}
+        fig="FIG.04"
         title="Sensor Status"
         subtitle="See which sensors are working and which ones need checking"
       />
@@ -52,21 +52,21 @@ export default function NodeManagement({ deviceStatus }) {
 
       {error ? (
         <EmptyState
-          title="Sensor information unavailable"
+          title="Sensor Information Unavailable"
           message={error}
           action="Check your connection or ask the system administrator, then try again."
           icon={AlertTriangle}
           variant="critical"
         />
       ) : loading ? (
-        <EmptyState title="Checking sensor status" message="Please wait while the latest sensor information loads." />
+        <EmptyState title="Checking Sensor Status" message="Please wait while the latest sensor information loads." />
       ) : devices.length ? (
         <div className="node-status-grid">
           {devices.map(device => <NodeCard key={device.device_id} device={device} />)}
         </div>
       ) : (
         <EmptyState
-          title="No sensors found"
+          title="No Sensors Found"
           message="No sensor information is available yet."
           action="Ask the system administrator to add a sensor. Missing information is not the same as working normally."
         />

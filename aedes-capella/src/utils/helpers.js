@@ -2,8 +2,8 @@
 export function getPHTime() {
   return new Date().toLocaleString('en-PH', {
     timeZone: 'Asia/Manila',
-    hour: '2-digit', minute: '2-digit', second: '2-digit',
-    hour12: false,
+    hour: 'numeric', minute: '2-digit', second: '2-digit',
+    hour12: true,
   });
 }
 
@@ -21,8 +21,8 @@ export function offsetTime(minsAgo) {
   d.setMinutes(d.getMinutes() - minsAgo);
   return d.toLocaleString('en-PH', {
     timeZone: 'Asia/Manila',
-    hour: '2-digit', minute: '2-digit', second: '2-digit',
-    hour12: false,
+    hour: 'numeric', minute: '2-digit', second: '2-digit',
+    hour12: true,
   });
 }
 

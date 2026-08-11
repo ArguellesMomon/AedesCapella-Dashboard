@@ -1,4 +1,4 @@
-import { Database, Droplets, Zap } from 'lucide-react';
+import { Database, Zap } from 'lucide-react';
 import SectionHeader from '../../components/ui/SectionHeader';
 import Banner from '../../components/ui/Banner';
 import FogSummaryCards from './FogSummaryCards';
@@ -12,7 +12,7 @@ export default function FoggingLog({ dashboardData }) {
   return (
     <div>
       <SectionHeader
-        icon={Droplets}
+        fig="FIG.03"
         title="Recorded Relay History"
         subtitle="Requested, started, stopped, and rejected device relay episodes"
       />

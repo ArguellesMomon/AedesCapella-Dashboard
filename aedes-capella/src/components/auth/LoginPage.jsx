@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Bug, Lock, LogIn, User } from 'lucide-react';
 import { C } from '../../constants/colors';
 import Card from '../ui/Card';
 import Tag from '../ui/Tag';
@@ -36,7 +35,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
       placeItems: 'center',
       padding: '32px',
       background: `radial-gradient(circle at top left, ${C.amberDim}, transparent 34%), radial-gradient(circle at bottom right, ${C.blue}22, transparent 28%), ${C.bg}`,
-      fontFamily: 'Syne, sans-serif',
+      fontFamily: 'Outfit, sans-serif',
     }}>
       <div style={{
         width: 'min(1040px, 100%)',
@@ -57,24 +56,11 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
             width: '220px',
             height: '220px',
             borderRadius: '50%',
-            background: `${C.amber}14`,
-            filter: 'blur(10px)',
+            background: 'transparent',
           }} />
 
           <div style={{ position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-              <div style={{
-                width: '46px',
-                height: '46px',
-                borderRadius: '14px',
-                background: `linear-gradient(135deg, ${C.amberDim}, ${C.redDim})`,
-                border: `1px solid ${C.amber}33`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <Bug size={22} color={C.amber} />
-              </div>
               <div>
                 <div style={{
                   fontSize: '28px',
@@ -186,7 +172,6 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                 EMAIL ADDRESS
               </div>
               <div style={{ position: 'relative' }}>
-                <User size={16} color={C.textDim} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   value={form.username}
                   onChange={handleChange('username')}
@@ -196,7 +181,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                   style={{
                     width: '100%',
                     height: '46px',
-                    padding: '0 14px 0 42px',
+                    padding: '0 14px',
                     borderRadius: '12px',
                     border: `1px solid ${error ? C.red : C.border}`,
                     background: C.surface2,
@@ -214,7 +199,6 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                 PASSWORD
               </div>
               <div style={{ position: 'relative' }}>
-                <Lock size={16} color={C.textDim} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="password"
                   value={form.password}
@@ -224,7 +208,7 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                   style={{
                     width: '100%',
                     height: '46px',
-                    padding: '0 14px 0 42px',
+                    padding: '0 14px',
                     borderRadius: '12px',
                     border: `1px solid ${error ? C.red : C.border}`,
                     background: C.surface2,
@@ -291,7 +275,6 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
                 boxShadow: `0 18px 30px ${C.amber}22`,
               }}
             >
-              <LogIn size={16} />
               {submitting ? 'Signing In…' : 'Sign In'}
             </button>
           </form>

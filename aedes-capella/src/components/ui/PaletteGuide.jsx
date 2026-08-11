@@ -13,7 +13,7 @@ export default function PaletteGuide() {
   return (
     <Card style={{ background: C.surface2 }}>
       <div style={{
-        fontFamily: 'Syne, sans-serif',
+        fontFamily: 'Outfit, sans-serif',
         fontSize: '16px',
         fontWeight: 700,
         color: C.text,

@@ -84,7 +84,7 @@ export default function App() {
   return (
     <div className="app-shell" style={{
       background: C.bg,
-      fontFamily: 'Syne, sans-serif',
+      fontFamily: 'Outfit, sans-serif',
     }}>
       <Sidebar
         activeSection={activeSection}

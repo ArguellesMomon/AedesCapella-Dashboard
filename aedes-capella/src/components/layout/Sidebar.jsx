@@ -1,15 +1,16 @@
-import { createElement } from 'react';
-import { Activity, MapPin, Droplets, Server, TrendingUp, Bug, LogOut, Moon, Settings, Sun } from 'lucide-react';
+import { LogOut, Moon, Settings, Sun } from 'lucide-react';
 import { C } from '../../constants/colors';
 import { getStatusPresentation } from '../../utils/deviceStatus';
 import Mono from '../ui/Mono';
 
+/* Figure numbers, not glyphs. They match the FIG.0x on each section header so
+   the sidebar doubles as the plate index. */
 const NAV_ITEMS = [
-  { id: 'feed',   icon: Activity,   label: 'Latest Sensor Activity' },
-  { id: 'map',    icon: MapPin,      label: 'Barangay Map' },
-  { id: 'fog',    icon: Droplets,    label: 'Relay History' },
-  { id: 'nodes',  icon: Server,      label: 'Sensor Status' },
-  { id: 'trends', icon: TrendingUp,  label: 'Activity Summary' },
+  { id: 'feed',   fig: '01', label: 'Latest Sensor Activity' },
+  { id: 'map',    fig: '02', label: 'Barangay Map' },
+  { id: 'fog',    fig: '03', label: 'Relay History' },
+  { id: 'nodes',  fig: '04', label: 'Sensor Status' },
+  { id: 'trends', fig: '05', label: 'Activity Summary' },
 ];
 
 export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme, onToggleTheme, onLogout }) {
@@ -18,63 +19,40 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme
   return (
     <aside className="dashboard-sidebar" style={{
       background:    C.surface,
-      borderRight:   `1px solid ${C.border}`,
+      borderRight:   '1px dashed var(--pd-dash)',
       display:       'flex',
       flexDirection: 'column',
       overflow:      'hidden',
     }}>
 
-      {/* Logo */}
-      <div style={{ padding: '20px 18px', borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-          <div style={{
-            width:          '32px',
-            height:         '32px',
-            borderRadius:   '8px',
-            background:     `linear-gradient(135deg, ${C.amberDim}, ${C.redDim})`,
-            border:         `1px solid ${C.amber}44`,
-            display:        'flex',
-            alignItems:     'center',
-            justifyContent: 'center',
-            flexShrink:     0,
-          }}>
-            <Bug size={16} color={C.amber} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontFamily:    'Syne, sans-serif',
-              fontWeight:    800,
-              fontSize:      '17px',
-              color:         C.text,
-              letterSpacing: '0.01em',
-              lineHeight:    1,
-              whiteSpace:    'nowrap',
-            }}>
-              AedesCapella
-            </div>
-            <div style={{
-              fontFamily:    'IBM Plex Mono, monospace',
-              fontSize:      '12px',
-              color:         C.amber,
-              letterSpacing: '0.1em',
-            }}>
-              BARANGAY MOSQUITO WATCH
-            </div>
-          </div>
+      {/* Wordmark. No glyph: the type carries the mark. Height is pinned to the
+          topbar so the two chrome edges form one continuous line. */}
+      <div className="sidebar-brand">
+        <div style={{
+          fontFamily:    'Outfit, sans-serif',
+          fontWeight:    800,
+          fontSize:      '19px',
+          color:         C.text,
+          letterSpacing: '-0.01em',
+          lineHeight:    1,
+          whiteSpace:    'nowrap',
+        }}>
+          AedesCapella
         </div>
         <div style={{
-          fontFamily: 'IBM Plex Mono, monospace',
-          fontSize:   '12px',
-          color:      C.textDim,
-          marginTop:  '6px',
+          fontFamily:    'IBM Plex Mono, monospace',
+          fontSize:      '10px',
+          color:         'var(--pd-accent-ink)',
+          letterSpacing: '0.14em',
+          marginTop:     '7px',
         }}>
-          Sabang · Lipa City · Batangas
+          BARANGAY MOSQUITO WATCH
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="dashboard-nav" style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
-        {NAV_ITEMS.map(({ id, icon: Icon, label }) => {
+        {NAV_ITEMS.map(({ id, fig, label }) => {
           const active = activeSection === id;
           return (
             <button
@@ -86,24 +64,31 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme
                 alignItems:   'center',
                 gap:          '10px',
                 padding:      '10px 10px',
-                borderRadius: '8px',
+                borderRadius: 'var(--pd-radius-xs)',
                 border:       'none',
-                borderLeft:   active ? `2px solid ${C.amber}` : '2px solid transparent',
-                background:   active ? `${C.amber}18` : 'transparent',
-                color:        active ? C.amber : C.textDim,
+                background:   active ? 'var(--pd-accent)' : 'transparent',
+                color:        active ? '#ffffff' : C.textDim,
                 cursor:       'pointer',
                 textAlign:    'left',
                 marginBottom: '2px',
                 transition:   'all 0.15s',
               }}
             >
-              {createElement(Icon, { size: 15 })}
               <span style={{
-                fontFamily: 'Syne, sans-serif',
-                fontSize:   '14px',
-                fontWeight: active ? 700 : 500,
+                fontFamily: 'Outfit, sans-serif',
+                fontSize:   '13.5px',
+                fontWeight: active ? 600 : 500,
+                flex:       1,
               }}>
                 {label}
+              </span>
+              <span style={{
+                fontFamily:    'IBM Plex Mono, monospace',
+                fontSize:      '10px',
+                letterSpacing: '0.08em',
+                color:         active ? 'rgba(255,255,255,0.72)' : C.gray,
+              }}>
+                {fig}
               </span>
             </button>
           );
@@ -111,7 +96,7 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme
       </nav>
 
       {/* Node mini status */}
-      <div className="sidebar-device-status" style={{ padding: '14px', borderTop: `1px solid ${C.border}` }}>
+      <div className="sidebar-device-status" style={{ padding: '14px', borderTop: '1px dashed var(--pd-dash)' }}>
         <div style={{
           fontFamily:    'IBM Plex Mono, monospace',
           fontSize:      '12px',
@@ -160,7 +145,7 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme
         })}
       </div>
 
-      <div className="sidebar-settings" style={{ padding: '14px', borderTop: `1px solid ${C.border}` }}>
+      <div className="sidebar-settings" style={{ padding: '14px', borderTop: '1px dashed var(--pd-dash)' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',

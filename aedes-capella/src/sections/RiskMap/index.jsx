@@ -1,4 +1,4 @@
-import { Database, MapPin } from 'lucide-react';
+import { Database } from 'lucide-react';
 import SectionHeader from '../../components/ui/SectionHeader';
 import Banner from '../../components/ui/Banner';
 import RealtimeDeviceMap from './RealtimeDeviceMap';
@@ -10,7 +10,7 @@ export default function RiskMap({ dashboardData }) {
   return (
     <div>
       <SectionHeader
-        icon={MapPin}
+        fig="FIG.02"
         title="Live Device Map"
         subtitle="Configured Supabase coordinates and current device activity"
       />

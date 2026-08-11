@@ -1,4 +1,4 @@
-import { Database, TrendingUp } from 'lucide-react';
+import { Database } from 'lucide-react';
 import SectionHeader from '../../components/ui/SectionHeader';
 import Banner from '../../components/ui/Banner';
 import MetricCards from './MetricCards';
@@ -17,7 +17,7 @@ export default function TrendsAnalytics({ dashboardData, deviceStatus }) {
   return (
     <div>
       <SectionHeader
-        icon={TrendingUp}
+        fig="FIG.05"
         title="Activity Summary"
         subtitle="Device-originated candidates and runtime activity · Asia/Manila"
       />

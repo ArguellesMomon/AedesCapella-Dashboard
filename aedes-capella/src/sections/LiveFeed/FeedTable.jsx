@@ -85,24 +85,24 @@ export default function FeedTable({ events = [], deviceLabels = {}, loading = fa
                   animation: index === 0 ? 'fadeIn 0.5s ease' : 'none',
                 }}
               >
-                <td>
+                <td data-label="When it happened">
                   <Mono size="12px" color={event.occurred_at ? C.textDim : C.amber} style={{ fontWeight: 700 }} title={formatDashboardTimestamp(event.occurred_at)}>
                     {event.occurred_at ? formatShortDashboardTimestamp(event.occurred_at) : 'Unresolved'}
                   </Mono>
                 </td>
-                <td>
+                <td data-label="When received">
                   <Mono size="12px" color={C.textDim} title={formatDashboardTimestamp(event.received_at)}>
                     {formatShortDashboardTimestamp(event.received_at)}
                   </Mono>
                 </td>
-                <td>
+                <td data-label="Device">
                   <Mono size="12px" color={C.text} style={{ fontWeight: 700 }}>
                     {event.device_label
                       ? formatDeviceName(event.device_label, { technical })
                       : deviceLabel(event.device_id, deviceLabels, technical)}
                   </Mono>
                 </td>
-                <td>
+                <td data-label="What happened">
                   <Tag color={presentation.color}>{presentation.label}</Tag>
                   {event.temporal_candidate && (
                     <Mono size="11px" color={C.textDim} style={{ display: 'block', marginTop: '5px' }}>
@@ -110,14 +110,14 @@ export default function FeedTable({ events = [], deviceLabels = {}, loading = fa
                     </Mono>
                   )}
                 </td>
-                <td>
+                <td data-label="Time">
                   <Mono size="12px" color={event.time_quality === 'unresolved' ? C.amber : C.green} style={{ fontWeight: 700 }}>
                     {event.time_quality === 'unresolved'
                       ? 'Not confirmed'
                       : event.time_quality === 'ntp' ? 'Exact' : 'Estimated'}
                   </Mono>
                 </td>
-                <td style={{ maxWidth: '280px' }}>
+                <td data-label="Notes" style={{ maxWidth: '280px' }}>
                   <Mono size="12px" color={C.textDim} style={{ lineHeight: 1.45 }}>
                     {event.temporal_candidate
                       ? 'Possible mosquito sound. Needs a person to check.'

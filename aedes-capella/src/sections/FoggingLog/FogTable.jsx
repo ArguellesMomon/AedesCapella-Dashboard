@@ -48,13 +48,13 @@ export default function FogTable({ relays = [], loading = false, error = '' }) {
 
         return (
           <tr key={relay.relay_episode_key}>
-            <td><Mono size="12px" color={C.textDim}>{formatDashboardTimestamp(relay.display_time)}</Mono></td>
-            <td><Mono size="12px" color={C.text} style={{ fontWeight: 700 }}>{formatDeviceName(relay.device_label, { technical })}</Mono></td>
-            <td><Tag color={relay.relay_status === 'rejected' ? 'red' : relay.relay_status === 'stopped' ? 'green' : 'amber'}>{formatRelayStatus(relay.relay_status)}</Tag></td>
-            <td><Mono size="12px">{relay.duration_seconds === null ? 'Not known' : `${Number(relay.duration_seconds).toFixed(1)} sec`}</Mono></td>
-            {technical && <td><Mono size="12px">{score === null ? 'Not available' : `${score.toFixed(1)}%`}</Mono></td>}
-            {technical && <td><Mono size="11px" color={C.textDim}>boot {relay.source_boot} · seq {relay.source_sequence}</Mono></td>}
-            <td><Mono size="11px" color={C.textDim}>{relay.rejection_reason || 'We cannot confirm spray actually came out.'}</Mono></td>
+            <td data-label="When"><Mono size="12px" color={C.textDim}>{formatDashboardTimestamp(relay.display_time)}</Mono></td>
+            <td data-label="Device"><Mono size="12px" color={C.text} style={{ fontWeight: 700 }}>{formatDeviceName(relay.device_label, { technical })}</Mono></td>
+            <td data-label="What happened"><Tag color={relay.relay_status === 'rejected' ? 'red' : relay.relay_status === 'stopped' ? 'green' : 'amber'}>{formatRelayStatus(relay.relay_status)}</Tag></td>
+            <td data-label="How long"><Mono size="12px">{relay.duration_seconds === null ? 'Not known' : `${Number(relay.duration_seconds).toFixed(1)} sec`}</Mono></td>
+            {technical && <td data-label="Match score"><Mono size="12px">{score === null ? 'Not available' : `${score.toFixed(1)}%`}</Mono></td>}
+            {technical && <td data-label="Source"><Mono size="11px" color={C.textDim}>boot {relay.source_boot} · seq {relay.source_sequence}</Mono></td>}
+            <td data-label="Notes"><Mono size="11px" color={C.textDim}>{relay.rejection_reason || 'We cannot confirm spray actually came out.'}</Mono></td>
           </tr>
         );
       }}

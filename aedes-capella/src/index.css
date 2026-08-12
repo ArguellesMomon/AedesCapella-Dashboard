@@ -875,6 +875,119 @@ a:focus-visible,
   .device-map { height: 360px; }
 }
 
+/* ---------------------------------------------------------------------------
+   Mobile
+   --------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  /*
+   * Two metric columns, not three. At phone widths three cells leave roughly
+   * 110px each, which truncates every label to an ellipsis and makes the strip
+   * useless. Labels also wrap here rather than clip, since a health worker
+   * reading "Possible Mosquitoes Today" needs the whole phrase.
+   */
+  .dashboard-topbar {
+    height: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topbar-clock {
+    grid-column: span 2;
+    text-align: left;
+    border-top: 1px dashed var(--pd-dash);
+  }
+
+  .topbar-label {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  /* Comfortable touch targets. 44px is the accepted minimum, and this
+     audience skews older, so nothing interactive goes below it. */
+  .dashboard-nav button,
+  .sidebar-settings button,
+  .status-refresh-button,
+  .feed-more {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 720px) {
+  /*
+   * Tables become stacked records.
+   *
+   * The data table is 860px wide by design, so on a phone every table would
+   * scroll sideways: the reader has to drag a seven-column grid back and forth
+   * and hold the column meanings in their head. Instead each row re-flows into
+   * a labelled block, one field per line, with the column name supplied from
+   * data-label. Nothing scrolls horizontally and nothing is hidden.
+   */
+  .feed-head { display: none; }
+
+  .table-scroll { overflow-x: visible; }
+
+  .data-table,
+  .data-table tbody,
+  .data-table tr,
+  .data-table td {
+    display: block;
+    width: auto;
+  }
+
+  .data-table { min-width: 0; }
+  .data-table colgroup { display: none; }
+
+  .data-table tr {
+    padding: 12px 14px;
+    border-bottom: 1px dashed var(--pd-dash);
+  }
+
+  .data-table tr:last-child { border-bottom: 0; }
+
+  .data-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    max-width: none !important;
+    padding: 6px 0;
+    border: 0;
+    text-align: right;
+  }
+
+  .data-table td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    text-align: left;
+    color: var(--color-text);
+    font: 600 10px 'IBM Plex Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* The body div caps its height inline for the desktop scroll pane; on a
+     phone the page itself should scroll instead of a box inside a box. */
+  .feed-body {
+    max-height: none !important;
+    overflow-y: visible;
+  }
+
+  .feed-foot { gap: 10px; }
+  .feed-more { width: 100%; text-align: center; }
+
+  /* Readable at arm's length. */
+  .topbar-value { font-size: 18px; }
+  .metric-card-value { font-size: 20px; }
+}
+
+@media (max-width: 480px) {
+  .dashboard-topbar { grid-template-columns: 1fr; }
+  .topbar-clock { grid-column: span 1; }
+  .topbar-metric,
+  .topbar-connection { border-right: 0; border-bottom: 1px dashed var(--pd-dash); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

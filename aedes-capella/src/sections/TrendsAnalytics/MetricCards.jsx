@@ -25,9 +25,9 @@ export default function MetricCards({ events = [], candidates = [] }) {
   const meanScore = average(candidates.map(candidateScorePercent));
   const metrics = [
     {
-      label: 'Candidates saved',
+      label: 'Possible mosquitoes recorded',
       value: String(candidates.length),
-      sub: candidates.length ? 'validated model/temporal candidates' : 'no candidates yet',
+      sub: candidates.length ? 'sounds that matched, still need checking' : 'nothing recorded yet',
       color: C.text,
       status: candidates.length ? 'Available' : 'No candidates',
       statusColor: candidates.length ? 'blue' : 'gray',
@@ -51,7 +51,7 @@ export default function MetricCards({ events = [], candidates = [] }) {
     {
       label: 'Average match strength',
       value: meanScore === null ? '—' : `${meanScore.toFixed(1)}%`,
-      sub: candidates.length ? 'model score; not species confirmation' : 'no candidate scores yet',
+      sub: candidates.length ? 'how closely sounds matched, not proof of species' : 'nothing to score yet',
       color: C.text,
       status: meanScore === null ? 'No reports' : 'Available',
       statusColor: meanScore === null ? 'gray' : 'blue',

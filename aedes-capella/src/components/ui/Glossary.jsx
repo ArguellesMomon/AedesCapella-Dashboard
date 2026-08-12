@@ -4,7 +4,7 @@ import Card from './Card';
 import Mono from './Mono';
 
 const TERMS = [
-  ['Candidate score', 'The model score saved with a possible match; it is not a species confirmation.'],
+  ['Match score', 'How closely a sound matched. It is not proof of the species.'],
   ['Possible mosquito match', 'A validated model and timing candidate that still needs human review.'],
   ['Cooldown', 'A recorded pause that prevents relay activations too close together.'],
   ['Works offline', 'The sensor can check sound even without an internet connection.'],

@@ -1,4 +1,6 @@
 import { C } from '../../constants/colors';
+import { formatDeviceName } from '../../utils/viewer';
+import { useIsTechnical } from '../../contexts/viewerRole';
 import Card from '../../components/ui/Card';
 import Mono from '../../components/ui/Mono';
 import Tag from '../../components/ui/Tag';
@@ -23,6 +25,7 @@ function Metric({ label, children }) {
 }
 
 export default function NodeCard({ device }) {
+  const technical = useIsTechnical();
   const status = getStatusPresentation(device.operational_state);
   const isFault = device.operational_state === 'logging_fault';
   const isOffline = ['offline', 'never_seen'].includes(device.operational_state);
@@ -38,7 +41,7 @@ export default function NodeCard({ device }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '16px' }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: '18px', fontWeight: 800, color: C.text }}>
-            {device.device_label || 'Unnamed device'}
+            {formatDeviceName(device.device_label, { technical }) || 'Unnamed device'}
           </div>
           <Mono size="11px" color={C.textDim} style={{ display: 'block', marginTop: '5px', wordBreak: 'break-all' }}>
             {device.device_id}
@@ -66,41 +69,41 @@ export default function NodeCard({ device }) {
           <Mono size="12px" color={C.text}>{formatTimestamp(device.last_seen_at)}</Mono>
         </Metric>
 
-        <Metric label="Records Saved">
+        <Metric label="Saving Records">
           <Tag color={device.log_healthy ? 'green' : device.has_ever_reported ? 'red' : 'gray'}>
             {device.has_ever_reported ? device.log_healthy ? 'Okay' : 'Problem' : 'No update yet'}
           </Tag>
         </Metric>
 
-        <Metric label="Relay-Safe State">
+        <Metric label="Sprayer Safe">
           <Tag color={device.relay_safe_high ? 'green' : 'red'}>
             {device.relay_safe_high ? 'Safe-high reported' : 'Unsafe — check device'}
           </Tag>
         </Metric>
 
-        <Metric label="Signal Strength">
+        <Metric label="Signal">
           {device.wifi_rssi_dbm === null ? <Mono size="12px" color={C.textDim}>Not available</Mono> : <WifiSignal dbm={device.wifi_rssi_dbm} />}
         </Metric>
 
-        <Metric label="Time Running">
+        <Metric label="Running For">
           <Mono size="12px" color={C.text}>{formatDuration(device.uptime_ms)}</Mono>
         </Metric>
 
-        <Metric label="Heartbeat Age">
+        <Metric label="Last Check-In">
           <Mono size="12px" color={device.needs_attention ? C.amber : C.text}>
-            {device.heartbeat_age_seconds === null ? 'Never reported' : formatDuration(Number(device.heartbeat_age_seconds) * 1000)}
+            {device.heartbeat_age_seconds === null ? 'Never checked in' : formatDuration(Number(device.heartbeat_age_seconds) * 1000)}
           </Mono>
         </Metric>
 
-        <Metric label="C3 boot / ordinal">
+        {technical && <Metric label="C3 boot / ordinal">
           <Mono size="12px" color={C.text}>{device.c3_boot ?? '—'} / {device.last_ordinal ?? '—'}</Mono>
-        </Metric>
+        </Metric>}
 
-        <Metric label="Free Heap">
+        {technical && <Metric label="Free Heap">
           <Mono size="12px" color={C.text}>
             {device.free_heap_bytes === null ? 'Not available' : `${Math.round(device.free_heap_bytes / 1024)} KiB`}
           </Mono>
-        </Metric>
+        </Metric>}
 
         <div style={{ height: 1, background: C.border }} />
 
@@ -118,11 +121,11 @@ export default function NodeCard({ device }) {
         <div className="info-grid info-grid-two">
           <div style={{ padding: '10px', background: C.surface2, borderRadius: '7px', textAlign: 'center' }}>
             <Mono size="20px" color={C.text} style={{ display: 'block' }}>{device.candidates_last_7d ?? 0}</Mono>
-            <Mono size="10px" color={C.textDim}>POSSIBLE MATCHES · 7 DAYS</Mono>
+            <Mono size="10px" color={C.textDim}>POSSIBLE MOSQUITOES · 7 DAYS</Mono>
           </div>
           <div style={{ padding: '10px', background: C.surface2, borderRadius: '7px', textAlign: 'center' }}>
             <Mono size="20px" color={C.text} style={{ display: 'block' }}>{device.mist_events_last_7d ?? 0}</Mono>
-            <Mono size="10px" color={C.textDim}>RELAY ACTIVATIONS · 7 DAYS</Mono>
+            <Mono size="10px" color={C.textDim}>SPRAYINGS · 7 DAYS</Mono>
           </div>
         </div>
       </div>

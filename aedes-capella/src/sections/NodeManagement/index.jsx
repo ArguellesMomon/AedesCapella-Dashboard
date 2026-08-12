@@ -14,8 +14,8 @@ export default function NodeManagement({ deviceStatus }) {
     <div>
       <SectionHeader
         fig="FIG.04"
-        title="Sensor Status"
-        subtitle="See which sensors are working and which ones need checking"
+        title="Device Status"
+        subtitle="Which devices are working and which ones need checking."
       />
       <Banner
         icon={Cpu}

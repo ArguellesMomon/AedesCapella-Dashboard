@@ -66,7 +66,7 @@ test('candidate score distribution preserves empty buckets and cautious labels',
     { range: '80–89%', count: 1 },
     { range: '90–100%', count: 1 },
   ]);
-  assert.equal(getEventPresentation('LIVE_ACCEPT').label, 'Possible mosquito match');
+  assert.equal(getEventPresentation('LIVE_ACCEPT').label, 'Possible mosquito');
   assert.equal(getEventPresentation('UNKNOWN').color, 'gray');
 });
 

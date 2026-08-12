@@ -17,8 +17,8 @@ export default function LiveFeed({ dashboardData, deviceStatus }) {
     <div>
       <SectionHeader
         fig="FIG.01"
-        title="Latest Sensor Activity"
-        subtitle="Recent sensor updates and possible mosquito matches"
+        title="Latest Activity"
+        subtitle="What the devices recorded recently. A possible mosquito is a sound that matched, not a confirmed mosquito."
       />
       {!dashboardData?.loading && !dashboardData?.errors?.activity && <ActivitySummary events={events} />}
       <FeedTable

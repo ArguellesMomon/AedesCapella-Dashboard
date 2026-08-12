@@ -51,7 +51,7 @@ export default function DistributionCharts({ events = [], candidates = [], devic
           MATCH STRENGTH
         </div>
         {!candidates.length ? (
-          <EmptyState title="No Candidate Scores Yet" message="This chart will fill from device-originated LIVE_ACCEPT rows." compact />
+          <EmptyState title="Nothing To Show Yet" message="This chart fills in once the devices record possible mosquitoes." compact />
         ) : (
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={confidence} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>

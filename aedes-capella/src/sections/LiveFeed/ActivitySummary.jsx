@@ -36,11 +36,10 @@ export default function ActivitySummary({ events }) {
         </div>
       </div>
 
-      <div className="info-grid info-grid-four">
-        <Metric label="Meaningful Activities Shown" value={summary.total} tone={C.blue} note={`${summary.last24h} shown from the last 24 hours`} />
-        <Metric label="Possible Matches" value={summary.candidateCount} tone={C.amber} note="Please review before action" />
-        <Metric label="Relay Activations" value={summary.relayCount} tone={C.red} note="Recorded event; delivery not proven" />
-        <Metric label="Time Not Confirmed" value={summary.unresolvedCount} tone={summary.unresolvedCount ? C.amber : C.green} note={summary.latestAt ? `latest ${formatDashboardTimestamp(summary.latestAt)}` : 'no recent activity'} />
+      <div className="info-grid info-grid-three">
+        <Metric label="Possible Mosquitoes" value={summary.candidateCount} tone={C.amber} note="Someone should check these" />
+        <Metric label="Sprayings" value={summary.relayCount} tone={C.red} note="We cannot confirm spray came out" />
+        <Metric label="Time Not Confirmed" value={summary.unresolvedCount} tone={summary.unresolvedCount ? C.amber : C.green} note={summary.latestAt ? `Latest ${formatDashboardTimestamp(summary.latestAt)}` : 'Nothing recent'} />
       </div>
     </Card>
   );

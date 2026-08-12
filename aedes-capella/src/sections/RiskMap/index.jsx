@@ -11,8 +11,8 @@ export default function RiskMap({ dashboardData }) {
     <div>
       <SectionHeader
         fig="FIG.02"
-        title="Live Device Map"
-        subtitle="Configured Supabase coordinates and current device activity"
+        title="Barangay Map"
+        subtitle="Where each device is, and what it recorded recently."
       />
       <Banner
         icon={Database}

@@ -11,19 +11,49 @@ export const OPERATOR_ACTIVITY_KINDS = Object.freeze([
 
 const OPERATOR_ACTIVITY_KIND_SET = new Set(OPERATOR_ACTIVITY_KINDS);
 
+/*
+ * Plain-language event names.
+ *
+ * The audience is barangay health workers, not engineers, so nothing here may
+ * assume familiarity with relays, models or firmware. The hedging survives the
+ * simplification though: a possible match must never read as a confirmed
+ * mosquito, and a sprayer switching on must never read as proof that spray
+ * reached anything.
+ */
 const EVENT_PRESENTATION = {
-  BOOT: { label: 'Sensor started', color: 'blue' },
-  TEST_ACCEPT: { label: 'Test candidate checked', color: 'gray' },
-  LIVE_ACCEPT: { label: 'Possible mosquito match', color: 'amber' },
-  RELAY_INTENT: { label: 'Relay requested', color: 'amber' },
-  RELAY_ON: { label: 'Relay activation recorded', color: 'red' },
-  RELAY_OFF: { label: 'Relay stop recorded', color: 'green' },
-  RELAY_REJECT: { label: 'Relay request rejected', color: 'red' },
-  COOLDOWN_COMPLETE: { label: 'Cooldown completed', color: 'green' },
+  BOOT: { label: 'Device turned on', color: 'blue' },
+  TEST_ACCEPT: { label: 'Test check', color: 'gray' },
+  LIVE_ACCEPT: { label: 'Possible mosquito', color: 'amber' },
+  RELAY_INTENT: { label: 'Spray requested', color: 'amber' },
+  RELAY_ON: { label: 'Sprayer turned on', color: 'red' },
+  RELAY_OFF: { label: 'Sprayer turned off', color: 'green' },
+  RELAY_REJECT: { label: 'Spray refused, too soon', color: 'red' },
+  COOLDOWN_COMPLETE: { label: 'Ready again', color: 'green' },
 };
 
+/*
+ * Firmware reason codes leak straight from the device ring into the UI
+ * (timer_armed, candidate, validated, reset). They are engineering shorthand,
+ * so translate the known ones and pass anything unrecognised through rather
+ * than inventing a meaning for it.
+ */
+const REASON_TEXT = {
+  reset: 'The device restarted.',
+  timer_armed: 'The sprayer was switched on.',
+  candidate: 'A sound matched. Needs a person to check.',
+  validated: 'The sound passed the checks.',
+  cooldown: 'Still waiting before it can spray again.',
+  cooldown_active: 'Too soon after the last spray.',
+  log_unhealthy: 'The device could not save records properly.',
+};
+
+export function plainReason(reason) {
+  if (!reason) return 'The device recorded this.';
+  return REASON_TEXT[reason] || reason;
+}
+
 export function getEventPresentation(eventKind) {
-  return EVENT_PRESENTATION[eventKind] || { label: 'Other sensor activity', color: 'gray' };
+  return EVENT_PRESENTATION[eventKind] || { label: 'Other activity', color: 'gray' };
 }
 
 export function isOperatorActivityEvent(event) {

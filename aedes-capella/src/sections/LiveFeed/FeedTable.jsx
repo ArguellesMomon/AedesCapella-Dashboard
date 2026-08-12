@@ -7,17 +7,24 @@ import {
   formatDashboardTimestamp,
   formatShortDashboardTimestamp,
   getEventPresentation,
+  plainReason,
 } from '../../utils/dashboardData';
+import { formatDeviceName } from '../../utils/viewer';
+import { useIsTechnical } from '../../contexts/viewerRole';
 
-const HEADERS = ['OCCURRED', 'RECEIVED', 'SENSOR', 'ACTIVITY', 'TIME QUALITY', 'DETAIL'];
+const HEADERS = ['WHEN IT HAPPENED', 'WHEN RECEIVED', 'DEVICE', 'WHAT HAPPENED', 'TIME', 'NOTES'];
 const COLUMNS = ['14%', '14%', '16%', '20%', '14%', '22%'];
 
-function deviceLabel(deviceId, deviceLabels) {
-  return deviceLabels[deviceId] || (deviceId ? deviceId.slice(0, 8) : 'Unknown device');
+function deviceLabel(deviceId, deviceLabels, technical) {
+  const stored = deviceLabels[deviceId];
+  if (stored) return formatDeviceName(stored, { technical });
+  return deviceId ? `Device ${deviceId.slice(0, 4)}` : 'Unknown device';
 }
 
 /** Recent sensor activity table with plain-language labels. */
 export default function FeedTable({ events = [], deviceLabels = {}, loading = false, error = '' }) {
+  const technical = useIsTechnical();
+
   if (loading) {
     return (
       <EmptyState
@@ -51,14 +58,16 @@ export default function FeedTable({ events = [], deviceLabels = {}, loading = fa
 
   const ordinals = events.map(event => event.ordinal).filter(Number.isFinite);
   const ordinalRange = ordinals.length
-    ? `ordinal ${Math.min(...ordinals)}–${Math.max(...ordinals)}`
+    ? `records ${Math.min(...ordinals)}–${Math.max(...ordinals)}`
     : null;
 
   return (
     <TablePlate
-      title="Recorded Events"
-      note={`${ordinalRange ? `${ordinalRange} · ` : ''}${events.length} rows held`}
-      label="Event log"
+      title="What The Devices Recorded"
+      note={technical
+        ? `${ordinalRange ? `${ordinalRange} · ` : ''}${events.length} rows held`
+        : `Showing the ${events.length} most recent`}
+      label="Activity"
       fig="FIG.01"
       headers={HEADERS}
       columns={COLUMNS}
@@ -88,29 +97,31 @@ export default function FeedTable({ events = [], deviceLabels = {}, loading = fa
                 </td>
                 <td>
                   <Mono size="12px" color={C.text} style={{ fontWeight: 700 }}>
-                    {event.device_label || deviceLabel(event.device_id, deviceLabels)}
+                    {event.device_label
+                      ? formatDeviceName(event.device_label, { technical })
+                      : deviceLabel(event.device_id, deviceLabels, technical)}
                   </Mono>
                 </td>
                 <td>
                   <Tag color={presentation.color}>{presentation.label}</Tag>
                   {event.temporal_candidate && (
                     <Mono size="11px" color={C.textDim} style={{ display: 'block', marginTop: '5px' }}>
-                      {isNewCandidate ? 'newly committed candidate' : 'candidate — please review'}
+                      {isNewCandidate ? 'just came in' : 'please check'}
                     </Mono>
                   )}
                 </td>
                 <td>
                   <Mono size="12px" color={event.time_quality === 'unresolved' ? C.amber : C.green} style={{ fontWeight: 700 }}>
                     {event.time_quality === 'unresolved'
-                      ? 'Occurrence unresolved'
-                      : event.time_quality === 'ntp' ? 'NTP time' : 'Boot-anchored time'}
+                      ? 'Not confirmed'
+                      : event.time_quality === 'ntp' ? 'Exact' : 'Estimated'}
                   </Mono>
                 </td>
                 <td style={{ maxWidth: '280px' }}>
                   <Mono size="12px" color={C.textDim} style={{ lineHeight: 1.45 }}>
                     {event.temporal_candidate
-                      ? 'Validated model/temporal candidate; not a confirmed biological detection.'
-                      : event.reason || 'Device-originated event recorded.'}
+                      ? 'Possible mosquito sound. Needs a person to check.'
+                      : plainReason(event.reason)}
                   </Mono>
                 </td>
               </tr>

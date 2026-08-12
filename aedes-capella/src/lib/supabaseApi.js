@@ -61,6 +61,24 @@ export async function signOut(accessToken) {
   await request('/auth/v1/logout', { method: 'POST', accessToken });
 }
 
+/*
+ * The signed-in user's role, from the existing current_user_role() function.
+ * Only 'admin' and 'technical_personnel' see engineering detail; health
+ * officers and sanitary inspectors get the plain-language view.
+ *
+ * A failure here must not lock anyone out, so callers treat an error as the
+ * least-privileged answer rather than surfacing it.
+ */
+export async function fetchCurrentUserRole(accessToken, signal) {
+  const role = await request('/rest/v1/rpc/current_user_role', {
+    method: 'POST',
+    accessToken,
+    body: {},
+    signal,
+  });
+  return typeof role === 'string' ? role : null;
+}
+
 export async function fetchDeviceStatus(accessToken, signal) {
   const columns = [
     'device_id', 'device_label', 'last_seen_at', 'has_ever_reported',

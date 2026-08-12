@@ -3,20 +3,29 @@ import Mono from '../../components/ui/Mono';
 import Tag from '../../components/ui/Tag';
 import EmptyState from '../../components/ui/EmptyState';
 import TablePlate from '../../components/ui/TablePlate';
+import { formatDeviceName } from '../../utils/viewer';
+import { useIsTechnical } from '../../contexts/viewerRole';
 import {
   candidateScorePercent,
   formatDashboardTimestamp,
   formatRelayStatus,
 } from '../../utils/dashboardData';
 
-const HEADERS = ['LATEST EVENT', 'SENSOR', 'STATUS', 'DURATION', 'CANDIDATE SCORE', 'SOURCE', 'EVIDENCE NOTE'];
-const COLUMNS = ['14%', '12%', '14%', '10%', '14%', '14%', '22%'];
+/* The score, boot and sequence columns are engineering evidence. Health
+   workers get the six plain columns; maintainers get all nine. */
+const HEADERS_PLAIN = ['WHEN', 'DEVICE', 'WHAT HAPPENED', 'HOW LONG', 'NOTES'];
+const COLUMNS_PLAIN = ['18%', '14%', '18%', '12%', '38%'];
+
+const HEADERS_TECHNICAL = ['WHEN', 'DEVICE', 'WHAT HAPPENED', 'HOW LONG', 'MATCH SCORE', 'SOURCE', 'NOTES'];
+const COLUMNS_TECHNICAL = ['14%', '12%', '14%', '10%', '14%', '14%', '22%'];
 
 export default function FogTable({ relays = [], loading = false, error = '' }) {
-  if (loading) return <EmptyState title="Loading Relay History" message="Reading saved C3 relay events." variant="startup" />;
-  if (error) return <EmptyState title="Relay History Unavailable" message={error} action="Polling will retry in 30 seconds." variant="warning" />;
+  const technical = useIsTechnical();
+
+  if (loading) return <EmptyState title="Loading Spraying History" message="Getting the saved spraying records." variant="startup" />;
+  if (error) return <EmptyState title="Spraying History Unavailable" message={error} action="Polling will retry in 30 seconds." variant="warning" />;
   if (!relays.length) {
-    return <EmptyState title="No Relay Episodes Recorded" message="No relay command/event is visible in the backend. This does not prove that no physical event occurred." />;
+    return <EmptyState title="No Sprayings Recorded" message="No sprayings have been saved yet. This does not prove that nothing happened." />;
   }
 
   const episodes = relays.length;
@@ -24,12 +33,14 @@ export default function FogTable({ relays = [], loading = false, error = '' }) {
 
   return (
     <TablePlate
-      title="Relay Episodes"
-      note={`${episodes} episodes held · ${started} with a recorded activation`}
-      label="Relay log"
+      title="Spraying History"
+      note={technical
+        ? `${episodes} episodes held · ${started} with a recorded activation`
+        : `${started} of ${episodes} actually started the sprayer`}
+      label="Sprayings"
       fig="FIG.03"
-      headers={HEADERS}
-      columns={COLUMNS}
+      headers={technical ? HEADERS_TECHNICAL : HEADERS_PLAIN}
+      columns={technical ? COLUMNS_TECHNICAL : COLUMNS_PLAIN}
       rows={relays}
       resetScrollOn={relays}
       renderRow={relay => {
@@ -38,12 +49,12 @@ export default function FogTable({ relays = [], loading = false, error = '' }) {
         return (
           <tr key={relay.relay_episode_key}>
             <td><Mono size="12px" color={C.textDim}>{formatDashboardTimestamp(relay.display_time)}</Mono></td>
-            <td><Mono size="12px" color={C.text} style={{ fontWeight: 700 }}>{relay.device_label}</Mono></td>
+            <td><Mono size="12px" color={C.text} style={{ fontWeight: 700 }}>{formatDeviceName(relay.device_label, { technical })}</Mono></td>
             <td><Tag color={relay.relay_status === 'rejected' ? 'red' : relay.relay_status === 'stopped' ? 'green' : 'amber'}>{formatRelayStatus(relay.relay_status)}</Tag></td>
-            <td><Mono size="12px">{relay.duration_seconds === null ? 'Not established' : `${Number(relay.duration_seconds).toFixed(1)} s`}</Mono></td>
-            <td><Mono size="12px">{score === null ? 'Not available' : `${score.toFixed(1)}%`}</Mono></td>
-            <td><Mono size="11px" color={C.textDim}>boot {relay.source_boot} · seq {relay.source_sequence}</Mono></td>
-            <td><Mono size="11px" color={C.textDim}>{relay.rejection_reason || 'Saved relay evidence; physical delivery not confirmed.'}</Mono></td>
+            <td><Mono size="12px">{relay.duration_seconds === null ? 'Not known' : `${Number(relay.duration_seconds).toFixed(1)} sec`}</Mono></td>
+            {technical && <td><Mono size="12px">{score === null ? 'Not available' : `${score.toFixed(1)}%`}</Mono></td>}
+            {technical && <td><Mono size="11px" color={C.textDim}>boot {relay.source_boot} · seq {relay.source_sequence}</Mono></td>}
+            <td><Mono size="11px" color={C.textDim}>{relay.rejection_reason || 'We cannot confirm spray actually came out.'}</Mono></td>
           </tr>
         );
       }}

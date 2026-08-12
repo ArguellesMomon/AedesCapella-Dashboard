@@ -1,20 +1,23 @@
 import { LogOut, Moon, Settings, Sun } from 'lucide-react';
 import { C } from '../../constants/colors';
 import { getStatusPresentation } from '../../utils/deviceStatus';
+import { formatDeviceName } from '../../utils/viewer';
+import { useIsTechnical } from '../../contexts/viewerRole';
 import Mono from '../ui/Mono';
 
 /* Figure numbers, not glyphs. They match the FIG.0x on each section header so
    the sidebar doubles as the plate index. */
 const NAV_ITEMS = [
-  { id: 'feed',   fig: '01', label: 'Latest Sensor Activity' },
+  { id: 'feed',   fig: '01', label: 'Latest Activity' },
   { id: 'map',    fig: '02', label: 'Barangay Map' },
-  { id: 'fog',    fig: '03', label: 'Relay History' },
-  { id: 'nodes',  fig: '04', label: 'Sensor Status' },
+  { id: 'fog',    fig: '03', label: 'Spraying History' },
+  { id: 'nodes',  fig: '04', label: 'Device Status' },
   { id: 'trends', fig: '05', label: 'Activity Summary' },
 ];
 
 export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme, onToggleTheme, onLogout }) {
   const ThemeIcon = theme === 'dark' ? Sun : Moon;
+  const technical = useIsTechnical();
 
   return (
     <aside className="dashboard-sidebar" style={{
@@ -104,16 +107,16 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme
           letterSpacing: '0.1em',
           marginBottom:  '10px',
         }}>
-          SENSOR STATUS
+          DEVICES
         </div>
         {deviceStatus.loading && (
-          <Mono size="12px" color={C.textDim}>Checking sensors…</Mono>
+          <Mono size="12px" color={C.textDim}>Checking devices…</Mono>
         )}
         {!deviceStatus.loading && deviceStatus.error && (
-          <Mono size="12px" color={C.red}>Sensor information unavailable</Mono>
+          <Mono size="12px" color={C.red}>Device information unavailable</Mono>
         )}
         {!deviceStatus.loading && !deviceStatus.error && !deviceStatus.devices.length && (
-          <Mono size="12px" color={C.textDim}>No sensors listed</Mono>
+          <Mono size="12px" color={C.textDim}>No devices listed</Mono>
         )}
         {!deviceStatus.loading && !deviceStatus.error && deviceStatus.devices.map(device => {
           const presentation = getStatusPresentation(device.operational_state);
@@ -135,7 +138,7 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme
                 animation:    isHealthy ? 'pulse 2s infinite' : 'none',
               }} />
               <Mono size="12px" color={isHealthy ? C.text : C.textDim} style={{ flex: 1, fontWeight: 700 }}>
-                {device.device_label}
+                {formatDeviceName(device.device_label, { technical })}
               </Mono>
               <Mono size="12px" color={presentation.color === 'red' ? C.red : C.textDim}>
                 {presentation.label}

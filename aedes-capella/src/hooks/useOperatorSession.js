@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { refreshOperatorSession, signInWithPassword, signOut } from '../lib/supabaseApi';
+import {
+  fetchCurrentUserRole,
+  refreshOperatorSession,
+  signInWithPassword,
+  signOut,
+} from '../lib/supabaseApi';
 
 const SESSION_KEY = 'aedes-capella-operator-session-v1';
 
@@ -16,6 +21,33 @@ function loadSession() {
 
 export function useOperatorSession() {
   const [session, setSession] = useState(loadSession);
+  /*
+   * The resolved role is stored against the token it was fetched for, so the
+   * effect never has to null it out synchronously on logout: a token that no
+   * longer matches simply reads as unresolved. That also closes the window
+   * where a stale role could outlive the session it came from.
+   *
+   * A failed lookup resolves to null, which the viewer context treats as
+   * non-technical, so a lookup problem hides engineering detail rather than
+   * exposing it.
+   */
+  const [resolvedRole, setResolvedRole] = useState({ token: null, role: null });
+
+  useEffect(() => {
+    const token = session?.accessToken;
+    if (!token) return undefined;
+
+    const controller = new AbortController();
+    fetchCurrentUserRole(token, controller.signal)
+      .then(role => setResolvedRole({ token, role }))
+      .catch(() => setResolvedRole({ token, role: null }));
+
+    return () => controller.abort();
+  }, [session?.accessToken]);
+
+  const role = resolvedRole.token && resolvedRole.token === session?.accessToken
+    ? resolvedRole.role
+    : null;
 
   useEffect(() => {
     if (!session?.refreshToken) return undefined;
@@ -51,5 +83,5 @@ export function useOperatorSession() {
     }
   }, [session?.accessToken]);
 
-  return { session, login, logout };
+  return { session, role, login, logout };
 }

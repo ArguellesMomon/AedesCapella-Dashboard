@@ -13,19 +13,19 @@ export default function FoggingLog({ dashboardData }) {
     <div>
       <SectionHeader
         fig="FIG.03"
-        title="Recorded Relay History"
-        subtitle="Requested, started, stopped, and rejected device relay episodes"
+        title="Spraying History"
+        subtitle="When the sprayers were asked to run, when they ran, and when a request was refused."
       />
       <Banner
         icon={Zap}
-        text="These are saved relay command/events from the C3. They do not by themselves prove that physical fluid was delivered."
+        text="These are the sprayer records saved by each device. They do not prove by themselves that spray actually came out."
         color="amber"
       />
       <Banner
         icon={Database}
         text={dashboardData?.reconciledAt
-          ? `Last full reconciliation: ${dashboardData.reconciledAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}.`
-          : 'Waiting for the first complete relay-history reconciliation.'}
+          ? `Last checked: ${dashboardData.reconciledAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}.`
+          : 'Waiting for the first update.'}
         color="blue"
       />
       {!dashboardData?.loading && !dashboardData?.errors?.relays && (

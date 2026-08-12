@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { C } from './constants/colors';
 import { useOperatorSession } from './hooks/useOperatorSession';
+import { ViewerProvider } from './contexts/ViewerProvider';
 import { useLiveDashboard } from './hooks/useLiveDashboard';
 import { average, candidateScorePercent, countSince } from './utils/dashboardData';
 import LoginPage from './components/auth/LoginPage';
@@ -38,7 +39,7 @@ export default function App() {
   const [activeSection, setActiveSection] = useState('feed');
   const [theme, setTheme] = useState(getInitialTheme);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { session, login, logout } = useOperatorSession();
+  const { session, role, login, logout } = useOperatorSession();
   const liveData = useLiveDashboard(session?.accessToken);
   const deviceStatus = {
     devices: liveData.devices,
@@ -82,6 +83,7 @@ export default function App() {
   }
 
   return (
+    <ViewerProvider role={role}>
     <div className="app-shell" style={{
       background: C.bg,
       fontFamily: 'Outfit, sans-serif',
@@ -134,5 +136,6 @@ export default function App() {
         />
       )}
     </div>
+    </ViewerProvider>
   );
 }

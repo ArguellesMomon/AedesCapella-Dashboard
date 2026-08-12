@@ -19,7 +19,7 @@ export default function TrendsAnalytics({ dashboardData, deviceStatus }) {
       <SectionHeader
         fig="FIG.05"
         title="Activity Summary"
-        subtitle="Device-originated candidates and runtime activity · Asia/Manila"
+        subtitle="Totals over time, in Philippine time."
       />
       <Banner
         icon={Database}

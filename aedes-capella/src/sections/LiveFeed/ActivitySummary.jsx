@@ -37,8 +37,8 @@ export default function ActivitySummary({ events }) {
       </div>
 
       <div className="info-grid info-grid-three">
-        <Metric label="Possible Mosquitoes" value={summary.candidateCount} tone={C.amber} note="Someone should check these" />
-        <Metric label="Sprayings" value={summary.relayCount} tone={C.red} note="We cannot confirm spray came out" />
+        <Metric label="Detected Aedes aegypti" value={summary.candidateCount} tone={C.amber} note="Number of possibly Aedes aegypti detections" />
+        <Metric label="Sprayings" value={summary.relayCount} tone={C.red} note="Number of spray/misting events" />
         <Metric label="Time Not Confirmed" value={summary.unresolvedCount} tone={summary.unresolvedCount ? C.amber : C.green} note={summary.latestAt ? `Latest ${formatDashboardTimestamp(summary.latestAt)}` : 'Nothing recent'} />
       </div>
     </Card>

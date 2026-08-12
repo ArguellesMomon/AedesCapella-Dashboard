@@ -1,4 +1,4 @@
-import { LogOut, Moon, Settings, Sun } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { C } from '../../constants/colors';
 import { getStatusPresentation } from '../../utils/deviceStatus';
 import { formatDeviceName } from '../../utils/viewer';
@@ -15,8 +15,7 @@ const NAV_ITEMS = [
   { id: 'trends', fig: '05', label: 'Activity Summary' },
 ];
 
-export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme, onToggleTheme, onLogout }) {
-  const ThemeIcon = theme === 'dark' ? Sun : Moon;
+export default function Sidebar({ activeSection, onNavigate, deviceStatus, onLogout }) {
   const technical = useIsTechnical();
 
   return (
@@ -162,33 +161,6 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, theme
           <Settings size={12} color={C.textDim} />
           SETTINGS
         </div>
-
-        <button
-          onClick={onToggleTheme}
-          style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '10px',
-            border: `1px solid ${C.border}`,
-            background: C.surface2,
-            color: C.text,
-            borderRadius: '8px',
-            padding: '9px 10px',
-            cursor: 'pointer',
-            marginBottom: '8px',
-          }}
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        >
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ThemeIcon size={14} color={C.text} />
-            <Mono size="12px" color={C.text} style={{ fontWeight: 700 }}>
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </Mono>
-          </span>
-        </button>
 
         {onLogout && (
           <button

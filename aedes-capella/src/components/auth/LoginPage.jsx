@@ -5,7 +5,7 @@ import Tag from '../ui/Tag';
 import { isSupabaseConfigured } from '../../lib/supabaseApi';
 import { getFriendlyError } from '../../utils/userMessages';
 
-export default function LoginPage({ theme, onToggleTheme, onLogin }) {
+export default function LoginPage({ onLogin }) {
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -139,31 +139,13 @@ export default function LoginPage({ theme, onToggleTheme, onLogin }) {
           alignSelf: 'center',
           background: C.surface,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <div style={{ marginBottom: '20px' }}>
             <div>
               <div style={{ fontSize: '28px', fontWeight: 700, color: C.text }}>Login</div>
               <div style={{ marginTop: '8px', color: C.textDim, fontSize: '14px', lineHeight: 1.5 }}>
                 Enter your email and password to open the dashboard.
               </div>
             </div>
-            <button
-              onClick={onToggleTheme}
-              style={{
-                border: `1px solid ${C.border}`,
-                background: C.surface2,
-                color: C.text,
-                borderRadius: '999px',
-                padding: '8px 12px',
-                cursor: 'pointer',
-                fontFamily: 'IBM Plex Mono, monospace',
-                fontSize: '12px',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-              }}
-            >
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </button>
           </div>
 
           <form onSubmit={handleSubmit}>

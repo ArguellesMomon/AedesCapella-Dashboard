@@ -15,6 +15,9 @@
  * --pd-accent-ink for anything that has to be read.
  */
 :root {
+  /* Light only. There is no dark variant and no toggle: the plate language is
+     drawn for paper, and a second palette is one more thing to keep correct
+     for an audience that never asked for it. */
   color-scheme: light;
   --color-bg: #fbfcfd;
   --color-surface: #ffffff;
@@ -94,85 +97,6 @@
   --banner-red-bg: #fee2e2;
   --banner-red-border: #fca5a566;
   --banner-red-text: #991b1b;
-}
-
-/*
- * Dark remains available because the sidebar toggle ships it, but the plate
- * language is tuned for paper: on a dark field the dashed edges and grid read
- * as noise rather than as draughting. Dark is kept coherent, not elaborated.
- */
-:root[data-theme='dark'] {
-  color-scheme: dark;
-  --color-bg: #0b1017;
-  --color-surface: #111a25;
-  --color-surface-2: #182232;
-  --color-surface-3: #1f2b3d;
-  --color-amber: #f0a45c;
-  --color-amber-dim: #3a2408;
-  --pd-accent: #f0a45c;
-  --pd-accent-ink: #f7d9ae;
-  --pd-accent-dim: rgba(240, 164, 92, 0.10);
-  --pd-accent-border: rgba(240, 164, 92, 0.34);
-  --pd-grid-line: rgba(223, 241, 255, 0.05);
-  --pd-dash: rgba(223, 241, 255, 0.16);
-  --pd-bracket: rgba(223, 241, 255, 0.38);
-  --color-red: #f87171;
-  --color-red-dim: #4b1f24;
-  --color-green: #4ade80;
-  --color-green-dim: #163826;
-  --color-blue: #60a5fa;
-  --color-gray: #7c8aa0;
-  --color-text: #f7f3ec;
-  --color-text-dim: #b7b0a6;
-  --color-border: #314154;
-  --color-border-bright: #485d75;
-  --shadow-card: 0 18px 34px rgba(0, 0, 0, 0.28);
-  --scrollbar-thumb: #4b5d73;
-  --scrollbar-thumb-hover: #688099;
-  --risk-critical-bg: #45242a;
-  --risk-critical-border: #b9485f;
-  --risk-critical-text: #fecdd3;
-  --risk-critical-fill: #f87171;
-  --risk-high-bg: #47310d;
-  --risk-high-border: #b77c10;
-  --risk-high-text: #fde68a;
-  --risk-high-fill: #f59e0b;
-  --risk-medium-bg: #40360d;
-  --risk-medium-border: #9e8a18;
-  --risk-medium-text: #fde68a;
-  --risk-medium-fill: #eab308;
-  --risk-low-bg: #183323;
-  --risk-low-border: #2f8f5a;
-  --risk-low-text: #bbf7d0;
-  --risk-low-fill: #4ade80;
-  --risk-none-bg: #253243;
-  --risk-none-border: #51667d;
-  --risk-none-text: #cbd5e1;
-  --risk-none-fill: #94a3b8;
-  --tag-amber-bg: #47310d;
-  --tag-amber-border: #b77c10;
-  --tag-amber-text: #fde68a;
-  --tag-red-bg: #45242a;
-  --tag-red-border: #b9485f;
-  --tag-red-text: #fecdd3;
-  --tag-green-bg: #183323;
-  --tag-green-border: #2f8f5a;
-  --tag-green-text: #bbf7d0;
-  --tag-gray-bg: #253243;
-  --tag-gray-border: #51667d;
-  --tag-gray-text: #d5dde7;
-  --tag-blue-bg: #102c4f;
-  --tag-blue-border: #356fb0;
-  --tag-blue-text: #bfdbfe;
-  --banner-blue-bg: #102c4f;
-  --banner-blue-border: #356fb066;
-  --banner-blue-text: #bfdbfe;
-  --banner-amber-bg: #47310d;
-  --banner-amber-border: #b77c1066;
-  --banner-amber-text: #fde68a;
-  --banner-red-bg: #45242a;
-  --banner-red-border: #b9485f66;
-  --banner-red-text: #fecdd3;
 }
 
 *, *::before, *::after {

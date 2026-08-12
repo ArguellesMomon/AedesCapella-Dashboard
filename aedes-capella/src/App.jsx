@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { C } from './constants/colors';
 import { useOperatorSession } from './hooks/useOperatorSession';
 import { ViewerProvider } from './contexts/ViewerProvider';
@@ -25,19 +25,8 @@ const SECTIONS = {
   trends: TrendsAnalytics,
 };
 
-const THEME_STORAGE_KEY = 'aedes-capella-theme';
-function getInitialTheme() {
-  if (typeof window === 'undefined') return 'light';
-
-  const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
 export default function App() {
   const [activeSection, setActiveSection] = useState('feed');
-  const [theme, setTheme] = useState(getInitialTheme);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { session, role, login, logout } = useOperatorSession();
   const liveData = useLiveDashboard(session?.accessToken);
@@ -67,18 +56,9 @@ export default function App() {
   // Render the active section component
   const ActiveSection = SECTIONS[activeSection];
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
-
   if (!session) {
     return (
-      <LoginPage
-        theme={theme}
-        onToggleTheme={() => setTheme(currentTheme => currentTheme === 'dark' ? 'light' : 'dark')}
-        onLogin={login}
-      />
+      <LoginPage onLogin={login} />
     );
   }
 
@@ -92,8 +72,6 @@ export default function App() {
         activeSection={activeSection}
         onNavigate={setActiveSection}
         deviceStatus={deviceStatus}
-        theme={theme}
-        onToggleTheme={() => setTheme(currentTheme => currentTheme === 'dark' ? 'light' : 'dark')}
         onLogout={() => setShowLogoutModal(true)}
       />
 
@@ -118,7 +96,6 @@ export default function App() {
         <main className="section-scroll">
           <Suspense fallback={<div style={{ color: C.textDim }}>Loading dashboard section…</div>}>
             <ActiveSection
-              theme={theme}
               deviceStatus={deviceStatus}
               dashboardData={liveData}
             />

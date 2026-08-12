@@ -38,7 +38,7 @@ export default function FogTable({ relays = [], loading = false, error = '' }) {
         ? `${episodes} episodes held · ${started} with a recorded activation`
         : `${started} of ${episodes} actually started the sprayer`}
       label="Sprayings"
-      fig="FIG.03"
+      fig="SEC.03"
       headers={technical ? HEADERS_TECHNICAL : HEADERS_PLAIN}
       columns={technical ? COLUMNS_TECHNICAL : COLUMNS_PLAIN}
       rows={relays}
@@ -54,7 +54,7 @@ export default function FogTable({ relays = [], loading = false, error = '' }) {
             <td data-label="How long"><Mono size="12px">{relay.duration_seconds === null ? 'Not known' : `${Number(relay.duration_seconds).toFixed(1)} sec`}</Mono></td>
             {technical && <td data-label="Match score"><Mono size="12px">{score === null ? 'Not available' : `${score.toFixed(1)}%`}</Mono></td>}
             {technical && <td data-label="Source"><Mono size="11px" color={C.textDim}>boot {relay.source_boot} · seq {relay.source_sequence}</Mono></td>}
-            <td data-label="Notes"><Mono size="11px" color={C.textDim}>{relay.rejection_reason || 'We cannot confirm spray actually came out.'}</Mono></td>
+            <td data-label="Notes"><Mono size="11px" color={C.textDim}>{relay.rejection_reason || 'Spray Activation.'}</Mono></td>
           </tr>
         );
       }}

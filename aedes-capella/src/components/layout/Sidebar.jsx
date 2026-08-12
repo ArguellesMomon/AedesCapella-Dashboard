@@ -5,7 +5,7 @@ import { formatDeviceName } from '../../utils/viewer';
 import { useIsTechnical } from '../../contexts/viewerRole';
 import Mono from '../ui/Mono';
 
-/* Figure numbers, not glyphs. They match the FIG.0x on each section header so
+/* Figure numbers, not glyphs. They match the SEC.0x on each section header so
    the sidebar doubles as the plate index. */
 const NAV_ITEMS = [
   { id: 'feed',   fig: '01', label: 'Latest Activity' },

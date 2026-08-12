@@ -5,7 +5,7 @@ import Card from '../../components/ui/Card';
 export default function HourlyFogChart({ data = [] }) {
   return (
     <Card style={{ marginBottom: '20px', background: C.surface2 }}>
-      <div className="chart-title">RECORDED RELAY ACTIVATIONS · LAST 12 HOURS · ASIA/MANILA</div>
+      <div className="chart-title">RECORDED SPRAYING ACTIVATIONS · LAST 12 HOURS · ASIA/MANILA</div>
       <ResponsiveContainer width="100%" height={170}>
         <BarChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}cc`} vertical={false} />

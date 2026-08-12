@@ -12,11 +12,11 @@ export default function FoggingLog({ dashboardData }) {
   return (
     <div>
       <SectionHeader
-        fig="FIG.03"
+        fig="SEC.03"
         title="Spraying History"
         subtitle="When the sprayers were asked to run, when they ran, and when a request was refused."
       />
-      <Banner
+      {/* <Banner
         icon={Zap}
         text="These are the sprayer records saved by each device. They do not prove by themselves that spray actually came out."
         color="amber"
@@ -27,7 +27,7 @@ export default function FoggingLog({ dashboardData }) {
           ? `Last checked: ${dashboardData.reconciledAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}.`
           : 'Waiting for the first update.'}
         color="blue"
-      />
+      /> */}
       {!dashboardData?.loading && !dashboardData?.errors?.relays && (
         <>
           <FogSummaryCards relays={relays} />

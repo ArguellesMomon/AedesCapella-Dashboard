@@ -10,7 +10,7 @@ import { C } from '../../constants/colors';
  * beside every title is the generic dashboard tell we are removing.
  *
  * @param {string} overline - tracked uppercase kicker above the title
- * @param {string} fig      - figure number, e.g. "FIG.01"
+ * @param {string} fig      - figure number, e.g. "SEC.01"
  */
 export default function SectionHeader({ title, subtitle, overline, fig }) {
   return (

@@ -13,7 +13,7 @@ export default function NodeManagement({ deviceStatus }) {
   return (
     <div>
       <SectionHeader
-        fig="FIG.04"
+        fig="SEC.04"
         title="Device Status"
         subtitle="Which devices are working and which ones need checking."
       />

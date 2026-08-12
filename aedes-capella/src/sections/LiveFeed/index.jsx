@@ -16,7 +16,7 @@ export default function LiveFeed({ dashboardData, deviceStatus }) {
   return (
     <div>
       <SectionHeader
-        fig="FIG.01"
+        fig="SEC.01"
         title="Latest Activity"
         subtitle="What the devices recorded recently. A possible mosquito is a sound that matched, not a confirmed mosquito."
       />

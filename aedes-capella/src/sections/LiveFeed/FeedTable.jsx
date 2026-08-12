@@ -68,7 +68,7 @@ export default function FeedTable({ events = [], deviceLabels = {}, loading = fa
         ? `${ordinalRange ? `${ordinalRange} · ` : ''}${events.length} rows held`
         : `Showing the ${events.length} most recent`}
       label="Activity"
-      fig="FIG.01"
+      fig="SEC.01"
       headers={HEADERS}
       columns={COLUMNS}
       rows={events}

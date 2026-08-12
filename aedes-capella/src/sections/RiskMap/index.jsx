@@ -10,7 +10,7 @@ export default function RiskMap({ dashboardData }) {
   return (
     <div>
       <SectionHeader
-        fig="FIG.02"
+        fig="SEC.02"
         title="Barangay Map"
         subtitle="Where each device is, and what it recorded recently."
       />

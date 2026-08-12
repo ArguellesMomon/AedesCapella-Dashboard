@@ -99,7 +99,7 @@ export default function RealtimeDeviceMap({ devices = [], candidates = [], relay
                   <Tag color={device.operational_state === 'online' ? 'green' : device.operational_state === 'logging_fault' ? 'red' : 'amber'}>
                     {device.operational_state.replace('_', ' ')}
                   </Tag>
-                  <span>{device.candidates_last_24h ?? 0} candidates · {device.relay_activations_last_24h ?? 0} relay activations / 24h</span>
+                  <span>{device.candidates_last_24h ?? 0} candidates · {device.relay_activations_last_24h ?? 0} spraying activations / 24h</span>
                   <span>Latest activity: {formatDashboardTimestamp(device.latest_activity_at)}</span>
                   <RecentRows label="Recent Candidates" rows={recentCandidates} timestampKey="display_time" />
                   <RecentRows label="Recent Relay Episodes" rows={recentRelays} timestampKey="display_time" />

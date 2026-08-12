@@ -12,7 +12,7 @@ import { C } from '../../constants/colors';
  * @param {boolean} grid      - fill the body with the faint square grid
  * @param {node}    figure    - content for the gridded upper zone
  * @param {string}  label     - left corner label, accent, e.g. "Sensor Status"
- * @param {string}  fig       - right corner label, muted, e.g. "FIG.04"
+ * @param {string}  fig       - right corner label, muted, e.g. "SEC.04"
  * @param {node}    meta      - dot-separated monospace footer
  * @param {string|number} padding - body padding; pass 0 for flush content
  *                                  such as a table that should meet the edge

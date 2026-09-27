@@ -69,8 +69,17 @@ function RecentRows({ label, rows, timestampKey }) {
   );
 }
 
+// A fixed 260 px popup plus Leaflet's content margins is wider than the map on
+// a phone, so the right side of the popup was cut off. Size it to the screen,
+// never wider than the desktop 260 px.
+function popupContentWidth() {
+  if (typeof window === 'undefined') return 260;
+  return Math.max(180, Math.min(260, window.innerWidth - 150));
+}
+
 function LeafletDeviceMap({ mapped, zones, candidates, relays, onTileFailure, onTileLoad }) {
   const zoneByDevice = new Map(zones.map(zone => [zone.deviceId, zone]));
+  const popupWidth = popupContentWidth();
   return (
     <MapContainer className="device-map" center={[13.941, 121.162]} zoom={13} scrollWheelZoom>
       <TileLayer
@@ -115,7 +124,7 @@ function LeafletDeviceMap({ mapped, zones, candidates, relays, onTileFailure, on
               dashArray: state === 'stale' ? '4 3' : undefined,
             }}
           >
-            <Popup minWidth={260}>
+            <Popup minWidth={popupWidth} maxWidth={popupWidth} autoPanPadding={[12, 12]}>
               <div className="map-popup">
                 <strong>{formatDeviceName(device.device_label)}</strong>
                 <span>{device.location_name} · {device.barangay_name}</span>

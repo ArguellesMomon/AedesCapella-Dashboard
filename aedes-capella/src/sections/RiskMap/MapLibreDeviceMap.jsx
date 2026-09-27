@@ -198,7 +198,7 @@ export default function MapLibreDeviceMap({ devices, zones, candidates, relays, 
 
       const recentCandidates = candidates.filter(row => row.device_id === device.device_id);
       const recentRelays = relays.filter(row => row.device_id === device.device_id);
-      const popup = new maplibregl.Popup({ offset: 16, maxWidth: '320px' })
+      const popup = new maplibregl.Popup({ offset: 16, maxWidth: 'min(320px, calc(100vw - 110px))' })
         .setDOMContent(buildPopup(
           device,
           zones.find(zone => zone.deviceId === device.device_id),

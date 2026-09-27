@@ -198,13 +198,23 @@ export default function MapLibreDeviceMap({ devices, zones, candidates, relays, 
 
       const recentCandidates = candidates.filter(row => row.device_id === device.device_id);
       const recentRelays = relays.filter(row => row.device_id === device.device_id);
-      const popup = new maplibregl.Popup({ offset: 16, maxWidth: 'min(320px, calc(100vw - 110px))' })
+      const popup = new maplibregl.Popup({ offset: 16, maxWidth: '320px' })
         .setDOMContent(buildPopup(
           device,
           zones.find(zone => zone.deviceId === device.device_id),
           recentCandidates,
           recentRelays,
         ));
+      // MapLibre does not pan to fit a popup, so on a phone one opened from a
+      // marker near the edge ran off the side of the map. On a narrow map, cap
+      // the popup at the map's width and bring the marker to the top centre,
+      // which leaves room for the popup below it.
+      popup.on('open', () => {
+        const container = map.getContainer();
+        if (container.clientWidth >= 520) return;
+        popup.setMaxWidth(`${Math.max(180, container.clientWidth - 24)}px`);
+        map.easeTo({ center: popup.getLngLat(), offset: [0, 40 - container.clientHeight / 2] });
+      });
 
       return new maplibregl.Marker({ element })
         .setLngLat([Number(device.longitude), Number(device.latitude)])

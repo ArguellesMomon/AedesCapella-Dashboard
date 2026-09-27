@@ -108,6 +108,10 @@ export default function MapLibreDeviceMap({ devices, zones, candidates, relays, 
   const markersRef = useRef([]);
   const lastFitKeyRef = useRef('');
   const zonesRef = useRef(zones);
+  // The markers are rebuilt on every data refresh, which removed an open popup
+  // mid-read. Remember which device's popup is open so the rebuild reopens it.
+  const openDeviceIdRef = useRef(null);
+  const rebuildingRef = useRef(false);
 
   useEffect(() => {
     let loaded = false;
@@ -198,7 +202,8 @@ export default function MapLibreDeviceMap({ devices, zones, candidates, relays, 
 
       const recentCandidates = candidates.filter(row => row.device_id === device.device_id);
       const recentRelays = relays.filter(row => row.device_id === device.device_id);
-      const popup = new maplibregl.Popup({ offset: 16, maxWidth: '320px' })
+      // Only the close button closes it: a tap or drag on the map does not.
+      const popup = new maplibregl.Popup({ offset: 16, maxWidth: '320px', closeOnClick: false })
         .setDOMContent(buildPopup(
           device,
           zones.find(zone => zone.deviceId === device.device_id),
@@ -209,18 +214,30 @@ export default function MapLibreDeviceMap({ devices, zones, candidates, relays, 
       // marker near the edge ran off the side of the map. On a narrow map, cap
       // the popup at the map's width and bring the marker to the top centre,
       // which leaves room for the popup below it.
+      const reopening = openDeviceIdRef.current === device.device_id;
       popup.on('open', () => {
+        openDeviceIdRef.current = device.device_id;
         const container = map.getContainer();
         if (container.clientWidth >= 520) return;
         popup.setMaxWidth(`${Math.max(180, container.clientWidth - 24)}px`);
+        // A reopen after a refresh keeps the view the reader already has.
+        if (reopening && rebuildingRef.current) return;
         map.easeTo({ center: popup.getLngLat(), offset: [0, 40 - container.clientHeight / 2] });
       });
+      popup.on('close', () => {
+        if (!rebuildingRef.current && openDeviceIdRef.current === device.device_id) {
+          openDeviceIdRef.current = null;
+        }
+      });
 
-      return new maplibregl.Marker({ element })
+      const marker = new maplibregl.Marker({ element })
         .setLngLat([Number(device.longitude), Number(device.latitude)])
         .setPopup(popup)
         .addTo(map);
+      if (reopening) marker.togglePopup();
+      return marker;
     });
+    rebuildingRef.current = false;
 
     const fitKey = devices
       .map(device => `${device.device_id}:${device.latitude}:${device.longitude}`)
@@ -239,6 +256,7 @@ export default function MapLibreDeviceMap({ devices, zones, candidates, relays, 
     }
 
     return () => {
+      rebuildingRef.current = true;
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
     };

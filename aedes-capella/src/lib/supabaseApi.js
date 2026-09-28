@@ -86,6 +86,27 @@ export async function fetchCurrentUserRole(accessToken, signal) {
   return typeof role === 'string' ? role : null;
 }
 
+/*
+ * The dashboard display cutoff from public.dashboard_settings (migration
+ * 202609280001). Before that migration is applied the table does not exist and
+ * PostgREST answers 404 (PGRST205); that is reported as { available: false }
+ * so the dashboard falls back to its built-in cutoff and filters client-side,
+ * rather than treating a missing table as an outage.
+ */
+export async function fetchDisplaySettings(accessToken, signal) {
+  try {
+    const rows = await request('/rest/v1/dashboard_settings?select=display_from&limit=1', {
+      accessToken,
+      signal,
+    });
+    const row = Array.isArray(rows) ? rows[0] : null;
+    return { available: Boolean(row), displayFrom: row?.display_from ?? null };
+  } catch (reason) {
+    if (reason?.status === 404) return { available: false, displayFrom: null };
+    throw reason;
+  }
+}
+
 export async function fetchDeviceStatus(accessToken, signal) {
   const columns = [
     'device_id', 'device_label', 'last_seen_at', 'has_ever_reported',

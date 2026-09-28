@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import {
   fetchActivitySummary,
@@ -11,6 +11,7 @@ import {
   fetchDeviceRegistryById,
   fetchDeviceStatus,
   fetchDeviceStatusById,
+  fetchDisplaySettings,
   fetchRelayActivity,
   fetchRelayActivityForSource,
   fetchRuntimeActivity,
@@ -23,6 +24,11 @@ import {
   EMPTY_LIVE_DASHBOARD,
   liveDashboardReducer,
 } from '../utils/liveDashboard';
+import { applyDisplayCutoff, DEFAULT_DISPLAY_FROM, resolveDisplayCutoff } from '../utils/displayCutoff';
+
+// Used only until migration 202609280001 is applied; after that the database's
+// dashboard_settings.display_from wins.
+const FALLBACK_DISPLAY_FROM = import.meta.env.VITE_DISPLAY_FROM || DEFAULT_DISPLAY_FROM;
 
 const RECONCILE_INTERVAL_MS = 30_000;
 const RELAY_EVENT_KINDS = new Set([
@@ -52,6 +58,7 @@ const SOURCES = [
   ['mapDevices', fetchDeviceMap],
   ['deviceRegistry', fetchDeviceRegistry],
   ['activitySummary', todaySummary],
+  ['displaySettings', fetchDisplaySettings],
 ];
 
 export function useLiveDashboard(accessToken) {
@@ -283,5 +290,15 @@ export function useLiveDashboard(accessToken) {
     }
   }, [reconcile]);
 
-  return { ...state, refresh };
+  /*
+   * Nothing before the display cutoff reaches a reader. Applied to the whole
+   * state on every change rather than at fetch time, so rows an open tab was
+   * already holding, and rows a Realtime upsert adds, are held to it too.
+   */
+  const visible = useMemo(
+    () => applyDisplayCutoff(state, resolveDisplayCutoff(state.displaySettings, FALLBACK_DISPLAY_FROM)),
+    [state],
+  );
+
+  return { ...visible, refresh };
 }

@@ -11,6 +11,7 @@ import {
   addMapTilerKey,
   describeMapError,
   isMapVisuallyComplete,
+  MAP_LOAD_TIMEOUT_MS,
   MAP_READY_EVENTS,
   shouldEscalateMapFailure,
 } from '../../utils/mapConfig';
@@ -147,7 +148,7 @@ export default function MapLibreDeviceMap({ devices, zones, candidates, relays, 
     let authorizationRejected = false;
     const timeout = window.setTimeout(() => {
       if (!loaded) reportFailure('timeout', authorizationRejected ? 'authorization' : 'timeout');
-    }, 30_000);
+    }, MAP_LOAD_TIMEOUT_MS);
 
     map.on('error', event => {
       const diagnostic = describeMapError(event);

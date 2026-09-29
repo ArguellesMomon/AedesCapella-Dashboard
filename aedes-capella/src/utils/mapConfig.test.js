@@ -4,10 +4,14 @@ import {
   addMapTilerKey,
   describeMapError,
   getMapTilerStyleUrl,
+  getVectorApiKey,
+  getVectorStyleUrl,
   isMapVisuallyComplete,
+  MAP_LOAD_TIMEOUT_MS,
   MAP_READY_EVENTS,
   MAP_RESOURCE_ERROR_LIMIT,
   mapTilerKey,
+  OPENFREEMAP_STYLE_URL,
   redactMapUrl,
   shouldEscalateMapFailure,
 } from './mapConfig.js';
@@ -41,6 +45,39 @@ test('the MapTiler key is propagated to dependent style resources without replac
     'https://example.com/tile.pbf',
   );
   assert.equal(mapTilerKey({ VITE_MAPTILER_KEY: ' public-key ' }), 'public-key');
+});
+
+test('the detailed map defaults to keyless OpenFreeMap with no MapTiler credentials in the environment', () => {
+  assert.equal(getVectorStyleUrl({}), OPENFREEMAP_STYLE_URL);
+  assert.equal(getVectorApiKey({}), null);
+});
+
+test('MapTiler credentials alone do not activate MapTiler; an explicit provider opt-in is required', () => {
+  const env = { VITE_MAPTILER_MAP_ID: 'barangay-map', VITE_MAPTILER_KEY: 'public-key' };
+  assert.equal(getVectorStyleUrl(env), OPENFREEMAP_STYLE_URL);
+  assert.equal(getVectorApiKey(env), null);
+
+  const optedIn = { ...env, VITE_MAP_PROVIDER: 'maptiler' };
+  assert.equal(
+    getVectorStyleUrl(optedIn),
+    'https://api.maptiler.com/maps/barangay-map/style.json?key=public-key',
+  );
+  assert.equal(getVectorApiKey(optedIn), 'public-key');
+});
+
+test('opting into MapTiler without both credentials still falls back to OpenFreeMap', () => {
+  assert.equal(getVectorStyleUrl({ VITE_MAP_PROVIDER: 'maptiler', VITE_MAPTILER_KEY: 'k' }), OPENFREEMAP_STYLE_URL);
+});
+
+test('an explicit style URL always wins, regardless of provider', () => {
+  assert.equal(
+    getVectorStyleUrl({ VITE_MAP_STYLE_URL: 'https://tiles.openfreemap.org/styles/positron' }),
+    'https://tiles.openfreemap.org/styles/positron',
+  );
+});
+
+test('the vector map load timeout is a few seconds, not the old half-minute wait', () => {
+  assert.ok(MAP_LOAD_TIMEOUT_MS <= 10_000);
 });
 
 test('a single MapLibre resource error is recoverable but a run of them forces the fallback', () => {

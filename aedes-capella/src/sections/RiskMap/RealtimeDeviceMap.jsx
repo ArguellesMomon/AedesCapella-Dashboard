@@ -9,7 +9,7 @@ import Tag from '../../components/ui/Tag';
 import { formatDashboardTimestamp } from '../../utils/dashboardData';
 import { getStatusPresentation } from '../../utils/deviceStatus';
 import { filterMappedDevices } from '../../utils/liveDashboard';
-import { getMapTilerStyleUrl, mapTilerKey } from '../../utils/mapConfig';
+import { getVectorApiKey, getVectorStyleUrl } from '../../utils/mapConfig';
 import { formatDeviceName } from '../../utils/viewer';
 import {
   buildRiskZones,
@@ -31,11 +31,11 @@ const STATE_COLORS = {
 
 const TILE_URL = import.meta.env.VITE_MAP_TILE_URL || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const TILE_ATTRIBUTION = import.meta.env.VITE_MAP_TILE_ATTRIBUTION || '&copy; OpenStreetMap contributors';
-const MAPTILER_STYLE_URL = getMapTilerStyleUrl(import.meta.env);
-const MAPTILER_API_KEY = mapTilerKey(import.meta.env);
+const VECTOR_STYLE_URL = getVectorStyleUrl(import.meta.env);
+const VECTOR_API_KEY = getVectorApiKey(import.meta.env);
 
 const VECTOR_FAILURE_MESSAGES = {
-  authorization: 'MapTiler rejected a map resource. Confirm the protected key allows aedescapella.vercel.app, then redeploy.',
+  authorization: 'The detailed map provider rejected a map resource. Check its API key/config, then redeploy.',
   resource: 'Detailed map resources kept failing to load. OpenStreetMap fallback is active; see the browser console for the failing resource.',
   timeout: 'Detailed map did not finish loading. OpenStreetMap fallback is active; device records remain usable.',
   initialization: 'Detailed map could not start in this browser. OpenStreetMap fallback is active; device records remain usable.',
@@ -179,7 +179,7 @@ export default function RealtimeDeviceMap({
   const [vectorFailure, setVectorFailure] = useState(null);
   const mapped = filterMappedDevices(devices);
   const zones = buildRiskZones(mapped, statusDevices);
-  const useVectorMap = Boolean(MAPTILER_STYLE_URL) && !vectorFailure;
+  const useVectorMap = Boolean(VECTOR_STYLE_URL) && !vectorFailure;
   const handleVectorFailure = useCallback(reason => setVectorFailure(reason), [setVectorFailure]);
   const handleVectorReady = useCallback(() => setVectorFailure(null), [setVectorFailure]);
 
@@ -210,8 +210,8 @@ export default function RealtimeDeviceMap({
             zones={zones}
             candidates={candidates}
             relays={relays}
-            styleUrl={MAPTILER_STYLE_URL}
-            apiKey={MAPTILER_API_KEY}
+            styleUrl={VECTOR_STYLE_URL}
+            apiKey={VECTOR_API_KEY}
             onFailure={handleVectorFailure}
             onReady={handleVectorReady}
           />

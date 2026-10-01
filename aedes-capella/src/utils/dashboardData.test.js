@@ -8,6 +8,8 @@ import {
   deriveRelayEpisodes,
   getActivityTimePresentation,
   getEventPresentation,
+  isCooldownObservation,
+  isDetectionCandidate,
   manilaStartOfDay,
 } from './dashboardData.js';
 import { DETECTION_TERM } from '../constants/terminology.js';
@@ -183,4 +185,42 @@ test('cooldown completion without relay-on evidence is not a spraying episode', 
   ]);
 
   assert.deepEqual(episodes, []);
+});
+
+/*
+ * Unit-2's firmware logs a LIVE_ACCEPT with reason cooldown_observation about a
+ * second after each spray (stored as 'cooldown_observatio', 19 characters, by
+ * the C3's 20-byte reason field). It is the same sound as the detection before
+ * it and must not be counted or labelled as a second detection, even while an
+ * open tab still holds rows from before the server-side fix.
+ */
+test('cooldown observations are not counted or labelled as detections', () => {
+  const now = Date.parse('2026-10-01T08:00:00Z');
+  const events = [
+    { event_kind: 'LIVE_ACCEPT', reason: 'candidate', display_time: '2026-10-01T07:41:19Z', temporal_candidate: true },
+    { event_kind: 'RELAY_ON', reason: 'timer_armed', display_time: '2026-10-01T07:41:19Z', relay_energized: true },
+    // As served before the migration: temporal_candidate still true.
+    { event_kind: 'LIVE_ACCEPT', reason: 'cooldown_observatio', display_time: '2026-10-01T07:41:20Z', temporal_candidate: true },
+    // As served after it.
+    { event_kind: 'LIVE_ACCEPT', reason: 'cooldown_observation', display_time: '2026-10-01T07:41:21Z', temporal_candidate: false },
+    { event_kind: 'LIVE_ACCEPT', reason: 'window_summary', display_time: '2026-10-01T07:41:22Z', temporal_candidate: true },
+  ];
+
+  assert.equal(buildRuntimeSummary(events, now).candidateCount, 1);
+  assert.equal(isDetectionCandidate(events[0]), true);
+  assert.equal(isDetectionCandidate(events[2]), false);
+  assert.equal(isDetectionCandidate(events[3]), false);
+  assert.equal(isDetectionCandidate(events[4]), false);
+
+  assert.equal(isCooldownObservation(events[2]), true);
+  assert.equal(isCooldownObservation(events[0]), false);
+  assert.equal(isCooldownObservation({ event_kind: 'RELAY_REJECT', reason: 'cooldown_observation' }), false);
+
+  const label = getEventPresentation('LIVE_ACCEPT', 'cooldown_observatio').label;
+  assert.notEqual(label, DETECTION_TERM.singular);
+  ['candidate', 'likely', 'confirmed', 'detected mosquito', 'aedes'].forEach(word => {
+    assert.ok(!label.toLowerCase().includes(word), `label must not contain "${word}": ${label}`);
+  });
+  assert.equal(getEventPresentation('LIVE_ACCEPT', 'candidate').label, DETECTION_TERM.singular);
+  assert.equal(getEventPresentation('LIVE_ACCEPT').label, DETECTION_TERM.singular);
 });

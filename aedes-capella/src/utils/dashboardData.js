@@ -98,6 +98,8 @@ const EVENT_PRESENTATION = {
  */
 const REASON_TEXT = {
   reset: 'The device restarted.',
+  cooldown_observation: 'Still heard during the wait after a spray. Not counted again.',
+  cooldown_observatio: 'Still heard during the wait after a spray. Not counted again.',
   timer_armed: 'The sprayer was switched on.',
   candidate: 'A sound matched. Needs a person to check.',
   validated: 'The sound passed the checks.',
@@ -111,7 +113,51 @@ export function plainReason(reason) {
   return REASON_TEXT[reason] || reason;
 }
 
-export function getEventPresentation(eventKind) {
+/*
+ * LIVE_ACCEPT reasons that are not a new detection.
+ *
+ * window_summary is the 30 s status packet that was shipped under LIVE_ACCEPT
+ * before 2026-09-04. cooldown_observation is newer firmware noting, about a
+ * second after a spray, that it still hears the sound while the 120 s cooldown
+ * runs. It never arms the relay and is the same sound as the detection just
+ * before it, so counting it doubled that unit's detections. The C3 stores the
+ * reason in a 20-byte field, so the row reads 'cooldown_observatio'; both
+ * spellings are listed so a firmware with a wider field stays excluded.
+ *
+ * Must stay in step with migration 202610010001_exclude_cooldown_observations.
+ */
+export const NON_DETECTION_ACCEPT_REASONS = Object.freeze([
+  'window_summary',
+  'cooldown_observation',
+  'cooldown_observatio',
+]);
+
+const NON_DETECTION_ACCEPT_REASON_SET = new Set(NON_DETECTION_ACCEPT_REASONS);
+const COOLDOWN_OBSERVATION_REASONS = new Set(['cooldown_observation', 'cooldown_observatio']);
+
+export function isCooldownObservation(event) {
+  return event?.event_kind === 'LIVE_ACCEPT'
+    && COOLDOWN_OBSERVATION_REASONS.has(event?.reason);
+}
+
+/*
+ * A counted detection. The server's temporal_candidate is the authority; the
+ * reason check keeps a cooldown observation out even if the open tab is
+ * holding a row from before the migration was applied.
+ */
+export function isDetectionCandidate(event) {
+  return Boolean(event?.temporal_candidate)
+    && !NON_DETECTION_ACCEPT_REASON_SET.has(event?.reason);
+}
+
+const COOLDOWN_OBSERVATION_PRESENTATION = Object.freeze({
+  label: 'Heard again while waiting', color: 'slate', icon: Timer,
+});
+
+export function getEventPresentation(eventKind, reason) {
+  if (isCooldownObservation({ event_kind: eventKind, reason })) {
+    return COOLDOWN_OBSERVATION_PRESENTATION;
+  }
   return EVENT_PRESENTATION[eventKind]
     || { label: 'Other activity', color: 'gray', icon: CircleDot };
 }
@@ -235,7 +281,7 @@ export function buildRuntimeSummary(events, now = Date.now()) {
   return {
     total: operatorEvents.length,
     last24h: countSince(operatorEvents, 'display_time', since24h),
-    candidateCount: operatorEvents.filter(event => event.temporal_candidate).length,
+    candidateCount: operatorEvents.filter(isDetectionCandidate).length,
     relayCount: operatorEvents.filter(event => event.relay_energized).length,
     unresolvedCount: operatorEvents.filter(event => event.time_quality === 'unresolved').length,
     latestAt,

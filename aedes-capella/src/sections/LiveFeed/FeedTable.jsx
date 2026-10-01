@@ -8,6 +8,7 @@ import {
   ACTIVITY_TABLE_HEADERS,
   getActivityTimePresentation,
   getEventPresentation,
+  isDetectionCandidate,
   plainReason,
 } from '../../utils/dashboardData';
 import { formatDeviceName } from '../../utils/viewer';
@@ -73,8 +74,8 @@ export default function FeedTable({
       rows={events}
       resetScrollOn={events}
       renderRow={(event, index) => {
-        const presentation = getEventPresentation(event.event_kind);
-        const isNewCandidate = event.temporal_candidate && Boolean(event.live_arrival_at);
+        const presentation = getEventPresentation(event.event_kind, event.reason);
+        const isNewCandidate = isDetectionCandidate(event) && Boolean(event.live_arrival_at);
         const time = getActivityTimePresentation(event);
 
         return (
@@ -130,7 +131,7 @@ export default function FeedTable({
                   <Mono size="12px" color={C.textDim} style={{ lineHeight: 1.45 }}>
                     {event.time_quality === 'unresolved'
                       ? 'Sent after reconnecting. The time this happened is not known.'
-                      : event.temporal_candidate
+                      : isDetectionCandidate(event)
                         ? DETECTION_TERM.caveat
                         : plainReason(event.reason)}
                   </Mono>

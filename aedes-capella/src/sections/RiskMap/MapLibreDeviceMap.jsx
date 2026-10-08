@@ -1,0 +1,273 @@
+import { useEffect, useRef } from 'react';
+import * as maplibregl from 'maplibre-gl';
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { DETECTION_TERM } from '../../constants/terminology';
+import { formatDashboardTimestamp } from '../../utils/dashboardData';
+import { getStatusPresentation } from '../../utils/deviceStatus';
+import { formatDeviceName } from '../../utils/viewer';
+import { describeDeviceRisk, riskZonesGeoJson } from '../../utils/riskZones';
+import {
+  addMapTilerKey,
+  describeMapError,
+  isMapVisuallyComplete,
+  MAP_LOAD_TIMEOUT_MS,
+  MAP_READY_EVENTS,
+  shouldEscalateMapFailure,
+} from '../../utils/mapConfig';
+
+// MapLibre GL JS 6 resolves its worker relative to the bundled chunk, which in a
+// Vite build is `/assets/maplibre-gl-worker.mjs` and does not exist. Without a
+// worker no vector tile is ever parsed, so the style background paints and every
+// road, label, and area stays blank. Vite's `?worker&url` pipeline emits the
+// worker together with its shared dependency as one self-contained asset.
+maplibregl.setWorkerUrl(workerUrl);
+
+const ZONE_SOURCE = 'risk-zones';
+
+/*
+ * The zones are a GeoJSON fill under the markers. Markers are DOM elements, so
+ * they always sit above the canvas and the zones never hide a device.
+ */
+function showRiskZones(map, zones) {
+  const data = riskZonesGeoJson(zones);
+  const source = map.getSource(ZONE_SOURCE);
+  if (source) {
+    source.setData(data);
+    return;
+  }
+
+  map.addSource(ZONE_SOURCE, { type: 'geojson', data });
+  map.addLayer({
+    id: `${ZONE_SOURCE}-fill`,
+    type: 'fill',
+    source: ZONE_SOURCE,
+    paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.18 },
+  });
+  map.addLayer({
+    id: `${ZONE_SOURCE}-outline`,
+    type: 'line',
+    source: ZONE_SOURCE,
+    paint: { 'line-color': ['get', 'color'], 'line-width': 2 },
+  });
+}
+
+const STATE_COLORS = {
+  online: '#16a34a',
+  stale: '#f59e0b',
+  offline: '#64748b',
+  never_seen: '#64748b',
+  logging_fault: '#dc2626',
+};
+
+function appendText(parent, tagName, text, className) {
+  const element = document.createElement(tagName);
+  element.textContent = text;
+  if (className) element.className = className;
+  parent.append(element);
+  return element;
+}
+
+function appendRecentRows(parent, label, rows, timestampKey) {
+  const list = document.createElement('div');
+  list.className = 'map-popup-list';
+  appendText(list, 'strong', label);
+
+  if (rows.length) {
+    rows.slice(0, 3).forEach(row => appendText(list, 'span', formatDashboardTimestamp(row[timestampKey])));
+  } else {
+    appendText(list, 'span', 'None in loaded history');
+  }
+  parent.append(list);
+}
+
+function buildPopup(device, zone, candidates, relays) {
+  const popup = document.createElement('div');
+  popup.className = 'map-popup';
+  // Same reading, same words and same colour as the device card and the table
+  // below the map, rather than a third private copy of the rule.
+  const status = getStatusPresentation(device.operational_state);
+
+  appendText(popup, 'strong', formatDeviceName(device.device_label));
+  appendText(popup, 'span', `${device.location_name || 'Location not named'} · ${device.barangay_name || 'Barangay not named'}`);
+  appendText(popup, 'span', status.label, `pd-tag pd-tag-${status.color}`);
+  appendText(
+    popup,
+    'span',
+    `${device.candidates_last_24h ?? 0} ${DETECTION_TERM.inlinePlural} · ${device.relay_activations_last_24h ?? 0} sprayer activations / 24h`,
+  );
+  appendText(popup, 'span', describeDeviceRisk(zone?.detections ?? 0));
+  appendText(popup, 'span', `Latest activity: ${formatDashboardTimestamp(device.latest_activity_at)}`);
+  appendRecentRows(popup, `Recent ${DETECTION_TERM.inlinePlural}`, candidates, 'display_time');
+  appendRecentRows(popup, 'Recent Sprayings', relays, 'display_time');
+  return popup;
+}
+
+export default function MapLibreDeviceMap({ devices, zones, candidates, relays, styleUrl, apiKey, onFailure, onReady }) {
+  const containerRef = useRef(null);
+  const mapRef = useRef(null);
+  const markersRef = useRef([]);
+  const lastFitKeyRef = useRef('');
+  const zonesRef = useRef(zones);
+  // The markers are rebuilt on every data refresh, which removed an open popup
+  // mid-read. Remember which device's popup is open so the rebuild reopens it.
+  const openDeviceIdRef = useRef(null);
+  const rebuildingRef = useRef(false);
+
+  useEffect(() => {
+    let loaded = false;
+    let failureReported = false;
+    let resourceErrorCount = 0;
+    const reportFailure = (kind, reason = kind) => {
+      // Once the basemap has rendered completely it has proven itself; a later
+      // failed tile while panning must not throw the operator back to Leaflet.
+      if (failureReported || loaded) return;
+      if (!shouldEscalateMapFailure({ kind, resourceErrorCount })) return;
+      failureReported = true;
+      onFailure(reason);
+    };
+
+    let map;
+    try {
+      map = new maplibregl.Map({
+        container: containerRef.current,
+        style: styleUrl,
+        center: [121.162, 13.941],
+        zoom: 13,
+        attributionControl: false,
+        transformRequest: url => ({ url: addMapTilerKey(url, apiKey) }),
+      });
+    } catch {
+      reportFailure('initialization');
+      return undefined;
+    }
+    mapRef.current = map;
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
+
+    let authorizationRejected = false;
+    const timeout = window.setTimeout(() => {
+      if (!loaded) reportFailure('timeout', authorizationRejected ? 'authorization' : 'timeout');
+    }, MAP_LOAD_TIMEOUT_MS);
+
+    map.on('error', event => {
+      const diagnostic = describeMapError(event);
+      if (diagnostic.kind === 'authorization') authorizationRejected = true;
+      resourceErrorCount += 1;
+      // MapLibre stops printing errors itself once a listener is attached, so the
+      // only record of a failing tile, glyph, or worker is the one written here.
+      console.warn('[map] MapLibre resource failure', {
+        ...diagnostic,
+        occurrence: resourceErrorCount,
+        mapLoaded: isMapVisuallyComplete(map),
+      });
+      if (diagnostic.kind === 'authorization') reportFailure('authorization');
+      else reportFailure('resource-error', 'resource');
+    });
+
+    const markReadyWhenComplete = () => {
+      if (loaded || failureReported || !isMapVisuallyComplete(map)) return;
+      loaded = true;
+      window.clearTimeout(timeout);
+      onReady();
+    };
+    MAP_READY_EVENTS.forEach(eventName => map.on(eventName, markReadyWhenComplete));
+    // The source can only be added once the style has loaded; later changes
+    // go through the zones effect below.
+    map.on('load', () => showRiskZones(map, zonesRef.current));
+
+    return () => {
+      window.clearTimeout(timeout);
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
+      mapRef.current = null;
+      map.remove();
+    };
+  }, [apiKey, onFailure, onReady, styleUrl]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return undefined;
+
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = devices.map(device => {
+      const state = device.operational_state || 'offline';
+      const element = document.createElement('button');
+      element.type = 'button';
+      element.className = `maplibre-device-marker maplibre-device-marker-${state}`;
+      element.style.setProperty('--device-marker-color', STATE_COLORS[state] || STATE_COLORS.offline);
+      element.setAttribute(
+        'aria-label',
+        `${formatDeviceName(device.device_label)}: ${getStatusPresentation(device.operational_state).label}`,
+      );
+
+      const recentCandidates = candidates.filter(row => row.device_id === device.device_id);
+      const recentRelays = relays.filter(row => row.device_id === device.device_id);
+      // Only the close button closes it: a tap or drag on the map does not.
+      const popup = new maplibregl.Popup({ offset: 16, maxWidth: '320px', closeOnClick: false })
+        .setDOMContent(buildPopup(
+          device,
+          zones.find(zone => zone.deviceId === device.device_id),
+          recentCandidates,
+          recentRelays,
+        ));
+      // MapLibre does not pan to fit a popup, so on a phone one opened from a
+      // marker near the edge ran off the side of the map. On a narrow map, cap
+      // the popup at the map's width and bring the marker to the top centre,
+      // which leaves room for the popup below it.
+      const reopening = openDeviceIdRef.current === device.device_id;
+      popup.on('open', () => {
+        openDeviceIdRef.current = device.device_id;
+        const container = map.getContainer();
+        if (container.clientWidth >= 520) return;
+        popup.setMaxWidth(`${Math.max(180, container.clientWidth - 24)}px`);
+        // A reopen after a refresh keeps the view the reader already has.
+        if (reopening && rebuildingRef.current) return;
+        map.easeTo({ center: popup.getLngLat(), offset: [0, 40 - container.clientHeight / 2] });
+      });
+      popup.on('close', () => {
+        if (!rebuildingRef.current && openDeviceIdRef.current === device.device_id) {
+          openDeviceIdRef.current = null;
+        }
+      });
+
+      const marker = new maplibregl.Marker({ element })
+        .setLngLat([Number(device.longitude), Number(device.latitude)])
+        .setPopup(popup)
+        .addTo(map);
+      if (reopening) marker.togglePopup();
+      return marker;
+    });
+    rebuildingRef.current = false;
+
+    const fitKey = devices
+      .map(device => `${device.device_id}:${device.latitude}:${device.longitude}`)
+      .join('|');
+    if (fitKey !== lastFitKeyRef.current) {
+      lastFitKeyRef.current = fitKey;
+      if (devices.length === 1) {
+        map.easeTo({ center: [Number(devices[0].longitude), Number(devices[0].latitude)], zoom: 16 });
+      } else if (devices.length > 1) {
+        const bounds = devices.reduce(
+          (nextBounds, device) => nextBounds.extend([Number(device.longitude), Number(device.latitude)]),
+          new maplibregl.LngLatBounds(),
+        );
+        map.fitBounds(bounds, { padding: 32, maxZoom: 16 });
+      }
+    }
+
+    return () => {
+      rebuildingRef.current = true;
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
+    };
+  }, [candidates, devices, relays, zones]);
+
+  useEffect(() => {
+    zonesRef.current = zones;
+    const map = mapRef.current;
+    if (map?.isStyleLoaded()) showRiskZones(map, zones);
+  }, [zones]);
+
+  return <div ref={containerRef} className="device-map" aria-label="Live device location map" />;
+}

@@ -12,7 +12,7 @@ import Mono from './Mono';
  * limits in lib/supabaseApi.js and the client buffer in utils/liveDashboard.js,
  * so raising the real ceiling means a cursor query, not a bigger page size.
  */
-const DEFAULT_PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 10;
 
 function Columns({ columns }) {
   return (
@@ -42,7 +42,6 @@ export default function TablePlate({
   title,
   note = null,
   label,
-  fig,
   headers,
   columns,
   rows = [],
@@ -72,7 +71,6 @@ export default function TablePlate({
     <Card
       padding={0}
       label={label}
-      fig={fig}
       style={{ overflow: 'hidden', marginBottom: '24px', ...style }}
       figure={(
         <div style={{
@@ -116,7 +114,6 @@ export default function TablePlate({
       <div className="pd-metafoot feed-foot">
         <span>
           showing <b>{shown}</b> of <b>{rows.length}</b>
-          {remaining > 0 ? ` · ${remaining} not rendered` : ' · all rendered'}
         </span>
         {remaining > 0 && (
           <button

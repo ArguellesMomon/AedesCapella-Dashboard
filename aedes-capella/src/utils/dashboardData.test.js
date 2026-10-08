@@ -1,12 +1,52 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  ACTIVITY_TABLE_HEADERS,
   buildActivitySeries,
   buildConfidenceDistribution,
   buildRuntimeSummary,
   deriveRelayEpisodes,
+  getActivityTimePresentation,
   getEventPresentation,
+  isCooldownObservation,
+  isDetectionCandidate,
+  manilaStartOfDay,
 } from './dashboardData.js';
+import { DETECTION_TERM } from '../constants/terminology.js';
+
+test('unresolved activity never presents receipt time as when it happened', () => {
+  const receivedAt = '2026-08-14T12:34:56Z';
+  const presentation = getActivityTimePresentation({
+    occurred_at: null,
+    received_at: receivedAt,
+    time_quality: 'unresolved',
+  });
+
+  assert.equal(presentation.happenedAt, null);
+  assert.equal(presentation.happenedLabel, 'Unavailable');
+  assert.equal(presentation.receivedAt, receivedAt);
+  assert.equal(presentation.qualityLabel, 'Time unavailable');
+  // Gray, not amber. A missing timestamp is missing information, which is what
+  // gray means; it is not a request to go and check the device.
+  assert.equal(presentation.qualityTone, 'gray');
+  assert.equal(ACTIVITY_TABLE_HEADERS.includes('TIME'), false);
+  assert.deepEqual(ACTIVITY_TABLE_HEADERS.slice(0, 2), [
+    'WHEN IT HAPPENED',
+    'WHEN RECEIVED',
+  ]);
+});
+
+test('activity time wording stays plain and always shows when data arrived', () => {
+  const presentation = getActivityTimePresentation({
+    occurred_at: '2026-08-14T12:34:00Z',
+    received_at: '2026-08-14T12:34:30Z',
+    time_quality: 'ntp',
+  });
+
+  assert.equal(presentation.qualityLabel, 'Confirmed time');
+  assert.notEqual(presentation.receivedLabel, 'Same upload window');
+  assert.equal(presentation.receivedLabel, 'Aug 14, 20:34:30');
+});
 
 test('runtime summary separates candidates, relay activations, and unresolved time', () => {
   const now = Date.parse('2026-08-08T12:00:00Z');
@@ -66,8 +106,58 @@ test('candidate score distribution preserves empty buckets and cautious labels',
     { range: '80–89%', count: 1 },
     { range: '90–100%', count: 1 },
   ]);
-  assert.equal(getEventPresentation('LIVE_ACCEPT').label, 'Possible mosquito');
+  assert.equal(getEventPresentation('LIVE_ACCEPT').label, DETECTION_TERM.singular);
   assert.equal(getEventPresentation('UNKNOWN').color, 'gray');
+});
+
+/*
+ * The label for a LIVE_ACCEPT row had drifted to "Likely Aedes Mosquito", which
+ * claims more than a 16.67 percent grouped precision supports, and "candidate"
+ * had leaked out of the database vocabulary into strings people read. Both are
+ * easy to reintroduce by editing one map, so they are asserted rather than
+ * merely commented.
+ */
+test('no event label claims a confirmation or leaks the word candidate', () => {
+  const kinds = [
+    'BOOT', 'TEST_ACCEPT', 'LIVE_ACCEPT', 'RELAY_INTENT', 'RELAY_ON',
+    'RELAY_OFF', 'RELAY_REJECT', 'COOLDOWN_COMPLETE', 'UNKNOWN',
+  ];
+  const banned = ['candidate', 'likely', 'confirmed', 'detected mosquito'];
+
+  kinds.forEach(kind => {
+    const label = getEventPresentation(kind).label.toLowerCase();
+    banned.forEach(word => {
+      assert.ok(!label.includes(word), `${kind} label must not contain "${word}": ${label}`);
+    });
+  });
+});
+
+/*
+ * "Today" is the boundary the Latest Activity filter and the database summary
+ * both window on, so being an hour out here silently miscounts a day on both
+ * sides of the screen at once.
+ */
+test('the Manila day starts at 16:00 UTC the evening before', () => {
+  // 2026-08-29 07:30 UTC is 15:30 on the 29th in Manila, so the day began at
+  // 16:00 UTC on the 28th.
+  assert.equal(
+    new Date(manilaStartOfDay(Date.parse('2026-08-29T07:30:00Z'))).toISOString(),
+    '2026-08-28T16:00:00.000Z',
+  );
+
+  // One minute before midnight Manila still belongs to the previous day, and
+  // one minute after starts the next: the two sides of the boundary that a
+  // whole-hours window cannot express.
+  const justBefore = Date.parse('2026-08-29T15:59:00Z');
+  const justAfter = Date.parse('2026-08-29T16:01:00Z');
+  assert.equal(new Date(manilaStartOfDay(justBefore)).toISOString(), '2026-08-28T16:00:00.000Z');
+  assert.equal(new Date(manilaStartOfDay(justAfter)).toISOString(), '2026-08-29T16:00:00.000Z');
+
+  // Never in the future, and never more than a day back.
+  const now = Date.parse('2026-08-29T07:30:00Z');
+  const start = manilaStartOfDay(now);
+  assert.ok(start <= now);
+  assert.ok(now - start < 24 * 60 * 60 * 1000);
 });
 
 test('relay pairing uses device and source packet and derives evidence duration', () => {
@@ -80,4 +170,57 @@ test('relay pairing uses device and source packet and derives evidence duration'
   assert.equal(episodes[0].relay_status, 'stopped');
   assert.equal(episodes[0].duration_seconds, 8);
   assert.equal(episodes[0].recorded_relay_activation, true);
+});
+
+test('cooldown completion without relay-on evidence is not a spraying episode', () => {
+  const episodes = deriveRelayEpisodes([
+    {
+      device_id: 'd1',
+      source_boot: 0,
+      source_sequence: 0,
+      event_kind: 'COOLDOWN_COMPLETE',
+      occurred_at: '2026-08-12T05:12:17Z',
+      reason: 'cleared',
+    },
+  ]);
+
+  assert.deepEqual(episodes, []);
+});
+
+/*
+ * Unit-2's firmware logs a LIVE_ACCEPT with reason cooldown_observation about a
+ * second after each spray (stored as 'cooldown_observatio', 19 characters, by
+ * the C3's 20-byte reason field). It is the same sound as the detection before
+ * it and must not be counted or labelled as a second detection, even while an
+ * open tab still holds rows from before the server-side fix.
+ */
+test('cooldown observations are not counted or labelled as detections', () => {
+  const now = Date.parse('2026-10-01T08:00:00Z');
+  const events = [
+    { event_kind: 'LIVE_ACCEPT', reason: 'candidate', display_time: '2026-10-01T07:41:19Z', temporal_candidate: true },
+    { event_kind: 'RELAY_ON', reason: 'timer_armed', display_time: '2026-10-01T07:41:19Z', relay_energized: true },
+    // As served before the migration: temporal_candidate still true.
+    { event_kind: 'LIVE_ACCEPT', reason: 'cooldown_observatio', display_time: '2026-10-01T07:41:20Z', temporal_candidate: true },
+    // As served after it.
+    { event_kind: 'LIVE_ACCEPT', reason: 'cooldown_observation', display_time: '2026-10-01T07:41:21Z', temporal_candidate: false },
+    { event_kind: 'LIVE_ACCEPT', reason: 'window_summary', display_time: '2026-10-01T07:41:22Z', temporal_candidate: true },
+  ];
+
+  assert.equal(buildRuntimeSummary(events, now).candidateCount, 1);
+  assert.equal(isDetectionCandidate(events[0]), true);
+  assert.equal(isDetectionCandidate(events[2]), false);
+  assert.equal(isDetectionCandidate(events[3]), false);
+  assert.equal(isDetectionCandidate(events[4]), false);
+
+  assert.equal(isCooldownObservation(events[2]), true);
+  assert.equal(isCooldownObservation(events[0]), false);
+  assert.equal(isCooldownObservation({ event_kind: 'RELAY_REJECT', reason: 'cooldown_observation' }), false);
+
+  const label = getEventPresentation('LIVE_ACCEPT', 'cooldown_observatio').label;
+  assert.notEqual(label, DETECTION_TERM.singular);
+  ['candidate', 'likely', 'confirmed', 'detected mosquito', 'aedes'].forEach(word => {
+    assert.ok(!label.toLowerCase().includes(word), `label must not contain "${word}": ${label}`);
+  });
+  assert.equal(getEventPresentation('LIVE_ACCEPT', 'candidate').label, DETECTION_TERM.singular);
+  assert.equal(getEventPresentation('LIVE_ACCEPT').label, DETECTION_TERM.singular);
 });

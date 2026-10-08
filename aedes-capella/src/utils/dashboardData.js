@@ -1,6 +1,47 @@
+import {
+  AudioLines,
+  CircleDot,
+  FlaskConical,
+  Power,
+  SprayCan,
+  Timer,
+} from 'lucide-react';
+// Explicit extension: this module runs under `node --test`, whose ESM resolver
+// does not fill one in the way Vite does.
+import { DETECTION_TERM } from '../constants/terminology.js';
+
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 const MANILA_OFFSET_MS = 8 * HOUR_MS;
+
+export const ACTIVITY_TABLE_HEADERS = Object.freeze([
+  'WHEN IT HAPPENED',
+  'WHEN RECEIVED',
+  'DEVICE',
+  'WHAT HAPPENED',
+  'NOTES',
+]);
+
+/*
+ * How good the timestamp is. A confirmed clock and an estimated one are both
+ * normal and neither asks anything of the reader, so they take kind tones and
+ * read as coloured text: teal for a clock that was checked against a time
+ * server, slate for one inferred from the boot anchor.
+ *
+ * "Time unavailable" is the exception and stays gray, so it draws as a filled
+ * pill among two plain ones and is visibly the odd one out. Gray, not amber:
+ * the record exists but cannot be placed in time, which is missing information
+ * and precisely what gray means. Amber says "look at this when you can", and
+ * there is nothing a barangay worker can do about a clock that was not set
+ * before the unit buffered those events. `dashboardData.test.js` guards this.
+ */
+const ACTIVITY_TIME_QUALITY = Object.freeze({
+  ntp: Object.freeze({ label: 'Confirmed time', tone: 'teal' }),
+  boot_anchor: Object.freeze({ label: 'Estimated time', tone: 'slate' }),
+  unresolved: Object.freeze({ label: 'Time unavailable', tone: 'gray' }),
+});
+
+const UNRESOLVED_ACTIVITY_TIME = ACTIVITY_TIME_QUALITY.unresolved;
 
 export const OPERATOR_ACTIVITY_KINDS = Object.freeze([
   'BOOT',
@@ -16,19 +57,37 @@ const OPERATOR_ACTIVITY_KIND_SET = new Set(OPERATOR_ACTIVITY_KINDS);
  *
  * The audience is barangay health workers, not engineers, so nothing here may
  * assume familiarity with relays, models or firmware. The hedging survives the
- * simplification though: a possible match must never read as a confirmed
+ * simplification though: a possible detection must never read as a confirmed
  * mosquito, and a sprayer switching on must never read as proof that spray
  * reached anything.
+ *
+ * None of these events asks anyone to do anything: they are the system working.
+ *
+ * Colour here once came off the severity scale, and that was the bug. A
+ * completely normal, successful night rendered amber ("check soon") for the
+ * detection followed by red ("needs action") for the spray that the detection
+ * correctly triggered, and the legend then told a barangay worker to inspect a
+ * device while nothing whatever was wrong. A busy night painted the screen red.
+ * Making everything neutral fixed that, and left the feed unreadably flat.
+ *
+ * So these carry a second, separate dimension: kind tones, which are drawn as
+ * coloured text and a coloured icon with no fill behind them. Nothing in this
+ * map may ever take amber, red or green. Those stay on the device card, where a
+ * filled pill means a person genuinely has to act, and the difference in shape
+ * is what keeps the two scales from being confused.
+ *
+ * Grouping: what the device did (indigo boot), what it heard (teal), what the
+ * sprayer did (violet), and the quiet bookkeeping either side of it (slate).
  */
 const EVENT_PRESENTATION = {
-  BOOT: { label: 'Device turned on', color: 'blue' },
-  TEST_ACCEPT: { label: 'Test check', color: 'gray' },
-  LIVE_ACCEPT: { label: 'Possible mosquito', color: 'amber' },
-  RELAY_INTENT: { label: 'Spray requested', color: 'amber' },
-  RELAY_ON: { label: 'Sprayer turned on', color: 'red' },
-  RELAY_OFF: { label: 'Sprayer turned off', color: 'green' },
-  RELAY_REJECT: { label: 'Spray refused, too soon', color: 'red' },
-  COOLDOWN_COMPLETE: { label: 'Ready again', color: 'green' },
+  BOOT: { label: 'Device turned on', color: 'indigo', icon: Power },
+  TEST_ACCEPT: { label: 'Test check', color: 'slate', icon: FlaskConical },
+  LIVE_ACCEPT: { label: DETECTION_TERM.singular, color: 'teal', icon: AudioLines },
+  RELAY_INTENT: { label: 'Spray requested', color: 'violet', icon: SprayCan },
+  RELAY_ON: { label: 'Sprayer turned on', color: 'violet', icon: SprayCan },
+  RELAY_OFF: { label: 'Sprayer turned off', color: 'violet', icon: SprayCan },
+  RELAY_REJECT: { label: 'Sprayer on cooldown', color: 'slate', icon: Timer },
+  COOLDOWN_COMPLETE: { label: 'Ready again', color: 'slate', icon: Timer },
 };
 
 /*
@@ -39,6 +98,8 @@ const EVENT_PRESENTATION = {
  */
 const REASON_TEXT = {
   reset: 'The device restarted.',
+  cooldown_observation: 'Still heard during the wait after a spray. Not counted again.',
+  cooldown_observatio: 'Still heard during the wait after a spray. Not counted again.',
   timer_armed: 'The sprayer was switched on.',
   candidate: 'A sound matched. Needs a person to check.',
   validated: 'The sound passed the checks.',
@@ -52,8 +113,53 @@ export function plainReason(reason) {
   return REASON_TEXT[reason] || reason;
 }
 
-export function getEventPresentation(eventKind) {
-  return EVENT_PRESENTATION[eventKind] || { label: 'Other activity', color: 'gray' };
+/*
+ * LIVE_ACCEPT reasons that are not a new detection.
+ *
+ * window_summary is the 30 s status packet that was shipped under LIVE_ACCEPT
+ * before 2026-09-04. cooldown_observation is newer firmware noting, about a
+ * second after a spray, that it still hears the sound while the 120 s cooldown
+ * runs. It never arms the relay and is the same sound as the detection just
+ * before it, so counting it doubled that unit's detections. The C3 stores the
+ * reason in a 20-byte field, so the row reads 'cooldown_observatio'; both
+ * spellings are listed so a firmware with a wider field stays excluded.
+ *
+ * Must stay in step with migration 202610010001_exclude_cooldown_observations.
+ */
+export const NON_DETECTION_ACCEPT_REASONS = Object.freeze([
+  'window_summary',
+  'cooldown_observation',
+  'cooldown_observatio',
+]);
+
+const NON_DETECTION_ACCEPT_REASON_SET = new Set(NON_DETECTION_ACCEPT_REASONS);
+const COOLDOWN_OBSERVATION_REASONS = new Set(['cooldown_observation', 'cooldown_observatio']);
+
+export function isCooldownObservation(event) {
+  return event?.event_kind === 'LIVE_ACCEPT'
+    && COOLDOWN_OBSERVATION_REASONS.has(event?.reason);
+}
+
+/*
+ * A counted detection. The server's temporal_candidate is the authority; the
+ * reason check keeps a cooldown observation out even if the open tab is
+ * holding a row from before the migration was applied.
+ */
+export function isDetectionCandidate(event) {
+  return Boolean(event?.temporal_candidate)
+    && !NON_DETECTION_ACCEPT_REASON_SET.has(event?.reason);
+}
+
+const COOLDOWN_OBSERVATION_PRESENTATION = Object.freeze({
+  label: 'Heard again while waiting', color: 'slate', icon: Timer,
+});
+
+export function getEventPresentation(eventKind, reason) {
+  if (isCooldownObservation({ event_kind: eventKind, reason })) {
+    return COOLDOWN_OBSERVATION_PRESENTATION;
+  }
+  return EVENT_PRESENTATION[eventKind]
+    || { label: 'Other activity', color: 'gray', icon: CircleDot };
 }
 
 export function isOperatorActivityEvent(event) {
@@ -90,6 +196,59 @@ export function formatShortDashboardTimestamp(value) {
   }).format(date);
 }
 
+function activityUploadDelay(occurredAt, receivedAt) {
+  const occurred = Date.parse(occurredAt || '');
+  const received = Date.parse(receivedAt || '');
+  if (!Number.isFinite(occurred) || !Number.isFinite(received)
+      || received <= occurred + 5 * 60 * 1000) return null;
+  const minutes = Math.round((received - occurred) / 60000);
+  return minutes >= 60 ? `${Math.round(minutes / 60)}h late` : `${minutes}m late`;
+}
+
+export function getActivityTimePresentation(event = {}) {
+  const happenedAt = event.occurred_at || null;
+  const receivedAt = event.received_at || null;
+  const delay = activityUploadDelay(happenedAt, receivedAt);
+  const quality = ACTIVITY_TIME_QUALITY[event.time_quality]
+    || UNRESOLVED_ACTIVITY_TIME;
+
+  return {
+    happenedAt,
+    happenedLabel: happenedAt
+      ? formatShortDashboardTimestamp(happenedAt)
+      : 'Unavailable',
+    happenedTitle: happenedAt
+      ? formatDashboardTimestamp(happenedAt)
+      : 'Recorded time unavailable',
+    receivedAt,
+    receivedLabel: formatShortDashboardTimestamp(receivedAt),
+    receivedTitle: formatDashboardTimestamp(receivedAt),
+    qualityLabel: quality.label,
+    qualityTone: quality.tone,
+    delay,
+  };
+}
+
+/*
+ * The instant the current Manila day began.
+ *
+ * "Today" on this dashboard means since midnight in Manila, which is not the
+ * same answer as "the last 24 hours" for all but one instant of the day, and
+ * is the one a barangay health worker means when she opens the page in the
+ * morning and asks what happened.
+ *
+ * Philippine Standard Time is a flat UTC+8 with no daylight saving, so the day
+ * boundary is arithmetic rather than a timezone-database lookup: shift into
+ * Manila, floor to the day, shift back.
+ *
+ * @param {number} [now] - injectable clock, for tests
+ * @returns {number} epoch milliseconds of 00:00 Asia/Manila today
+ */
+export function manilaStartOfDay(now = Date.now()) {
+  const shifted = now + MANILA_OFFSET_MS;
+  return (Math.floor(shifted / DAY_MS) * DAY_MS) - MANILA_OFFSET_MS;
+}
+
 export function average(values) {
   const numeric = values.map(Number).filter(Number.isFinite);
   return numeric.length
@@ -122,7 +281,7 @@ export function buildRuntimeSummary(events, now = Date.now()) {
   return {
     total: operatorEvents.length,
     last24h: countSince(operatorEvents, 'display_time', since24h),
-    candidateCount: operatorEvents.filter(event => event.temporal_candidate).length,
+    candidateCount: operatorEvents.filter(isDetectionCandidate).length,
     relayCount: operatorEvents.filter(event => event.relay_energized).length,
     unresolvedCount: operatorEvents.filter(event => event.time_quality === 'unresolved').length,
     latestAt,
@@ -215,6 +374,15 @@ export function formatRelayStatus(status) {
   })[status] || 'Recorded';
 }
 
+export function isDisplayableRelayEpisode(episode) {
+  return Boolean(
+    episode?.requested_at
+    || episode?.started_at
+    || episode?.stopped_at
+    || episode?.rejected_at,
+  );
+}
+
 export function deriveRelayEpisodes(events) {
   const relayKinds = new Set(['RELAY_INTENT', 'RELAY_ON', 'RELAY_OFF', 'RELAY_REJECT', 'COOLDOWN_COMPLETE']);
   const episodes = new Map();
@@ -255,5 +423,5 @@ export function deriveRelayEpisodes(events) {
         ? Math.max(0, (stopped - started) / 1000)
         : null,
     };
-  });
+  }).filter(isDisplayableRelayEpisode);
 }

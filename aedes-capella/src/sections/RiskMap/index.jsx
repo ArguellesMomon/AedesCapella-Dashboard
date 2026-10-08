@@ -1,6 +1,4 @@
-import { Database } from 'lucide-react';
 import SectionHeader from '../../components/ui/SectionHeader';
-import Banner from '../../components/ui/Banner';
 import RealtimeDeviceMap from './RealtimeDeviceMap';
 import LocationActivityPanel from './LocationActivityPanel';
 
@@ -10,17 +8,17 @@ export default function RiskMap({ dashboardData }) {
   return (
     <div>
       <SectionHeader
-        fig="SEC.02"
         title="Barangay Map"
-        subtitle="Where each device is, and what it recorded recently."
+        subtitle="Where each device is, and where it recorded possible Aedes activity."
       />
-      <Banner
+      {/* <Banner
         icon={Database}
         text="Only authorized location coordinates are plotted. Missing coordinates stay in the Location not mapped list and are never assigned a placeholder point."
         color="blue"
-      />
+      /> */}
       <RealtimeDeviceMap
         devices={devices}
+        statusDevices={dashboardData?.devices || []}
         candidates={dashboardData?.candidates || []}
         relays={dashboardData?.relays || []}
         loading={dashboardData?.loading}

@@ -52,6 +52,28 @@
   --pd-radius-s: 16px;
   --pd-corner: 18px;              /* bracket arm length; must exceed radius-s */
   --pd-scrollbar: 6px;            /* shared by ::-webkit-scrollbar and .feed-head */
+  /*
+   * Two type roles, one token each.
+   *
+   * --font-data covers everything a reader reads for meaning: descriptions,
+   * table headers and cells, metric labels and values, chips, captions. It was
+   * IBM Plex Mono, which set the whole interface in a typewriter face and made
+   * long plain-language sentences harder to read than the headings above them.
+   * It now matches the headings, so body copy and headings share one voice.
+   *
+   * --font-plate is what stays monospace: the SEC.0x corner labels. Those are
+   * identity rather than content, named in the note at the top of this file as
+   * one of the four things carrying the technical-drawing language, and they
+   * are labels on a drawing rather than prose anyone reads a sentence of.
+   *
+   * Changing the interface's type is one line here, not 48 call sites.
+   */
+  --font-data: 'Outfit', system-ui, sans-serif;
+  --font-plate: 'IBM Plex Mono', monospace;
+  /* Gutter for section content, and for the phone bar above it. One token so
+     the wordmark and menu button cannot drift out of line with the headings
+     they sit over; it narrows with the section at each breakpoint. */
+  --pd-gutter: 28px;
   --pd-chrome-h: 88px;            /* topbar and sidebar brand share this height */
   --risk-critical-bg: #fee2e2;
   --risk-critical-border: #fca5a5;
@@ -73,21 +95,58 @@
   --risk-none-border: #cbd5e1;
   --risk-none-text: #64748b;
   --risk-none-fill: #94a3b8;
-  --tag-amber-bg: #fef3c7;
-  --tag-amber-border: #fcd34d;
-  --tag-amber-text: #92400e;
-  --tag-red-bg: #fee2e2;
-  --tag-red-border: #fca5a5;
-  --tag-red-text: #991b1b;
-  --tag-green-bg: #dcfce7;
-  --tag-green-border: #86efac;
-  --tag-green-text: #166534;
-  --tag-gray-bg: #f1f5f9;
-  --tag-gray-border: #cbd5e1;
-  --tag-gray-text: #64748b;
-  --tag-blue-bg: #dbeafe;
-  --tag-blue-border: #93c5fd;
-  --tag-blue-text: #1d4ed8;
+  /*
+   * Status chips carry two tones, not three. The old set tinted background,
+   * border and text in the same hue, which is what made them read as generic
+   * pastel pills. Now a near-white tint carries the fill, a single saturated
+   * "fill" drives the marker and the ring, and text sits at an ink tone dark
+   * enough to clear 4.5:1 on that tint.
+   */
+  --tag-amber-bg: #fdf4e6;
+  --tag-amber-fill: #d98518;
+  --tag-amber-ink: #8a4b0a;
+  --tag-red-bg: #fdeceb;
+  --tag-red-fill: #dc2626;
+  --tag-red-ink: #9b1c1c;
+  --tag-green-bg: #eaf6ef;
+  --tag-green-fill: #16a34a;
+  --tag-green-ink: #15612f;
+  --tag-gray-bg: #f2f4f7;
+  --tag-gray-fill: #8a94a6;
+  --tag-gray-ink: #4a5563;
+  /*
+   * "Recorded, nothing to do." Deliberately not a hue: a normal event that
+   * needs no action should not compete with the three that carry urgency, and
+   * gray is already spoken for by "no information". Slate reads as definite
+   * rather than absent, which is the difference between the two.
+   */
+  --tag-neutral-bg: #eef1f5;
+  --tag-neutral-fill: #47536a;
+  --tag-neutral-ink: #2b3546;
+  /*
+   * Kind tones. These say what sort of thing happened, never how urgent it is,
+   * so they are drawn as coloured text and a coloured icon with no tint behind
+   * them. That is the whole distinction a reader has to make on this screen:
+   *
+   *   filled pill      severity, and someone may have to act
+   *   coloured text    a kind of event, and nothing is being asked
+   *
+   * They are deliberately outside the amber/red/green scale. Colouring the
+   * activity feed with severity hues is what made a normal successful night
+   * render amber then red while the legend told a barangay worker to inspect a
+   * device that was working correctly.
+   *
+   * Ink tones clear 4.5:1 on the page background; fills are icon-only and need
+   * 3:1, so they sit a step brighter.
+   */
+  --tag-indigo-fill: #4f46e5;
+  --tag-indigo-ink: #3730a3;
+  --tag-slate-fill: #64748b;
+  --tag-slate-ink: #475569;
+  --tag-teal-fill: #0d9488;
+  --tag-teal-ink: #0f766e;
+  --tag-violet-fill: #7c3aed;
+  --tag-violet-ink: #6d28d9;
   --banner-blue-bg: #dbeafe;
   --banner-blue-border: #93c5fd66;
   --banner-blue-text: #1d4ed8;
@@ -214,6 +273,23 @@ html, body, #root {
   border-color: var(--pd-accent);
 }
 
+/*
+ * Tinting a plate.
+ *
+ * The dashed edge is four background gradients and the brackets are four
+ * pseudo-elements; both read their colour from a custom property. Recolour the
+ * properties and the whole plate follows, with the bracket still meeting the
+ * dash exactly where --pd-corner says it should.
+ *
+ * Call sites used to add a real `border` instead. That draws a second line
+ * inside the dashes rather than replacing them, which is where the doubled
+ * edge came from, and it offsets every bracket by the border width because the
+ * gradients are positioned against the padding box while the brackets are not.
+ */
+.pd-tone-warning  { --pd-dash: rgba(224, 123, 19, 0.45); --pd-bracket: var(--color-amber); }
+.pd-tone-critical { --pd-dash: rgba(220, 38, 38, 0.45);  --pd-bracket: var(--color-red); }
+.pd-tone-info     { --pd-dash: rgba(37, 99, 235, 0.40);  --pd-bracket: var(--color-blue); }
+
 /* The figure zone: gridded, holds a diagram or a headline figure. */
 .pd-figure {
   position: relative;
@@ -226,7 +302,7 @@ html, body, #root {
 .pd-figlabel {
   position: absolute;
   bottom: 8px;
-  font: 500 10.5px 'IBM Plex Mono', monospace;
+  font: 500 10.5px var(--font-plate);
   letter-spacing: 0.08em;
 }
 
@@ -238,7 +314,7 @@ html, body, #root {
   border-top: 1px dashed var(--pd-dash);
   padding: 11px 18px;
   color: var(--color-gray);
-  font: 500 11px 'IBM Plex Mono', monospace;
+  font: 500 11px var(--font-data);
 }
 
 .pd-metafoot b { color: var(--pd-accent-ink); font-weight: 500; }
@@ -367,12 +443,17 @@ a:focus-visible,
   flex: 1;
   min-width: 0;
   overflow-y: auto;
-  padding: 28px;
+  padding: var(--pd-gutter);
 }
 
 .dashboard-sidebar {
   width: 280px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-surface);
+  border-right: 1px dashed var(--pd-dash);
 }
 
 /*
@@ -422,9 +503,8 @@ a:focus-visible,
   border-right: 1px dashed var(--pd-dash);
 }
 
-.topbar-label,
-.topbar-reconciled {
-  font: 500 10px 'IBM Plex Mono', monospace;
+.topbar-label {
+  font: 500 10px var(--font-data);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -438,17 +518,10 @@ a:focus-visible,
   font-weight: 600;
 }
 
-.topbar-reconciled { color: var(--color-gray); }
-
 .topbar-value {
   color: var(--color-text);
-  font: 700 20px 'IBM Plex Mono', monospace;
+  font: 700 20px var(--font-data);
   letter-spacing: -0.02em;
-}
-
-.topbar-reconciled {
-  text-transform: none;
-  letter-spacing: 0.02em;
 }
 
 .topbar-clock {
@@ -458,7 +531,7 @@ a:focus-visible,
   padding: 12px 22px;
   text-align: right;
   color: var(--color-text);
-  font: 700 20px 'IBM Plex Mono', monospace;
+  font: 700 20px var(--font-data);
   letter-spacing: -0.02em;
   white-space: nowrap;
 }
@@ -499,6 +572,11 @@ a:focus-visible,
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Five is the full colour scale, so the legend is the only user of this. */
+.info-grid-five {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
 .risk-map-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
@@ -511,6 +589,96 @@ a:focus-visible,
   gap: 20px;
 }
 
+/*
+ * Device cards in a row share one height, and their closing block sits on the
+ * bottom edge of that height rather than wherever the rows above happen to end.
+ *
+ * Grid already stretches the plates to the tallest in the row, but the content
+ * inside stopped where it stopped, so a card with fewer rows -- an offline one
+ * showing Current status, say -- left its totals floating in the middle with
+ * dead space beneath. Making the plate body a column and letting the closing
+ * block take the free space puts every card's divider, activity lines and
+ * seven-day totals on the same baseline.
+ *
+ * Scoped to this grid: plate bodies elsewhere hold tables and charts that must
+ * not become flex containers.
+ */
+.node-status-grid > .pd-plate {
+  display: flex;
+  flex-direction: column;
+}
+
+.node-status-grid > .pd-plate > .pd-plate-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/*
+ * Current status and Last online status occupy the same grid cell, so the cell
+ * is always as tall as the taller of the two and pressing the toggle cannot
+ * resize the card or the row it sits in. The inactive view keeps its space and
+ * leaves the accessibility tree, which visibility:hidden does and display:none
+ * would not, since display:none also gives up the space that is the point.
+ */
+.node-card-views {
+  display: grid;
+}
+
+.node-card-views > * {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.node-card-views > .is-hidden,
+.node-card-close > .is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.node-card-close {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+/*
+ * Rows in the closing block hold one line height whatever they contain. A row
+ * whose value is a chip is taller than one whose value is plain text, so
+ * "Latest Activity" measured 22px on a card carrying a time-quality chip and
+ * 15px on one reading "No activity yet". Seven pixels there, plus the closing
+ * line, is what pushed one card's totals off its neighbour's baseline.
+ *
+ * Only the closing block is pinned this way. Rows above it sit under a toggle
+ * that already changes how many there are, so equalising them would buy
+ * nothing and would stretch the plain ones for no reason.
+ */
+.node-card-close .node-metric {
+  min-height: 22px;
+}
+
+/*
+ * A badge and its explanation stack; they never sit on one line.
+ *
+ * Side by side, the chip and the sentence read as one broken run of text and
+ * the reader cannot tell which is the label. Stacked, the chip is plainly the
+ * state and the line beneath it is plainly a footnote. The width cap stops a
+ * long note stretching the value column and squeezing its label.
+ */
+.node-metric-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  min-width: 0;
+  max-width: 30ch;
+  text-align: right;
+}
+
 .status-refresh-button {
   display: inline-flex;
   align-items: center;
@@ -521,13 +689,73 @@ a:focus-visible,
   border-radius: 7px;
   padding: 8px 11px;
   cursor: pointer;
-  font: 700 12px 'IBM Plex Mono', monospace;
+  font: 700 12px var(--font-data);
   text-transform: uppercase;
 }
 
 .status-refresh-button:disabled {
   cursor: wait;
   opacity: 0.6;
+}
+
+/*
+ * Two-way switch on a device card, between what is true now and what the
+ * device last reported. Built from the same tokens as .status-refresh-button
+ * rather than as a new control: monospace tracked caps in a plate-radius
+ * container, with the selected side carrying the accent tint the rest of the
+ * system uses for a current choice.
+ */
+.card-view-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--pd-radius-xs);
+  background: var(--color-surface-2);
+}
+
+.card-view-toggle button {
+  flex: 1;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: calc(var(--pd-radius-xs) - 4px);
+  background: transparent;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  font: 600 11px var(--font-data);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.card-view-toggle button:hover { color: var(--color-text); }
+
+/* Solid accent, matching the selected sidebar item. White on --pd-accent is
+   the one place the vivid orange carries text, and it clears contrast because
+   the text is bold and the fill is solid rather than a tint. */
+.card-view-toggle button.is-active {
+  background: var(--pd-accent);
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-view-toggle button { transition: none; }
+}
+
+/* Turns while a refresh is in flight, so a re-fetch is visible without the
+   section blanking out the rows the reader is already looking at. */
+.status-refresh-button .is-spinning {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-refresh-button .is-spinning { animation: none; }
 }
 
 .metric-card-grid {
@@ -543,7 +771,7 @@ a:focus-visible,
 .chart-title,
 .table-section-title,
 .unmapped-heading {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-data);
 }
 
 .metric-card-label { margin: 10px 0 6px; color: var(--color-text); font-size: 12px; font-weight: 600; }
@@ -568,14 +796,20 @@ a:focus-visible,
   border-collapse: collapse;
 }
 
+/*
+ * The header outranks the rows it names, so it is set larger, heavier and in
+ * full ink. It previously ran 11px/600 in --color-text-dim against rows at
+ * 12px/500 in --color-text, which inverted the hierarchy: the label a reader
+ * scans first was the least legible thing in the table.
+ */
 .data-table th {
   padding: 12px 16px;
   text-align: left;
   white-space: nowrap;
-  color: var(--color-text-dim);
+  color: var(--color-text);
   background: var(--color-surface-2);
   border-bottom: 1px solid var(--color-border);
-  font: 600 11px 'IBM Plex Mono', monospace;
+  font: 700 13px var(--font-data);
   letter-spacing: .06em;
 }
 
@@ -584,10 +818,12 @@ a:focus-visible,
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent);
   color: var(--color-text);
   vertical-align: top;
-  font: 500 12px 'IBM Plex Mono', monospace;
+  font: 500 12px var(--font-data);
 }
 
 .data-table tr:last-child td { border-bottom: 0; }
+
+.activity-time-quality { margin-top: 5px; }
 
 /*
  * Split header/body feed table.
@@ -633,7 +869,7 @@ a:focus-visible,
   color: var(--pd-accent-ink);
   padding: 6px 12px;
   cursor: pointer;
-  font: 600 11px 'IBM Plex Mono', monospace;
+  font: 600 11px var(--font-data);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   transition: background-color 0.15s ease;
@@ -641,6 +877,96 @@ a:focus-visible,
 
 .feed-more:hover { background: var(--pd-accent); color: #fff; }
 .feed-more:active { transform: translateY(1px); }
+
+/*
+ * Status chip.
+ *
+ * Reads as a legend key on a technical drawing rather than as a pill: a square
+ * marker in the status colour, monospace tracked caps, and the ring-inset rule
+ * the rest of the system uses. The square is deliberate; it is the one part
+ * that survives being photocopied, printed or read by someone who cannot
+ * separate amber from red, so colour is never the only carrier of state.
+ */
+.pd-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 9px;
+  border-radius: var(--pd-radius-xs);
+  background: var(--tag-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tag-fill) 32%, transparent);
+  color: var(--tag-ink);
+  font: 600 11px var(--font-data);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.pd-tag::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 1.5px;
+  background: var(--tag-fill);
+}
+
+/*
+ * A chip carrying an icon drops the square marker. Both are the chip's leading
+ * glyph, and drawing the two together reads as decoration rather than as one
+ * mark meaning one thing.
+ */
+.pd-tag-iconed::before { display: none; }
+.pd-tag svg { flex-shrink: 0; color: var(--tag-fill); }
+
+.pd-tag-amber { --tag-bg: var(--tag-amber-bg); --tag-fill: var(--tag-amber-fill); --tag-ink: var(--tag-amber-ink); }
+.pd-tag-red   { --tag-bg: var(--tag-red-bg);   --tag-fill: var(--tag-red-fill);   --tag-ink: var(--tag-red-ink); }
+.pd-tag-green { --tag-bg: var(--tag-green-bg); --tag-fill: var(--tag-green-fill); --tag-ink: var(--tag-green-ink); }
+.pd-tag-gray  { --tag-bg: var(--tag-gray-bg);  --tag-fill: var(--tag-gray-fill);  --tag-ink: var(--tag-gray-ink); }
+.pd-tag-neutral { --tag-bg: var(--tag-neutral-bg); --tag-fill: var(--tag-neutral-fill); --tag-ink: var(--tag-neutral-ink); }
+
+/*
+ * Kind tones: colour rides on the text and the icon, with nothing behind them.
+ * The tint and the ring are dropped rather than made transparent so the chip
+ * sits on the baseline as text, and the horizontal padding goes with them for
+ * the same reason. A pill shape with no fill still reads as a pill.
+ */
+.pd-tag-indigo { --tag-fill: var(--tag-indigo-fill); --tag-ink: var(--tag-indigo-ink); }
+.pd-tag-slate  { --tag-fill: var(--tag-slate-fill);  --tag-ink: var(--tag-slate-ink); }
+.pd-tag-teal   { --tag-fill: var(--tag-teal-fill);   --tag-ink: var(--tag-teal-ink); }
+.pd-tag-violet { --tag-fill: var(--tag-violet-fill); --tag-ink: var(--tag-violet-ink); }
+
+.pd-tag-indigo,
+.pd-tag-slate,
+.pd-tag-teal,
+.pd-tag-violet {
+  background: none;
+  box-shadow: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/*
+ * Activity chips wrap. The feed's two tables pin their columns with
+ * table-layout:fixed so the header stays aligned with the scrolling body, which
+ * means "What happened" is stuck at its share of the width and cannot grow to
+ * fit "Possible Aedes detection". A nowrap chip therefore spills into Notes.
+ *
+ * It always did. The filled pill's opaque tint painted over the overlap and
+ * hid it, and removing the fill only made an existing collision visible.
+ * Widening the column is not the fix, because both tables share one colgroup.
+ *
+ * The icon aligns to the first line rather than to the middle of a wrapped
+ * block, and the square marker takes a nudge to sit on the cap height.
+ */
+.activity-feed-row .pd-tag {
+  align-items: flex-start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.activity-feed-row .pd-tag::before { margin-top: 4px; }
 
 /* Nav buttons carry no edge of any kind; only the fill marks the active item. */
 .dashboard-nav button {
@@ -691,29 +1017,88 @@ a:focus-visible,
   align-items: flex-start;
   margin-bottom: 10px;
   color: var(--color-text);
-  font: 700 13px 'IBM Plex Mono', monospace;
+  font: 700 13px var(--font-data);
 }
 
 .map-heading strong,
 .map-heading > div > span { display: block; }
 
-.map-legend {
-  display: flex;
-  gap: 9px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+/* Key for the risk zones, read before the map rather than hunted for on it. */
+.risk-zone-legend {
+  margin-bottom: 10px;
   color: var(--color-text-dim);
-  font-size: 10px;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
-.map-legend span { display: flex; align-items: center; gap: 4px; }
-.map-legend i { width: 8px; height: 8px; border-radius: 50%; }
+.risk-zone-legend p { margin: 6px 0 0; }
+
+.risk-zone-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+
+.risk-zone-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.risk-zone-key strong { color: var(--color-text); }
+
+.risk-zone-swatch {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--zone-color);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--zone-color) 25%, transparent);
+}
 
 .device-map {
   width: 100%;
   height: clamp(340px, 55vh, 620px);
   border-radius: 8px;
   background: var(--color-surface-3);
+}
+
+.map-loading {
+  display: grid;
+  place-items: center;
+  color: var(--color-text-dim);
+  font: 600 12px var(--font-data);
+}
+
+.maplibre-device-marker {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  background: var(--device-marker-color);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.45);
+  cursor: pointer;
+}
+
+.maplibre-device-marker-stale { border-style: dashed; }
+.maplibre-device-marker-logging_fault { border-width: 5px; }
+.maplibre-device-marker:focus-visible { outline: 3px solid var(--color-blue); outline-offset: 3px; }
+
+.maplibregl-popup-content { border-radius: 8px; padding-top: 18px; }
+/* A finger-sized close button: the default 14 px glyph was hard to hit on a phone. */
+.maplibregl-popup-close-button {
+  width: 36px;
+  height: 36px;
+  font-size: 26px;
+  line-height: 1;
+}
+.map-popup > strong { padding-right: 32px; }
+.leaflet-container a.leaflet-popup-close-button {
+  width: 36px;
+  height: 36px;
+  font-size: 26px;
+  line-height: 36px;
 }
 
 .tile-warning {
@@ -723,16 +1108,25 @@ a:focus-visible,
   border-radius: 7px;
   background: var(--color-amber-dim);
   color: var(--banner-amber-text);
-  font: 600 12px 'IBM Plex Mono', monospace;
+  font: 600 12px var(--font-data);
 }
 
-.map-popup { display: grid; gap: 6px; color: #1c1917; font: 12px 'IBM Plex Mono', monospace; }
+.map-popup { display: grid; gap: 6px; color: #1c1917; font: 12px var(--font-data); }
 .map-popup > strong { font-size: 14px; }
 .map-popup-list { display: grid; gap: 3px; padding-top: 4px; border-top: 1px solid #e7dfd3; }
 .map-popup-list span { font-size: 10px; }
+.map-popup span { overflow-wrap: anywhere; }
+
+@media (max-width: 480px) {
+  .leaflet-popup-content { margin: 10px 14px; }
+  /* The map is 360 px tall on a phone; keep a long popup scrollable inside it. */
+  .maplibregl-popup-content .map-popup,
+  .leaflet-popup-content .map-popup { max-height: 250px; overflow-y: auto; }
+}
 
 @media (max-width: 1100px) {
-  .info-grid-four {
+  .info-grid-four,
+  .info-grid-five {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -746,6 +1140,12 @@ a:focus-visible,
 }
 
 @media (max-width: 900px) {
+  /*
+   * The chrome moves into a drawer here. Previously the sidebar became a full
+   * width block and the summary strip stacked beneath it, which between them
+   * took roughly two thirds of a phone screen before a single row of section
+   * content appeared. Both now live behind the menu button in .mobile-bar.
+   */
   .app-shell {
     min-height: 100dvh;
     height: auto;
@@ -754,31 +1154,29 @@ a:focus-visible,
   }
 
   .app-main { overflow: visible; }
+  :root { --pd-gutter: 22px; }
+  .section-scroll { overflow: visible; }
 
-  .dashboard-sidebar {
-    width: 100%;
-    overflow: visible !important;
-  }
+  /*
+   * Dissolve the rail. Its three blocks become direct children of the menu
+   * panel, which is what lets the summary strip be ordered between the
+   * navigation and the device list rather than after all of them.
+   */
+  .dashboard-sidebar { display: contents; }
+
+  /* The bar above the panel already carries the wordmark. */
+  .sidebar-brand { display: none; }
 
   .dashboard-nav {
-    display: flex;
-    overflow-x: auto !important;
     flex: none !important;
-    border-bottom: 1px solid var(--color-border);
+    overflow-y: visible !important;
   }
-
-  .dashboard-nav button { min-width: max-content; }
-  .sidebar-device-status { display: none; }
-  .sidebar-settings { display: flex; gap: 8px; }
-  .sidebar-settings > div { display: none !important; }
-  .sidebar-settings button { width: auto !important; margin: 0 !important; }
-  .dashboard-topbar { position: sticky; top: 0; z-index: 500; }
-  .section-scroll { overflow: visible; padding: 22px; }
 }
 
 @media (max-width: 720px) {
   .info-grid-three,
   .info-grid-four,
+  .info-grid-five,
   .info-grid-two {
     grid-template-columns: 1fr;
   }
@@ -792,11 +1190,165 @@ a:focus-visible,
     grid-template-columns: 1fr;
   }
 
-  .section-scroll { padding: 16px; }
-  .dashboard-topbar { min-height: 64px; padding: 8px 14px; }
+  :root { --pd-gutter: 16px; }
+  /* The summary strip is drawer content below 900px, so it no longer needs the
+     page padding it carried when it was the top of the screen. */
   .map-heading { flex-direction: column; }
-  .map-legend { justify-content: flex-start; }
   .device-map { height: 360px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Phone chrome: compact bar and drop-down menu
+   ---------------------------------------------------------------------------
+   Rendered only below 900px; App swaps the tree rather than restyling it,
+   because the sidebar and summary strip change parent, not just appearance.
+
+   The panel hangs off this wrapper rather than off the bar, so the bar keeps
+   its own border and the menu can overlay the section beneath it.
+   --------------------------------------------------------------------------- */
+
+.mobile-chrome {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+}
+
+.mobile-bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px var(--pd-gutter);
+  background: var(--color-surface);
+  border-bottom: 1px dashed var(--pd-dash);
+}
+
+.mobile-bar-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  margin-left: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--pd-radius-xs);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.mobile-bar-toggle:focus-visible {
+  outline: 3px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+/* Unread-style marker for a device needing attention, so the reader knows to
+   open the drawer without being told to look. */
+.mobile-bar-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--color-surface-2);
+  border-radius: 50%;
+  background: var(--color-red);
+}
+
+.mobile-bar-brand { min-width: 0; }
+
+.mobile-bar-name {
+  font: 800 17px 'Outfit', sans-serif;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+.mobile-bar-sub {
+  margin-top: 4px;
+  font: 500 9px var(--font-data);
+  letter-spacing: 0.14em;
+  color: var(--pd-accent-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+ * Both surfaces stay mounted and are hidden with visibility, so opening and
+ * closing are the same transition run in opposite directions. Keyframes could
+ * only animate the entrance; the exit would still be an instant unmount.
+ * visibility is transitioned with a delay so it flips only once the fade has
+ * finished, which also keeps the hidden panel out of the tab order.
+ */
+.mobile-menu-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: rgba(14, 23, 38, 0.44);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease, visibility 0s linear 0.22s;
+}
+
+.mobile-menu-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  /* Taller than the phone once the summary and the device list are both in it,
+     so the panel scrolls rather than clipping the logout button. */
+  max-height: calc(100dvh - 100%);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--color-surface);
+  border-bottom: 1px dashed var(--pd-dash);
+  box-shadow: 0 24px 40px rgba(14, 23, 38, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transform-origin: top center;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.22s;
+}
+
+.mobile-chrome-open .mobile-menu-scrim,
+.mobile-chrome-open .mobile-menu-panel {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.mobile-chrome-open .mobile-menu-panel { transform: translateY(0); }
+
+/*
+ * Reading order inside the panel: navigate, then the live numbers, then the
+ * device list and logout at the foot. The rail's own source order puts its
+ * device list and settings directly after its nav, which would strand the
+ * summary below the logout button.
+ */
+.mobile-menu-panel .dashboard-nav { order: 1; }
+.mobile-menu-panel .dashboard-topbar { order: 2; }
+.mobile-menu-panel .sidebar-device-status { order: 3; }
+.mobile-menu-panel .sidebar-settings { order: 4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu-scrim,
+  .mobile-menu-panel { transition: none; }
 }
 
 /* ---------------------------------------------------------------------------
@@ -805,18 +1357,32 @@ a:focus-visible,
 
 @media (max-width: 900px) {
   /*
-   * Two metric columns, not three. At phone widths three cells leave roughly
-   * 110px each, which truncates every label to an ellipsis and makes the strip
+   * Two metric columns, not three. Inside the drawer three cells leave roughly
+   * 100px each, which truncates every label to an ellipsis and makes the strip
    * useless. Labels also wrap here rather than clip, since a health worker
    * reading "Possible Mosquitoes Today" needs the whole phrase.
    */
   .dashboard-topbar {
     height: auto;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-bottom: 0;
+    background: transparent;
   }
+
+  /* Cell rules are the drawer's own separators now, so the right-hand edge of
+     each row would otherwise leave a stub against the panel wall. */
+  .topbar-metric,
+  .topbar-connection {
+    padding: 10px 12px;
+    border-right: 0;
+    border-bottom: 1px dashed var(--pd-dash);
+  }
+
+  .topbar-metric:nth-child(odd) { border-right: 1px dashed var(--pd-dash); }
 
   .topbar-clock {
     grid-column: span 2;
+    padding: 10px 12px;
     text-align: left;
     border-top: 1px dashed var(--pd-dash);
   }
@@ -849,6 +1415,14 @@ a:focus-visible,
    */
   .feed-head { display: none; }
 
+  /*
+   * A thead stays a table-header-group even when the rest of the table is set
+   * to block, so it lays its cells out as one wide row and the plate overflows
+   * the screen. The tables that carry their header inline rather than in a
+   * .feed-head need it hidden here too; data-label supplies the names.
+   */
+  .data-table thead { display: none; }
+
   .table-scroll { overflow-x: visible; }
 
   .data-table,
@@ -880,15 +1454,90 @@ a:focus-visible,
     text-align: right;
   }
 
+  /*
+   * The card-mode equivalent of a th. Matched to the desktop header's weight
+   * and ink. It sits on the same line as its value rather than above it, so it
+   * takes the value's size instead of exceeding it; going larger here would
+   * make the label outweigh the reading it labels.
+   */
   .data-table td::before {
     content: attr(data-label);
     flex-shrink: 0;
     text-align: left;
     color: var(--color-text);
-    font: 600 10px 'IBM Plex Mono', monospace;
+    font: 700 12px var(--font-data);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
+
+  /*
+   * Activity rows are read in the field, often one-handed. Give this table a
+   * record-card rhythm instead of forcing every value into the generic
+   * label/value line used by denser administrative tables.
+   */
+  .activity-feed-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "kind kind"
+      "happened received"
+      "device device"
+      "notes notes";
+    gap: 0 16px;
+    margin: 12px;
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--pd-radius-xs);
+    background: var(--color-surface-2);
+  }
+
+  .activity-feed-row:last-child { border-bottom: 1px solid var(--color-border); }
+  .activity-happened { grid-area: happened; }
+  .activity-received { grid-area: received; }
+  .activity-device { grid-area: device; }
+  .activity-kind { grid-area: kind; }
+  .activity-notes { grid-area: notes; }
+
+  .activity-feed-row td {
+    display: block;
+    min-width: 0;
+    padding: 11px 0;
+    text-align: left;
+  }
+
+  .activity-feed-row td + td { border-top: 1px dashed var(--pd-dash); }
+  .activity-feed-row .activity-received { border-top: 0; }
+
+  /*
+   * Here the label sits above its value rather than beside it, so it is a
+   * stacked header and takes the desktop header's size and ink. At 9px dim
+   * over a 12px reading it was the most inverted of the three headers.
+   */
+  .activity-feed-row td::before {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--color-text);
+    font-size: 13px;
+  }
+
+  .activity-feed-row td > span,
+  .activity-feed-row .pd-tag {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .activity-feed-row .activity-kind {
+    padding-top: 0;
+    padding-bottom: 14px;
+  }
+
+  .activity-feed-row .activity-kind .pd-tag {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .activity-time-quality { margin-top: 8px; }
 
   /* The body div caps its height inline for the desktop scroll pane; on a
      phone the page itself should scroll instead of a box inside a box. */
@@ -903,6 +1552,7 @@ a:focus-visible,
   /* Readable at arm's length. */
   .topbar-value { font-size: 18px; }
   .metric-card-value { font-size: 20px; }
+  .pd-tag { font-size: 12px; padding: 5px 11px 5px 10px; }
 }
 
 @media (max-width: 480px) {
@@ -910,6 +1560,186 @@ a:focus-visible,
   .topbar-clock { grid-column: span 1; }
   .topbar-metric,
   .topbar-connection { border-right: 0; border-bottom: 1px dashed var(--pd-dash); }
+
+  .activity-feed-row {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "kind"
+      "happened"
+      "received"
+      "device"
+      "notes";
+    margin: 10px;
+    padding: 15px;
+  }
+
+  .activity-feed-row .activity-received { border-top: 1px dashed var(--pd-dash); }
+}
+
+/* ---------------------------------------------------------------------------
+   Sign-in
+   ---------------------------------------------------------------------------
+   One plate, centred, at every width. This began as a two-column split with a
+   feature-box grid beside the form, which on a phone stacked into roughly two
+   screens of scrolling before the password field came into view. The pitch is
+   now three lines above the form rather than four boxes below it.
+
+   Layout lives here rather than in inline style objects, which cannot carry a
+   media query; that was the original reason the page did not respond at all.
+   --------------------------------------------------------------------------- */
+
+/*
+ * Flex with an auto-margined child rather than grid centring. Both centre, but
+ * when the card is taller than the viewport an auto margin collapses to zero
+ * and the card aligns to the top, where grid centring would push its head off
+ * the screen with no way to scroll back up to it.
+ */
+.login-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  padding: 32px;
+  background:
+    radial-gradient(circle at top left, var(--color-amber-dim), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.13), transparent 28%),
+    var(--color-bg);
+  font-family: 'Outfit', sans-serif;
+}
+
+/*
+ * A plate like every other surface in the dashboard: dashed edges, solid
+ * corner brackets, and the pitch sitting in a gridded figure zone above the
+ * rule, with the form on plain ground below it.
+ *
+ * No background-image here. The plate draws its four dashed edges as
+ * background gradients, so setting one on the same element erases all of
+ * them; an earlier tint did exactly that and left the card borderless.
+ *
+ * Body padding is a token rather than a fixed prop value because the prop is
+ * applied inline, where a media query cannot reach it.
+ */
+.login-card {
+  --login-pad: 24px;
+  margin: auto;
+  width: min(520px, 100%);
+  overflow: hidden;
+}
+
+.login-card .pd-figure { padding: 24px 24px 32px; }
+
+.login-brand {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.login-headline {
+  margin-top: 14px;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--color-text);
+}
+
+.login-lede {
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-text-dim);
+}
+
+.login-form-title { font-size: 22px; font-weight: 700; color: var(--color-text); }
+.login-form-sub { margin-top: 8px; font-size: 14px; line-height: 1.5; color: var(--color-text-dim); }
+.login-form-head { margin-bottom: 20px; }
+
+.login-field { display: block; margin-bottom: 14px; }
+.login-field-last { margin-bottom: 16px; }
+
+.login-field-label {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-text-dim);
+}
+
+.login-input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font-family: var(--font-data);
+  font-size: 14px;
+  outline: none;
+}
+
+.login-input:focus-visible {
+  border-color: var(--pd-accent-border);
+  box-shadow: 0 0 0 3px var(--pd-accent-dim);
+}
+
+.login-input-error { border-color: var(--color-red); }
+
+.login-note {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-family: var(--font-data);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.login-note-error {
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  background: rgba(220, 38, 38, 0.07);
+  color: var(--color-red);
+}
+
+.login-note-warn {
+  border: 1px solid var(--pd-accent-border);
+  background: var(--pd-accent-dim);
+  color: var(--pd-accent-ink);
+}
+
+.login-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 48px;
+  border: 1px solid var(--pd-accent-border);
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--color-amber), #d97706);
+  color: #fffaf2;
+  font-family: var(--font-data);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 18px 30px rgba(224, 123, 19, 0.13);
+  cursor: pointer;
+}
+
+.login-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 900px) {
+  .login-shell { padding: 18px 14px; }
+
+  /* Under 16px, iOS Safari zooms the page in when the field takes focus and
+     never zooms back out. */
+  .login-input { font-size: 16px; }
+}
+
+@media (max-width: 560px) {
+  .login-card { --login-pad: 18px; }
+  .login-card .pd-figure { padding: 18px 18px 30px; }
+  .login-brand { font-size: 24px; }
+  .login-headline { font-size: 25px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -919,4 +1749,505 @@ a:focus-visible,
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Device registry and validated management
+   --------------------------------------------------------------------------- */
+
+.device-registry-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 18px;
+}
+
+.device-registry h3,
+.device-dialog h3 {
+  margin: 5px 0 0;
+  color: var(--color-text);
+  font-size: 21px;
+  line-height: 1.15;
+}
+
+.device-registry-head p,
+.device-dialog-copy {
+  max-width: 680px;
+  margin: 8px 0 0;
+  color: var(--color-text-dim);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.device-primary-button,
+.device-secondary-button,
+.device-danger-button,
+.device-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  border-radius: var(--pd-radius-xs);
+  font: 700 11px var(--font-data);
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.device-primary-button {
+  padding: 0 15px;
+  border: 1px solid var(--pd-accent-border);
+  background: var(--color-amber);
+  color: #fffaf2;
+}
+
+.device-secondary-button {
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.device-danger-button {
+  padding: 0 15px;
+  border: 1px solid var(--color-red);
+  background: var(--color-red);
+  color: #fff;
+}
+
+.device-primary-button:disabled,
+.device-secondary-button:disabled,
+.device-danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.device-icon-button {
+  width: 40px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-dim);
+}
+
+.device-icon-danger { color: var(--color-red); }
+
+.device-primary-button:focus-visible,
+.device-secondary-button:focus-visible,
+.device-danger-button:focus-visible,
+.device-icon-button:focus-visible,
+.device-input:focus-visible {
+  outline: 3px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+.device-registry-list {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--pd-radius-xs);
+  background: var(--color-surface);
+}
+
+.device-registry-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.85fr) minmax(170px, 1.15fr) minmax(200px, 1.3fr) 120px auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px dashed var(--pd-dash);
+  color: var(--color-text);
+  font-size: 13px;
+}
+
+.device-registry-row:last-child { border-bottom: 0; }
+
+.device-registry-row > div:not(.device-registry-actions) {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.device-registry-row span:not(.pd-tag) { overflow-wrap: anywhere; }
+
+.device-registry-label {
+  color: var(--color-text-dim);
+  font: 700 9px var(--font-data);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.device-registry-actions { display: flex; gap: 7px; }
+
+.device-registry-empty {
+  padding: 22px;
+  color: var(--color-text-dim);
+  font: 12px var(--font-data);
+}
+
+.device-dialog-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(14, 23, 38, 0.62);
+}
+
+.device-dialog {
+  width: min(720px, 100%);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--pd-radius-sm);
+  background: var(--color-surface);
+  box-shadow: 0 28px 70px rgba(14, 23, 38, 0.3);
+}
+
+.device-dialog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.device-form-grid,
+.device-placement-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.device-placement-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.device-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 15px;
+}
+
+.device-field-label {
+  color: var(--color-text);
+  font: 700 12px var(--font-data);
+}
+
+.device-field-hint {
+  color: var(--color-text-dim);
+  font: 10px/1.45 var(--font-data);
+}
+
+.device-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--pd-radius-xs);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: 13px var(--font-data);
+}
+
+.device-textarea {
+  min-height: 86px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/*
+ * Everything a field install does not need, behind one disclosure.
+ *
+ * Native <details> rather than a state flag and a button: it is keyboard
+ * operable, announces its own expanded state, and cannot get out of step with
+ * the thing it hides. The summary says who the panel is for and that it can be
+ * skipped, because a collapsed panel with an unexplained heading is read as
+ * something the reader has forgotten to fill in.
+ */
+.device-advanced {
+  margin: 6px 0 14px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--pd-dash);
+}
+
+/*
+ * A two-column grid, not a flex column with an absolutely positioned arrow.
+ * The title and the note stack in column two while one marker sits against
+ * both of them in column one, and nothing has to be positioned by hand.
+ */
+.device-advanced > summary {
+  cursor: pointer;
+  list-style: none;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  align-items: start;
+  gap: 3px 4px;
+  font: 600 13px var(--font-data);
+  color: var(--color-text);
+  padding: 4px 0;
+}
+
+/* Safari draws its own marker on top of ours without this. */
+.device-advanced > summary::-webkit-details-marker { display: none; }
+
+.device-advanced > summary span {
+  grid-column: 2;
+  font: 400 12px var(--font-data);
+  color: var(--color-text-dim);
+  line-height: 1.45;
+}
+
+.device-advanced > summary::before {
+  content: '';
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: center;
+  margin-top: 5px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid var(--color-text-dim);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 0.15s ease;
+}
+
+.device-advanced[open] > summary::before { transform: rotate(90deg); }
+
+.device-advanced > summary:focus-visible {
+  outline: 2px solid var(--pd-accent-ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.device-advanced-body {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 14px 0 2px 18px;
+}
+
+.device-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 8px;
+}
+
+.device-token-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px dashed var(--pd-accent-border);
+  border-radius: var(--pd-radius-xs);
+  background: var(--pd-accent-dim);
+}
+
+.device-token-box code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--pd-accent-ink);
+  font: 12px/1.55 var(--font-data);
+}
+
+@media (max-width: 1050px) {
+  .device-registry-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .device-registry-actions { justify-content: flex-end; }
+}
+
+@media (max-width: 720px) {
+  .device-registry-head { flex-direction: column; }
+  .device-registry-head .device-primary-button { width: 100%; }
+  .device-registry-row { grid-template-columns: minmax(0, 1fr); }
+  .device-registry-actions { justify-content: flex-start; }
+  .device-form-grid,
+  .device-placement-grid { grid-template-columns: minmax(0, 1fr); }
+  .device-dialog-scrim { align-items: start; padding: 12px; }
+  .device-dialog { max-height: calc(100dvh - 24px); padding: 18px; }
+  .device-token-box { grid-template-columns: minmax(0, 1fr); }
+  .device-dialog-actions { flex-direction: column-reverse; }
+  .device-dialog-actions button { width: 100%; min-height: 44px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Two-device placement comparison
+   --------------------------------------------------------------------------- */
+
+.device-comparison-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.device-comparison h3 {
+  margin: 5px 0 0;
+  color: var(--color-text);
+  font-size: 21px;
+}
+
+.device-comparison-head p {
+  max-width: 760px;
+  margin: 8px 0 0;
+  color: var(--color-text-dim);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.device-comparison-controls {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.device-comparison-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--color-text-dim);
+  font: 700 10px var(--font-data);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.device-comparison-controls select {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--pd-radius-xs);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 13px var(--font-data);
+}
+
+.comparison-window {
+  display: flex;
+  gap: 5px;
+}
+
+.comparison-window button {
+  min-height: 42px;
+  padding: 0 11px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--pd-radius-xs);
+  background: var(--color-surface);
+  color: var(--color-text-dim);
+  font: 700 10px var(--font-data);
+  cursor: pointer;
+}
+
+.comparison-window button.is-active {
+  border-color: var(--pd-accent-border);
+  background: var(--pd-accent-dim);
+  color: var(--pd-accent-ink);
+}
+
+.comparison-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+  gap: 16px;
+}
+
+.comparison-table,
+.comparison-chart {
+  border: 1px solid var(--color-border);
+  border-radius: var(--pd-radius-xs);
+  background: var(--color-surface);
+}
+
+.comparison-table { overflow: hidden; }
+
+.comparison-device {
+  padding: 14px 16px;
+  border-bottom: 1px dashed var(--pd-dash);
+}
+
+.comparison-device-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 11px;
+}
+
+.comparison-device-title > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.comparison-device-title strong {
+  color: var(--color-text);
+  font-size: 15px;
+}
+
+.comparison-device-title span {
+  color: var(--color-text-dim);
+  font: 10px/1.45 var(--font-data);
+}
+
+.comparison-stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 5px 0;
+  color: var(--color-text-dim);
+  font: 11px var(--font-data);
+}
+
+.comparison-stat strong { color: var(--color-text); }
+
+.comparison-agreement {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 16px;
+  padding: 14px 16px;
+  background: var(--pd-accent-dim);
+  color: var(--pd-accent-ink);
+  font: 700 11px/1.45 var(--font-data);
+}
+
+.comparison-agreement strong {
+  grid-row: span 2;
+  align-self: center;
+  font-size: 20px;
+}
+
+.comparison-agreement small {
+  color: var(--color-text-dim);
+  font-weight: 500;
+}
+
+.comparison-chart { padding: 16px 12px 4px; }
+
+.comparison-data-note {
+  margin-top: 12px;
+  color: var(--color-red);
+  font: 11px/1.5 var(--font-data);
+}
+
+@media (max-width: 1050px) {
+  .device-comparison-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .comparison-window { grid-column: span 2; }
+  .comparison-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .device-comparison-controls { grid-template-columns: minmax(0, 1fr); }
+  .comparison-window { grid-column: span 1; }
+  .comparison-window button { flex: 1; }
 }

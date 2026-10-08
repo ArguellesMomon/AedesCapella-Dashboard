@@ -1,8 +1,9 @@
-import { AlertTriangle } from 'lucide-react';
 import { C } from '../../constants/colors';
+import { DETECTION_TERM } from '../../constants/terminology';
 import Card from '../../components/ui/Card';
 import Tag from '../../components/ui/Tag';
 import { average, buildRuntimeSummary, candidateScorePercent, formatDashboardTimestamp } from '../../utils/dashboardData';
+import { useIsTechnical } from '../../contexts/viewerRole';
 
 function peakEventHour(events) {
   const counts = new Map();
@@ -21,41 +22,50 @@ function peakEventHour(events) {
 
 /** Simple activity summary for barangay workers. */
 export default function MetricCards({ events = [], candidates = [] }) {
+  const technical = useIsTechnical();
   const runtimeSummary = buildRuntimeSummary(events);
   const meanScore = average(candidates.map(candidateScorePercent));
   const metrics = [
     {
-      label: 'Possible mosquitoes recorded',
+      label: DETECTION_TERM.plural,
       value: String(candidates.length),
-      sub: candidates.length ? 'sounds that matched, still need checking' : 'nothing recorded yet',
+      sub: candidates.length ? DETECTION_TERM.caveat : 'nothing recorded yet',
       color: C.text,
-      status: candidates.length ? 'Available' : 'No candidates',
-      statusColor: candidates.length ? 'blue' : 'gray',
+      status: candidates.length ? 'Available' : 'None recorded',
+      statusColor: candidates.length ? 'neutral' : 'gray',
     },
     {
-      label: 'Sensor activities',
+      label: 'Device activities',
       value: String(runtimeSummary.total),
       sub: runtimeSummary.latestAt ? `last seen ${formatDashboardTimestamp(runtimeSummary.latestAt)}` : 'no activity yet',
       color: C.text,
       status: runtimeSummary.total ? 'Available' : 'No activity',
-      statusColor: runtimeSummary.total ? 'blue' : 'gray',
+      statusColor: runtimeSummary.total ? 'neutral' : 'gray',
     },
     {
       label: 'Busiest time',
       value: peakEventHour(events),
-      sub: 'based on sensor activity',
+      sub: 'based on device activity',
       color: C.text,
-      status: events.length ? 'Review soon' : 'No activity',
-      statusColor: events.length ? 'amber' : 'gray',
+      // Not amber. The busiest hour of the night is a fact about the
+      // records, not a request to go and check anything.
+      status: events.length ? 'Available' : 'No activity',
+      statusColor: events.length ? 'neutral' : 'gray',
     },
-    {
+    /*
+     * Match strength is a model score. It reads as a confidence in the
+     * species to anyone not maintaining the model, which is the misreading
+     * this dashboard works hardest to avoid, so it stays with the roles that
+     * can act on it.
+     */
+    ...(technical ? [{
       label: 'Average match strength',
       value: meanScore === null ? '—' : `${meanScore.toFixed(1)}%`,
       sub: candidates.length ? 'how closely sounds matched, not proof of species' : 'nothing to score yet',
       color: C.text,
       status: meanScore === null ? 'No reports' : 'Available',
-      statusColor: meanScore === null ? 'gray' : 'blue',
-    },
+      statusColor: meanScore === null ? 'gray' : 'neutral',
+    }] : []),
   ];
 
   return (
@@ -69,11 +79,13 @@ export default function MetricCards({ events = [], candidates = [] }) {
             gap: '8px',
             marginBottom: '12px',
           }}>
+            {/* An amber warning triangle used to appear here when the count
+                was zero. A night on which the device heard nothing is a normal
+                night, and the chip beside it already says "None recorded". */}
             <Tag color={statusColor}>{status}</Tag>
-            {index === 0 && candidates.length === 0 && <AlertTriangle size={16} color={C.amber} />}
           </div>
           <div style={{
-            fontFamily:    'IBM Plex Mono, monospace',
+            fontFamily:    'var(--font-data)',
             fontSize:      '12px',
             color:         C.textDim,
             marginBottom:  '10px',
@@ -82,7 +94,7 @@ export default function MetricCards({ events = [], candidates = [] }) {
             {label}
           </div>
           <div style={{
-            fontFamily:   'IBM Plex Mono, monospace',
+            fontFamily:   'var(--font-data)',
             fontSize:     index === 0 ? '24px' : '18px',
             color,
             fontWeight:   700,
@@ -91,7 +103,7 @@ export default function MetricCards({ events = [], candidates = [] }) {
           }}>
             {value}
           </div>
-          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '12px', lineHeight: 1.45, color: C.textDim }}>
+          <div style={{ fontFamily: 'var(--font-data)', fontSize: '12px', lineHeight: 1.45, color: C.textDim }}>
             {sub}
           </div>
         </Card>

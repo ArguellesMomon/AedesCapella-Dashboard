@@ -2,30 +2,20 @@ import { LogOut, Settings } from 'lucide-react';
 import { C } from '../../constants/colors';
 import { getStatusPresentation } from '../../utils/deviceStatus';
 import { formatDeviceName } from '../../utils/viewer';
-import { useIsTechnical } from '../../contexts/viewerRole';
 import Mono from '../ui/Mono';
-
-/* Figure numbers, not glyphs. They match the SEC.0x on each section header so
-   the sidebar doubles as the plate index. */
-const NAV_ITEMS = [
-  { id: 'feed',   fig: '01', label: 'Latest Activity' },
-  { id: 'map',    fig: '02', label: 'Barangay Map' },
-  { id: 'fog',    fig: '03', label: 'Spraying History' },
-  { id: 'nodes',  fig: '04', label: 'Device Status' },
-  { id: 'trends', fig: '05', label: 'Activity Summary' },
-];
+/* Numbers, not glyphs. Each one is the keyboard shortcut that opens its
+   section, which is why the list is shared with the number shortcuts and the
+   lazy-loading fallback and lives in one place. */
+import { DASHBOARD_SECTIONS as NAV_ITEMS } from '../../utils/sectionNavigation';
 
 export default function Sidebar({ activeSection, onNavigate, deviceStatus, onLogout }) {
-  const technical = useIsTechnical();
-
+  /*
+   * Layout lives in the stylesheet rather than inline: below 900px this
+   * element dissolves so its three blocks can be ordered against the summary
+   * strip, and an inline display would outrank the rule that does it.
+   */
   return (
-    <aside className="dashboard-sidebar" style={{
-      background:    C.surface,
-      borderRight:   '1px dashed var(--pd-dash)',
-      display:       'flex',
-      flexDirection: 'column',
-      overflow:      'hidden',
-    }}>
+    <aside className="dashboard-sidebar">
 
       {/* Wordmark. No glyph: the type carries the mark. Height is pinned to the
           topbar so the two chrome edges form one continuous line. */}
@@ -42,7 +32,7 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, onLog
           AedesCapella
         </div>
         <div style={{
-          fontFamily:    'IBM Plex Mono, monospace',
+          fontFamily:    'var(--font-data)',
           fontSize:      '10px',
           color:         'var(--pd-accent-ink)',
           letterSpacing: '0.14em',
@@ -60,6 +50,8 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, onLog
             <button
               key={id}
               onClick={() => onNavigate(id)}
+              aria-keyshortcuts={String(Number(fig))}
+              title={`Open ${label} (${Number(fig)})`}
               style={{
                 width:        '100%',
                 display:      'flex',
@@ -85,7 +77,7 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, onLog
                 {label}
               </span>
               <span style={{
-                fontFamily:    'IBM Plex Mono, monospace',
+                fontFamily:    'var(--font-data)',
                 fontSize:      '10px',
                 letterSpacing: '0.08em',
                 color:         active ? 'rgba(255,255,255,0.72)' : C.gray,
@@ -100,7 +92,7 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, onLog
       {/* Node mini status */}
       <div className="sidebar-device-status" style={{ padding: '14px', borderTop: '1px dashed var(--pd-dash)' }}>
         <div style={{
-          fontFamily:    'IBM Plex Mono, monospace',
+          fontFamily:    'var(--font-data)',
           fontSize:      '12px',
           color:         C.textDim,
           letterSpacing: '0.1em',
@@ -137,7 +129,7 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, onLog
                 animation:    isHealthy ? 'pulse 2s infinite' : 'none',
               }} />
               <Mono size="12px" color={isHealthy ? C.text : C.textDim} style={{ flex: 1, fontWeight: 700 }}>
-                {formatDeviceName(device.device_label, { technical })}
+                {formatDeviceName(device.device_label)}
               </Mono>
               <Mono size="12px" color={presentation.color === 'red' ? C.red : C.textDim}>
                 {presentation.label}
@@ -152,7 +144,7 @@ export default function Sidebar({ activeSection, onNavigate, deviceStatus, onLog
           display: 'flex',
           alignItems: 'center',
           gap: '7px',
-          fontFamily: 'IBM Plex Mono, monospace',
+          fontFamily: 'var(--font-data)',
           fontSize: '12px',
           color: C.textDim,
           letterSpacing: '0.1em',

@@ -4,27 +4,24 @@ import Banner from '../../components/ui/Banner';
 import MetricCards from './MetricCards';
 import DetectionTrendChart from './DetectionTrendChart';
 import DistributionCharts from './DistributionCharts';
+import DeviceComparison from './DeviceComparison';
+import { formatDeviceName } from '../../utils/viewer';
 
 /** Section 5 — Trends & Analytics */
 export default function TrendsAnalytics({ dashboardData, deviceStatus }) {
   const events = dashboardData?.activity || [];
   const candidates = dashboardData?.candidates || [];
+  // Formatted here so the chart axes read "Device 1" rather than the slug.
   const deviceLabels = (deviceStatus?.devices || []).reduce((lookup, device) => ({
     ...lookup,
-    [device.device_id]: device.device_label,
+    [device.device_id]: formatDeviceName(device.device_label),
   }), {});
 
   return (
     <div>
       <SectionHeader
-        fig="SEC.05"
         title="Activity Summary"
         subtitle="Totals over time, in Philippine time."
-      />
-      <Banner
-        icon={Database}
-        text="These charts summarize sensor information. A possible mosquito match still needs a person to review it and is not proof of mosquitoes."
-        color="blue"
       />
       {(dashboardData?.errors?.activity || dashboardData?.errors?.candidates) && (
         <Banner
@@ -34,6 +31,12 @@ export default function TrendsAnalytics({ dashboardData, deviceStatus }) {
         />
       )}
       <MetricCards events={events} candidates={candidates} />
+      <DeviceComparison
+        devices={deviceStatus?.devices || []}
+        registry={dashboardData?.deviceRegistry || []}
+        candidates={candidates}
+        relays={dashboardData?.relays || []}
+      />
       <DetectionTrendChart candidates={candidates} />
       <DistributionCharts events={events} candidates={candidates} deviceLabels={deviceLabels} />
     </div>

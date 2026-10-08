@@ -1,11 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { describeDeviceState, formatDuration, formatTimestamp, getStatusPresentation } from './deviceStatus.js';
+import {
+  describeDeviceState,
+  describeUploadBacklog,
+  describeDetector,
+  formatDuration,
+  formatTimestamp,
+  getStatusPresentation,
+} from './deviceStatus.js';
 
-test('maps every declared sensor state to a plain-language label', () => {
+test('maps every declared device state to a plain-language label', () => {
   assert.equal(getStatusPresentation('online').label, 'Working');
   assert.equal(getStatusPresentation('stale').label, 'Check soon');
-  assert.equal(getStatusPresentation('offline').label, 'Not reporting');
+  assert.equal(getStatusPresentation('offline').label, 'Offline');
   assert.equal(getStatusPresentation('never_seen').label, 'Not connected yet');
   assert.equal(getStatusPresentation('logging_fault').label, 'Records may be missing');
 });
@@ -19,4 +26,124 @@ test('duration and null timestamps are safe', () => {
   assert.equal(formatDuration(null), '—');
   assert.equal(formatDuration(90_000_000), '1d 1h 0m');
   assert.equal(formatTimestamp(null), 'Never');
+});
+
+const NOW = Date.parse('2026-08-14T10:00:00Z');
+
+test('a fully uploaded device says so, without a nag', () => {
+  const backlog = describeUploadBacklog(
+    { unsent_backlog_state: 'clear', unsent_records: 0, oldest_unsent_at: null },
+    NOW,
+  );
+  assert.equal(backlog.label, 'All records sent');
+  assert.equal(backlog.color, 'green');
+  assert.equal(backlog.detail, null);
+});
+
+test('a backlog reports its depth and how long the silence has lasted', () => {
+  const backlog = describeUploadBacklog(
+    {
+      unsent_backlog_state: 'pending',
+      unsent_records: 7,
+      oldest_unsent_at: '2026-08-14T09:35:00Z',
+    },
+    NOW,
+  );
+  assert.equal(backlog.label, '7 waiting to send');
+  assert.equal(backlog.detail, 'Nothing received for 0h 25m');
+  assert.equal(backlog.color, 'neutral');
+});
+
+test('only the database-decided stall turns the backlog amber', () => {
+  const row = {
+    unsent_records: 40,
+    oldest_unsent_at: '2026-08-14T06:00:00Z',
+  };
+  assert.equal(describeUploadBacklog({ ...row, unsent_backlog_state: 'pending' }, NOW).color, 'neutral');
+  assert.equal(describeUploadBacklog({ ...row, unsent_backlog_state: 'stalled' }, NOW).color, 'amber');
+});
+
+test('a device that has never reported is not reported as zero', () => {
+  const backlog = describeUploadBacklog(
+    { unsent_backlog_state: 'unknown', unsent_records: null, oldest_unsent_at: null },
+    NOW,
+  );
+  assert.equal(backlog.label, 'Not reported yet');
+  assert.equal(backlog.color, 'gray');
+});
+
+test('a row from before the backlog columns existed degrades to "not reported"', () => {
+  // fetchDeviceStatusById selects *, but a cached or older payload may not
+  // carry the new columns. Undefined must read as no information, not as zero.
+  assert.equal(describeUploadBacklog({}, NOW).label, 'Not reported yet');
+});
+
+test('a stalled backlog contradicts the "sending normally" reading, so it replaces it', () => {
+  const online = {
+    operational_state: 'online',
+    expected_heartbeat_cadence_minutes: 30,
+  };
+  assert.match(describeDeviceState(online), /sending updates normally/i);
+  assert.match(
+    describeDeviceState({ ...online, unsent_backlog_state: 'stalled', unsent_records: 40 }),
+    /40 of its saved records have not reached the dashboard/i,
+  );
+});
+
+test('a silent device states only what is known, without implying live readings', () => {
+  const offline = describeDeviceState({
+    operational_state: 'offline', offline_after_minutes: 10,
+  });
+  assert.match(offline, /10-minute offline period/);
+  // The card no longer shows the frozen snapshot by default, so the state
+  // message has nothing to disclaim and must not imply the readings are live.
+  assert.doesNotMatch(offline, /from the last update/i);
+
+  const stale = describeDeviceState({
+    operational_state: 'stale', stale_after_minutes: 6,
+  });
+  assert.match(stale, /6-minute check period/);
+  assert.doesNotMatch(stale, /not from now/i);
+});
+
+test('a working device makes no such disclaimer', () => {
+  const online = describeDeviceState({
+    operational_state: 'online', expected_heartbeat_cadence_minutes: 2,
+  });
+  assert.match(online, /about every 2 minutes/);
+  assert.doesNotMatch(online, /last update/i);
+});
+
+test('a recent reading is positive evidence the detector is alive', () => {
+  const d = describeDetector({ detector_state: 'confirmed_live' });
+  assert.equal(d.color, 'green');
+  assert.match(d.label, /Detecting/);
+});
+
+test('silence is never reported as a fault, and never as reassurance', () => {
+  const d = describeDetector({
+    detector_state: 'silent_unverifiable', detector_reporting_supported: false,
+  });
+  // Not red: on firmware with no keepalive a quiet night looks identical to a
+  // dead S3, so claiming a fault would be as wrong as claiming health.
+  assert.equal(d.color, 'gray');
+  assert.doesNotMatch(d.label, /working|okay|fine/i);
+  assert.match(d.detail, /cannot yet tell quiet apart from stopped/);
+});
+
+test('firmware that reports detector age drops the cannot-tell caveat', () => {
+  const d = describeDetector({
+    detector_state: 'silent_unverifiable', detector_reporting_supported: true,
+  });
+  assert.equal(d.detail, null);
+});
+
+test('a detector the hub says it cannot hear is a real fault', () => {
+  const d = describeDetector({ detector_state: 'detector_down' });
+  assert.equal(d.color, 'red');
+});
+
+test('an unknown or missing detector state degrades quietly', () => {
+  assert.equal(describeDetector({}).color, 'gray');
+  assert.equal(describeDetector({ detector_state: 'unknown' }).label, 'No update yet');
 });

@@ -1,25 +1,34 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import {
+  fetchActivitySummary,
   fetchCandidateActivity,
   fetchCandidateActivityById,
   fetchDeviceMap,
   fetchDeviceMapById,
   fetchDeviceMapByLocation,
+  fetchDeviceRegistry,
+  fetchDeviceRegistryById,
   fetchDeviceStatus,
   fetchDeviceStatusById,
+  fetchDisplaySettings,
   fetchRelayActivity,
   fetchRelayActivityForSource,
   fetchRuntimeActivity,
   fetchRuntimeActivityById,
 } from '../lib/supabaseApi';
 import { getFriendlyError } from '../utils/userMessages';
-import { isOperatorActivityEvent } from '../utils/dashboardData';
+import { isOperatorActivityEvent, manilaStartOfDay } from '../utils/dashboardData';
 import {
   connectionStateForChannelStatus,
   EMPTY_LIVE_DASHBOARD,
   liveDashboardReducer,
 } from '../utils/liveDashboard';
+import { applyDisplayCutoff, DEFAULT_DISPLAY_FROM, resolveDisplayCutoff } from '../utils/displayCutoff';
+
+// Used only until migration 202609280001 is applied; after that the database's
+// dashboard_settings.display_from wins.
+const FALLBACK_DISPLAY_FROM = import.meta.env.VITE_DISPLAY_FROM || DEFAULT_DISPLAY_FROM;
 
 const RECONCILE_INTERVAL_MS = 30_000;
 const RELAY_EVENT_KINDS = new Set([
@@ -30,12 +39,26 @@ const RELAY_EVENT_KINDS = new Set([
   'COOLDOWN_COMPLETE',
 ]);
 
+/*
+ * The summary is asked for today, meaning since midnight in Manila, and every
+ * caller here computes that boundary at the moment it asks rather than holding
+ * one. A tab left open overnight would otherwise keep counting yesterday.
+ */
+const todaySummary = (accessToken, signal) => fetchActivitySummary(
+  accessToken,
+  signal,
+  new Date(manilaStartOfDay()).toISOString(),
+);
+
 const SOURCES = [
   ['activity', fetchRuntimeActivity],
   ['candidates', fetchCandidateActivity],
   ['relays', fetchRelayActivity],
   ['devices', fetchDeviceStatus],
   ['mapDevices', fetchDeviceMap],
+  ['deviceRegistry', fetchDeviceRegistry],
+  ['activitySummary', todaySummary],
+  ['displaySettings', fetchDisplaySettings],
 ];
 
 export function useLiveDashboard(accessToken) {
@@ -52,8 +75,24 @@ export function useLiveDashboard(accessToken) {
     }
   }, []);
 
-  const reconcile = useCallback(async suppliedSignal => {
+  const reconcile = useCallback(async suppliedArgument => {
     if (!accessToken) return;
+
+    /*
+     * This is returned as `refresh`, so a caller writing onClick={refresh}
+     * hands us a React click event. Passing that on as `signal` makes fetch
+     * throw "Failed to execute 'fetch' on 'Window'..." before any request
+     * leaves the browser. Every source then fails at once, and because the
+     * message contains the word "fetch", getFriendlyError reports it as a lost
+     * internet connection -- so a working dashboard claimed to be offline and
+     * only recovered on the next 30-second reconcile.
+     *
+     * The call sites are fixed, but anything that is not an AbortSignal is
+     * ignored here too: the next onClick={refresh} must not resurrect this.
+     */
+    const suppliedSignal = suppliedArgument instanceof AbortSignal
+      ? suppliedArgument
+      : undefined;
 
     const run = async signal => {
       const results = await Promise.allSettled(
@@ -66,7 +105,7 @@ export function useLiveDashboard(accessToken) {
       results.forEach((result, index) => {
         const [key] = SOURCES[index];
         if (result.status === 'fulfilled') {
-          datasets[key] = Array.isArray(result.value) ? result.value : [];
+          datasets[key] = result.value;
         } else if (result.reason?.name !== 'AbortError') {
           errors[key] = getFriendlyError(
             result.reason,
@@ -74,6 +113,8 @@ export function useLiveDashboard(accessToken) {
           );
         }
       });
+
+      if (signal?.aborted) return;
 
       dispatch({
         type: 'reconcile',
@@ -95,12 +136,18 @@ export function useLiveDashboard(accessToken) {
     fetchDeviceMapById(accessToken, deviceId, signal).then(row => {
       if (row) dispatch({ type: 'upsert_map', rows: row });
     }),
+    fetchDeviceRegistryById(accessToken, deviceId, signal).then(row => {
+      if (row) dispatch({ type: 'upsert_registry', row });
+    }),
   ]), [accessToken]);
 
   const hydrateRuntimeEvent = useCallback(async (event, signal) => {
     const eventId = event.runtime_event_id;
     const tasks = [
       hydrateDevice(event.device_id, signal),
+      todaySummary(accessToken, signal).then(row => {
+        if (row) dispatch({ type: 'set_activity_summary', row });
+      }),
     ];
 
     if (isOperatorActivityEvent(event)) {
@@ -228,5 +275,30 @@ export function useLiveDashboard(accessToken) {
     controllersRef.current.clear();
   }, []);
 
-  return { ...state, refresh: reconcile };
+  /*
+   * Manual refresh, as opposed to the 30-second reconcile. It reports itself so
+   * the button can say "Refreshing…" over data that stays on screen throughout.
+   * refresh_end is in a finally: reconcile returns early when there is no
+   * access token, and a flag that never cleared would disable the button.
+   */
+  const refresh = useCallback(async () => {
+    dispatch({ type: 'refresh_start' });
+    try {
+      await reconcile();
+    } finally {
+      dispatch({ type: 'refresh_end' });
+    }
+  }, [reconcile]);
+
+  /*
+   * Nothing before the display cutoff reaches a reader. Applied to the whole
+   * state on every change rather than at fetch time, so rows an open tab was
+   * already holding, and rows a Realtime upsert adds, are held to it too.
+   */
+  const visible = useMemo(
+    () => applyDisplayCutoff(state, resolveDisplayCutoff(state.displaySettings, FALLBACK_DISPLAY_FROM)),
+    [state],
+  );
+
+  return { ...visible, refresh };
 }

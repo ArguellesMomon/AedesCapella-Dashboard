@@ -1,15 +1,16 @@
 import { BookOpen } from 'lucide-react';
 import { C } from '../../constants/colors';
+import { DETECTION_TERM } from '../../constants/terminology';
 import Card from './Card';
 import Mono from './Mono';
 
 const TERMS = [
+  [DETECTION_TERM.singular, `${DETECTION_TERM.caveat} The device matched the sound to Aedes and its timing checks agreed, which is as far as it can go on its own.`],
   ['Match score', 'How closely a sound matched. It is not proof of the species.'],
-  ['Possible mosquito match', 'A validated model and timing candidate that still needs human review.'],
-  ['Cooldown', 'A recorded pause that prevents spraying activations too close together.'],
-  ['Works offline', 'The sensor can check sound even without an internet connection.'],
-  ['Relay event', 'A saved command or state change. It does not prove physical fluid delivery.'],
-  ['Sensor', 'A field device that evaluates sound and reports health and runtime events.'],
+  ['Cooldown', 'A recorded pause that stops the sprayer switching on again too soon.'],
+  ['Works offline', 'The device can check sound even without an internet connection.'],
+  ['Sprayer event', 'A record that the sprayer was told to switch on, or did. It does not prove that spray reached anything.'],
+  ['Device', 'The unit installed in the field. It listens, checks what it hears, and reports how it is doing.'],
 ];
 
 export default function Glossary() {

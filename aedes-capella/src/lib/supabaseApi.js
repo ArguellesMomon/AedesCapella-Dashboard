@@ -3,6 +3,7 @@ import {
   supabaseAnonKey,
   supabaseUrl,
 } from './supabaseClient';
+import { isDisplayableRelayEpisode } from '../utils/dashboardData';
 
 export { isSupabaseConfigured } from './supabaseClient';
 
@@ -34,7 +35,11 @@ async function request(path, { accessToken, body, method = 'GET', signal } = {})
   const payload = response.status === 204 ? null : await response.json().catch(() => null);
   if (!response.ok) {
     const message = payload?.msg || payload?.message || payload?.error_description || payload?.error;
-    throw new Error(message || `Supabase request failed (${response.status}).`);
+    // The status lets the session hook tell a rejected token from a dropped connection.
+    throw Object.assign(
+      new Error(message || `Supabase request failed (${response.status}).`),
+      { status: response.status },
+    );
   }
 
   return payload;
@@ -58,7 +63,9 @@ export async function refreshOperatorSession(refreshToken) {
 }
 
 export async function signOut(accessToken) {
-  await request('/auth/v1/logout', { method: 'POST', accessToken });
+  // Local scope: Supabase's default is global, which would end the session on
+  // every other device signed in to the same account.
+  await request('/auth/v1/logout?scope=local', { method: 'POST', accessToken });
 }
 
 /*
@@ -79,6 +86,27 @@ export async function fetchCurrentUserRole(accessToken, signal) {
   return typeof role === 'string' ? role : null;
 }
 
+/*
+ * The dashboard display cutoff from public.dashboard_settings (migration
+ * 202609280001). Before that migration is applied the table does not exist and
+ * PostgREST answers 404 (PGRST205); that is reported as { available: false }
+ * so the dashboard falls back to its built-in cutoff and filters client-side,
+ * rather than treating a missing table as an outage.
+ */
+export async function fetchDisplaySettings(accessToken, signal) {
+  try {
+    const rows = await request('/rest/v1/dashboard_settings?select=display_from&limit=1', {
+      accessToken,
+      signal,
+    });
+    const row = Array.isArray(rows) ? rows[0] : null;
+    return { available: Boolean(row), displayFrom: row?.display_from ?? null };
+  } catch (reason) {
+    if (reason?.status === 404) return { available: false, displayFrom: null };
+    throw reason;
+  }
+}
+
 export async function fetchDeviceStatus(accessToken, signal) {
   const columns = [
     'device_id', 'device_label', 'last_seen_at', 'has_ever_reported',
@@ -89,6 +117,15 @@ export async function fetchDeviceStatus(accessToken, signal) {
     'latest_upload_or_event_at', 'latest_event_time_quality', 'latest_event_kind',
     'latest_activity_at', 'needs_attention', 'mist_events_last_7d',
     'candidates_last_7d', 'free_heap_bytes', 'c3_boot', 'last_ordinal',
+    // Added by migration 202608140001. This selects named columns, so these
+    // must not be requested before that migration is applied: an unknown column
+    // fails the whole request and blanks Device Status rather than degrading.
+    'unsent_records', 'oldest_unsent_at', 'unsent_backlog_state',
+    'backlog_stalled_after_minutes',
+    // Added by migration 202608290004. Same rule as above: an unknown column
+    // fails the whole request, so do not request these before it is applied.
+    'detector_state', 'detector_reporting_supported', 'detector_last_confirmed_at',
+    's3_last_packet_age_ms', 's3_boot_id', 's3_last_sequence',
   ].join(',');
 
   return request(`/rest/v1/dashboard_device_status?select=${columns}&order=device_label.asc`, {
@@ -96,6 +133,15 @@ export async function fetchDeviceStatus(accessToken, signal) {
     signal,
   });
 }
+
+/*
+ * How many activity rows one fetch returns. Exported because the Latest
+ * Activity filter has to know it: a full buffer whose oldest row is still
+ * inside today means today has more rows than the table is holding, and the
+ * section says so rather than letting the table disagree with the count above
+ * it.
+ */
+export const ACTIVITY_FETCH_LIMIT = 100;
 
 export async function fetchRuntimeActivity(accessToken, signal) {
   const columns = [
@@ -109,10 +155,43 @@ export async function fetchRuntimeActivity(accessToken, signal) {
   ].join(',');
 
   const operatorKinds = 'BOOT,LIVE_ACCEPT,RELAY_ON,RELAY_REJECT';
-  return request(`/rest/v1/dashboard_runtime_activity?select=${columns}&event_kind=in.(${operatorKinds})&order=display_time.desc&limit=100`, {
+  return request(`/rest/v1/dashboard_runtime_activity?select=${columns}&event_kind=in.(${operatorKinds})&order=display_time.desc&limit=${ACTIVITY_FETCH_LIMIT}`, {
     accessToken,
     signal,
   });
+}
+
+/**
+ * Operator activity counts over one window, computed in the database.
+ *
+ * `windowStartIso` asks for a calendar boundary, which is what "today" means
+ * on this dashboard: midnight in Manila, not the last 24 hours. That parameter
+ * arrived with migration 202608290006, so a dashboard deployed ahead of the
+ * migration would otherwise get PGRST202 for an unknown function signature and
+ * blank the whole summary. It falls back to the rolling window instead, and
+ * the caller reads `window_start` off the answer to see which one it got, so
+ * the panel labels itself from what the database actually did rather than from
+ * what was asked for.
+ */
+export async function fetchActivitySummary(accessToken, signal, windowStartIso) {
+  async function call(body) {
+    const rows = await request('/rest/v1/rpc/dashboard_activity_summary', {
+      method: 'POST',
+      accessToken,
+      body,
+      signal,
+    });
+    return Array.isArray(rows) ? rows[0] || null : rows;
+  }
+
+  if (!windowStartIso) return call({ p_window_hours: 24 });
+
+  try {
+    return await call({ p_window_hours: 24, p_window_start: windowStartIso });
+  } catch (reason) {
+    if (reason?.name === 'AbortError') throw reason;
+    return call({ p_window_hours: 24 });
+  }
 }
 
 export async function fetchRuntimeActivityById(accessToken, runtimeEventId, signal) {
@@ -147,10 +226,11 @@ export async function fetchCandidateActivityById(accessToken, runtimeEventId, si
 }
 
 export async function fetchRelayActivity(accessToken, signal) {
-  return request('/rest/v1/dashboard_relay_activity?select=*&order=display_time.desc&limit=500', {
+  const rows = await request('/rest/v1/dashboard_relay_activity?select=*&order=display_time.desc&limit=500', {
     accessToken,
     signal,
   });
+  return rows.filter(isDisplayableRelayEpisode);
 }
 
 export async function fetchRelayActivityForSource(
@@ -169,13 +249,77 @@ export async function fetchRelayActivityForSource(
     accessToken,
     signal,
   });
-  return rows[0] || null;
+  return rows.find(isDisplayableRelayEpisode) || null;
 }
 
 export async function fetchDeviceMap(accessToken, signal) {
   return request('/rest/v1/dashboard_device_map?select=*&order=device_label.asc', {
     accessToken,
     signal,
+  });
+}
+
+export async function fetchDeviceRegistry(accessToken, signal) {
+  return request('/rest/v1/dashboard_device_registry?select=*&order=device_label.asc', {
+    accessToken,
+    signal,
+  });
+}
+
+export async function fetchDeviceRegistryById(accessToken, deviceId, signal) {
+  const rows = await request(
+    `/rest/v1/dashboard_device_registry?select=*&device_id=eq.${encodeURIComponent(deviceId)}&limit=1`,
+    { accessToken, signal },
+  );
+  return rows[0] || null;
+}
+
+export async function fetchLocations(accessToken, signal) {
+  return request('/rest/v1/locations?select=location_id,location_name,barangay_name,is_active&is_active=eq.true&order=barangay_name.asc,location_name.asc', {
+    accessToken,
+    signal,
+  });
+}
+
+export async function registerDevice(accessToken, device, signal) {
+  return request('/rest/v1/rpc/register_device', {
+    method: 'POST',
+    accessToken,
+    signal,
+    body: device,
+  });
+}
+
+export async function updateDevice(accessToken, device, signal) {
+  return request('/rest/v1/rpc/technical_update_device', {
+    method: 'POST',
+    accessToken,
+    signal,
+    body: device,
+  });
+}
+
+export async function decommissionDevice(accessToken, deviceId, confirmationLabel, signal) {
+  return request('/rest/v1/rpc/admin_decommission_device', {
+    method: 'POST',
+    accessToken,
+    signal,
+    body: {
+      p_device_id: deviceId,
+      p_confirmation_label: confirmationLabel,
+    },
+  });
+}
+
+export async function rotateDeviceToken(accessToken, deviceLabel, tokenSha256, signal) {
+  return request('/rest/v1/rpc/admin_rotate_device_ingest_token', {
+    method: 'POST',
+    accessToken,
+    signal,
+    body: {
+      p_device_label: deviceLabel,
+      p_token_sha256: tokenSha256,
+    },
   });
 }
 
